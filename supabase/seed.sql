@@ -1,5 +1,6 @@
 -- Seed data from docs/SPEC_DATA.md. Safe to re-run:
---   visa_rule and grade_mapping are inserted only when the table is empty;
+--   visa_rule rows are inserted when not already present (same country, type, region, nationalities, start);
+--   grade_mapping is inserted only when the table is empty;
 --   demo rows (is_demo = true) are deleted and recreated.
 -- Visa rules must be re-verified on the official page before launch (see spec "Seed notes").
 
@@ -8,6 +9,12 @@ begin;
 -- ---------------------------------------------------------------------------
 -- visa_rule (spec "Seed: visa_rule rows", as of 2026-11-01)
 -- ---------------------------------------------------------------------------
+
+-- Superseded by the two Proclamation 10998 rows below (docs/EXTRACTION.md section 6).
+delete from public.visa_rule
+where country = 'US' and rule_type = 'nationality_restriction'
+  and applies_to_nationalities = '{NG,AO,BJ,BI,CI,GA,GM,MW,MR,SN,TZ,TG,ZM,ZW}';
+
 insert into public.visa_rule
   (country, rule_type, applies_to_nationalities, applies_to_region, value, description,
    effective_from, effective_to, review_due, source_url, last_verified_at, confidence)
@@ -68,10 +75,16 @@ from (values
    '2026-01-01', null, null,
    'https://prodigyfinance.com/resources/blog/canada-study-permit-2026-cap-gic-standard-stream/', 'third_party'),
   -- Codes listed in the spec. TODO before launch: complete from Proclamation 10998 on travel.state.gov.
-  ('US', 'nationality_restriction', '{NG,AO,BJ,BI,CI,GA,GM,MW,MR,SN,TZ,TG,ZM,ZW}', null,
-   '{"suspended_visas":["F","M","J"],"exempt":"visas issued before 2026-01-01"}',
-   'F, M and J visa issuance is suspended for these nationalities (visas issued before 2026-01-01 are exempt).',
-   '2026-01-01', null, '2026-12-28', 'https://travel.state.gov', 'official'),
+  ('US', 'nationality_restriction', '{AF,BF,MM,TD,CG,GQ,ER,HT,IR,LA,LY,ML,NE,SL,SO,SS,SD,SY,YE}', null,
+   '{"suspended_visas":["F","M","J"],"exempt":"visas issued before 2026-01-01; nationals inside the US on that date"}',
+   'Proclamation 10998 full suspension: F, M and J student visas are suspended (visas issued before 2026-01-01 and nationals inside the US on that date are exempt).',
+   '2026-01-01', null, '2026-12-27',
+   'https://www.whitehouse.gov/presidential-actions/2025/12/restricting-and-limiting-the-entry-of-foreign-nationals-to-protect-the-security-of-the-united-states/', 'official'),
+  ('US', 'nationality_restriction', '{AO,AG,BJ,BI,CI,CU,DM,GA,GM,MW,MR,NG,SN,TZ,TG,TO,VE,ZM,ZW}', null,
+   '{"suspended_visas":["F","M","J"],"exempt":"visas issued before 2026-01-01; nationals inside the US on that date"}',
+   'Proclamation 10998 partial suspension: F, M and J student visas are suspended (visas issued before 2026-01-01 and nationals inside the US on that date are exempt).',
+   '2026-01-01', null, '2026-12-27',
+   'https://www.whitehouse.gov/presidential-actions/2025/12/restricting-and-limiting-the-entry-of-foreign-nationals-to-protect-the-security-of-the-united-states/', 'official'),
   ('US', 'length_of_stay', '{}', null,
    '{"max_admission_years":4,"replaces":"duration_of_status"}',
    'Students are admitted for a fixed period of up to 4 years, replacing duration of status.',
@@ -87,7 +100,19 @@ from (values
    'https://nairametrics.com/2026/09/15/us-tightens-f-1-visa-rules-introduces-four-year-admission-limit-cuts-grace-period-to-30-days/', 'third_party')
 ) as v(country, rule_type, applies_to_nationalities, applies_to_region, value, description,
        effective_from, effective_to, review_due, source_url, confidence)
-where not exists (select 1 from public.visa_rule);
+where not exists (
+  select 1 from public.visa_rule r
+  where r.country = v.country and r.rule_type = v.rule_type
+    and r.applies_to_region is not distinct from v.applies_to_region
+    and r.applies_to_nationalities = v.applies_to_nationalities
+    and r.effective_from = v.effective_from
+);
+
+-- Palestinian Authority travel documents are in the full-suspension group. PS is matched against
+-- student_profile.travel_document, not nationality (docs/EXTRACTION.md section 6).
+update public.visa_rule set applies_to_travel_documents = '{PS}'
+where country = 'US' and rule_type = 'nationality_restriction' and 'AF' = any (applies_to_nationalities)
+  and applies_to_travel_documents <> '{PS}';
 
 -- ---------------------------------------------------------------------------
 -- grade_mapping (Nigerian CGPA → UK class), confidence = estimated

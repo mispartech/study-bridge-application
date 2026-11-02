@@ -364,6 +364,28 @@ describe("data integrity", () => {
   })
 })
 
+describe("US Proclamation 10998 seed (docs/EXTRACTION.md section 6)", () => {
+  it("has the full and partial suspension rows, with PS as a travel document", async () => {
+    const { rows: r } = await db.query(`
+      select applies_to_nationalities::text[] as nat, applies_to_travel_documents::text[] as docs, review_due::text, confidence, value
+      from public.visa_rule where country = 'US' and rule_type = 'nationality_restriction'
+      order by cardinality(applies_to_travel_documents) desc`)
+    expect(r).toHaveLength(2)
+    const [full, partial] = r
+    expect(full.nat).toHaveLength(19)
+    expect(full.nat).not.toContain("PS")
+    expect(full.docs).toEqual(["PS"])
+    expect(partial.nat).toHaveLength(19)
+    expect(partial.nat).toContain("NG")
+    expect(partial.docs).toEqual([])
+    for (const row of r) {
+      expect(row.review_due).toBe("2026-12-27")
+      expect(row.confidence).toBe("official")
+      expect(row.value.suspended_visas).toEqual(["F", "M", "J"])
+    }
+  })
+})
+
 describe("seed data through the public API (anon key, PostgREST)", () => {
   const base = process.env.NEXT_PUBLIC_SUPABASE_URL
   const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? ""
@@ -409,7 +431,7 @@ describe("seed data through the public API (anon key, PostgREST)", () => {
              (select count(distinct field)::int from public.programme where is_demo) fields,
              (select count(*)::int from public.programme where is_demo and title not like '%Demo%') unlabelled`)
     expect(c[0]).toEqual({
-      visa: 16,
+      visa: 17,
       grades: 8,
       demo: 30,
       uk_london: 6,

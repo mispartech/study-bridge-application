@@ -680,6 +680,7 @@ export type Database = {
           preferred_countries: Database["public"]["Enums"]["country_code"][]
           residence_country: string | null
           toefl: number | null
+          travel_document: string | null
           tuition_cap_minor: number | null
           updated_at: string
           user_id: string
@@ -714,6 +715,7 @@ export type Database = {
           preferred_countries?: Database["public"]["Enums"]["country_code"][]
           residence_country?: string | null
           toefl?: number | null
+          travel_document?: string | null
           tuition_cap_minor?: number | null
           updated_at?: string
           user_id: string
@@ -747,6 +749,7 @@ export type Database = {
           preferred_countries?: Database["public"]["Enums"]["country_code"][]
           residence_country?: string | null
           toefl?: number | null
+          travel_document?: string | null
           tuition_cap_minor?: number | null
           updated_at?: string
           user_id?: string
@@ -823,6 +826,7 @@ export type Database = {
         Row: {
           applies_to_nationalities: unknown[]
           applies_to_region: string | null
+          applies_to_travel_documents: unknown[]
           confidence: Database["public"]["Enums"]["confidence_level"]
           country: Database["public"]["Enums"]["country_code"]
           created_at: string
@@ -842,6 +846,7 @@ export type Database = {
         Insert: {
           applies_to_nationalities?: unknown[]
           applies_to_region?: string | null
+          applies_to_travel_documents?: unknown[]
           confidence: Database["public"]["Enums"]["confidence_level"]
           country: Database["public"]["Enums"]["country_code"]
           created_at?: string
@@ -860,6 +865,7 @@ export type Database = {
         Update: {
           applies_to_nationalities?: unknown[]
           applies_to_region?: string | null
+          applies_to_travel_documents?: unknown[]
           confidence?: Database["public"]["Enums"]["confidence_level"]
           country?: Database["public"]["Enums"]["country_code"]
           created_at?: string

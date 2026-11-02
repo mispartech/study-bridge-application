@@ -53,6 +53,8 @@ export const studentProfileRow = z.object({
   user_id: uuid,
   nationality: isoCountry.nullable(),
   residence_country: isoCountry.nullable(),
+  /** Issuer of a non-passport travel document (e.g. PS); matched by visa rules. */
+  travel_document: isoCountry.nullable(),
   degree_title: z.string().nullable(),
   institution_type: z.enum(["federal", "state", "private", "polytechnic"]).nullable(),
   degree_class: ukClassBand.nullable(),
@@ -228,6 +230,7 @@ export const visaRuleRow = z.object({
   country: countryCode,
   rule_type: visaRuleType,
   applies_to_nationalities: z.array(isoCountry),
+  applies_to_travel_documents: z.array(isoCountry),
   applies_to_region: z.string().nullable(),
   value: json,
   description: z.string().min(1),
