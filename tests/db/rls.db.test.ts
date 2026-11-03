@@ -364,6 +364,61 @@ describe("data integrity", () => {
   })
 })
 
+describe("AI usage, plans and advisor quota", () => {
+  const consume = (userId: string) =>
+    rows("service_role", null, "select * from public.consume_advisor_message($1)", [userId]).then((r) => r[0])
+
+  it("free users get 5 advisor messages a day, then are refused without counting", async () => {
+    const { userId } = await student()
+    const results = []
+    for (let i = 0; i < 7; i++) results.push(await consume(userId))
+    expect(results.map((r) => r.allowed)).toEqual([true, true, true, true, true, false, false])
+    expect(results.map((r) => r.used)).toEqual([1, 2, 3, 4, 5, 5, 5])
+    expect(results[0]).toMatchObject({ daily_limit: 5, plan: "free" })
+  })
+
+  it("Plus users are unlimited; an expired Plus period falls back to free", async () => {
+    const plus = await student()
+    await db.query("insert into public.subscription (user_id, plan) values ($1, 'plus')", [plus.userId])
+    for (let i = 0; i < 8; i++) expect((await consume(plus.userId)).allowed).toBe(true)
+    expect(await consume(plus.userId)).toMatchObject({ plan: "plus", daily_limit: null })
+
+    const lapsed = await student()
+    await db.query(
+      "insert into public.subscription (user_id, plan, current_period_end) values ($1, 'plus', now() - interval '1 day')",
+      [lapsed.userId]
+    )
+    expect(await consume(lapsed.userId)).toMatchObject({ plan: "free", daily_limit: 5 })
+  })
+
+  it("clients cannot call the quota function, read usage or upgrade themselves", async () => {
+    const a = await student()
+    await db.query("insert into public.subscription (user_id) values ($1)", [a.userId])
+    expect(
+      await refused("authenticated", a.userId, "select * from public.consume_advisor_message($1)", [a.userId])
+    ).toBe("42501")
+    for (const table of ["ai_usage", "ai_usage_daily", "advisor_daily_usage", "explanation_cache"]) {
+      expect(await refused("authenticated", a.userId, `select * from public.${table}`), table).toBe("42501")
+      expect(await refused("anon", null, `select * from public.${table}`), table).toBe("42501")
+    }
+    expect(await rows("authenticated", a.userId, "select plan from public.subscription")).toEqual([{ plan: "free" }])
+    expect(await refused("authenticated", a.userId, "update public.subscription set plan = 'plus'")).toBe("42501")
+    const b = await student()
+    await db.query("insert into public.subscription (user_id, plan) values ($1, 'plus')", [b.userId])
+    expect(await rows("authenticated", a.userId, "select user_id from public.subscription")).toHaveLength(1)
+  })
+
+  it("aggregates ai_usage into daily totals per task", async () => {
+    await db.query(`insert into public.ai_usage (task, provider, model, input_tokens, output_tokens, latency_ms, success)
+                    values ('zz_test', 'anthropic', 'claude-haiku-5-5', 100, 10, 200, true),
+                           ('zz_test', 'anthropic', 'claude-haiku-5-5', 50, 5, 400, false)`)
+    const r = await rows("service_role", null, "select * from public.ai_usage_daily where task = 'zz_test'")
+    expect(r).toHaveLength(1)
+    expect(r[0]).toMatchObject({ calls: 2, failures: 1, avg_latency_ms: 300 })
+    expect(Number(r[0].input_tokens)).toBe(150)
+  })
+})
+
 describe("US Proclamation 10998 seed (docs/EXTRACTION.md section 6)", () => {
   it("has the full and partial suspension rows, with PS as a travel document", async () => {
     const { rows: r } = await db.query(`

@@ -290,6 +290,47 @@ export const reviewQueueRow = z.object({
   ...timestamps,
 })
 
+// --- AI usage, plans and caches (server only) ----------------------------------------
+
+export const planTier = z.enum(E.plan_tier)
+
+export const aiUsageRow = z.object({
+  id: uuid,
+  task: z.string().min(1),
+  provider: z.string().min(1),
+  model: z.string().min(1),
+  input_tokens: z.number().int().nonnegative().nullable(),
+  output_tokens: z.number().int().nonnegative().nullable(),
+  latency_ms: z.number().int().nonnegative(),
+  success: z.boolean(),
+  error: z.string().nullable(),
+  user_id: uuid.nullable(),
+  created_at: timestamp,
+})
+
+export const subscriptionRow = z.object({
+  user_id: uuid,
+  plan: planTier,
+  current_period_end: timestamp.nullable(),
+  ...timestamps,
+})
+
+export const advisorDailyUsageRow = z.object({
+  user_id: uuid,
+  day: date,
+  messages: z.number().int().nonnegative(),
+})
+
+export const explanationCacheRow = z.object({
+  programme_id: uuid,
+  profile_bucket: z.string().min(1),
+  source_version: z.string().min(1),
+  content: z.string(),
+  provider: z.string().min(1),
+  model: z.string().min(1),
+  ...timestamps,
+})
+
 export const rowSchemas = {
   student_profile: studentProfileRow,
   shortlist: shortlistRow,
@@ -306,6 +347,10 @@ export const rowSchemas = {
   fx_rate: fxRateRow,
   source_audit: sourceAuditRow,
   review_queue: reviewQueueRow,
+  ai_usage: aiUsageRow,
+  subscription: subscriptionRow,
+  advisor_daily_usage: advisorDailyUsageRow,
+  explanation_cache: explanationCacheRow,
 } as const
 
 export type TableName = keyof Database["public"]["Tables"]

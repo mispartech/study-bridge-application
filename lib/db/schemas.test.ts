@@ -24,6 +24,10 @@ describe("schemas match the generated database types", () => {
       fx_rate: true,
       source_audit: true,
       review_queue: true,
+      ai_usage: true,
+      subscription: true,
+      advisor_daily_usage: true,
+      explanation_cache: true,
     }
     expect(Object.keys(rowSchemas).sort()).toEqual(Object.keys(tables).sort())
   })
@@ -46,6 +50,10 @@ describe("schemas match the generated database types", () => {
     expectTypeOf<Parsed<"fx_rate">>().toExtend<Tables["fx_rate"]["Row"]>()
     expectTypeOf<Parsed<"source_audit">>().toExtend<Tables["source_audit"]["Row"]>()
     expectTypeOf<Parsed<"review_queue">>().toExtend<Tables["review_queue"]["Row"]>()
+    expectTypeOf<Parsed<"ai_usage">>().toExtend<Tables["ai_usage"]["Row"]>()
+    expectTypeOf<Parsed<"subscription">>().toExtend<Tables["subscription"]["Row"]>()
+    expectTypeOf<Parsed<"advisor_daily_usage">>().toExtend<Tables["advisor_daily_usage"]["Row"]>()
+    expectTypeOf<Parsed<"explanation_cache">>().toExtend<Tables["explanation_cache"]["Row"]>()
   })
 })
 

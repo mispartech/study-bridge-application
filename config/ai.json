@@ -1,0 +1,5 @@
+{
+  "extraction": { "provider": "anthropic", "model": "claude-haiku-5-5" },
+  "explanations": { "provider": "anthropic", "model": "claude-haiku-5-5" },
+  "advisor": { "provider": "anthropic", "model": "claude-sonnet-5-5" }
+}

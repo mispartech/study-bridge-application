@@ -18,6 +18,7 @@ const eslintConfig = defineConfig([
     "playwright-report/**",
     "test-results/**",
     "lighthouse-reports/**",
+    "ingest/**",
   ]),
 ])
 

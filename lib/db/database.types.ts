@@ -5,6 +5,68 @@ export type Json = string | number | boolean | null | { [key: string]: Json | un
 export type Database = {
   public: {
     Tables: {
+      advisor_daily_usage: {
+        Row: {
+          day: string
+          messages: number
+          user_id: string
+        }
+        ComputedFields: never
+        Insert: {
+          day: string
+          messages?: number
+          user_id: string
+        }
+        Update: {
+          day?: string
+          messages?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
+      ai_usage: {
+        Row: {
+          created_at: string
+          error: string | null
+          id: string
+          input_tokens: number | null
+          latency_ms: number
+          model: string
+          output_tokens: number | null
+          provider: string
+          success: boolean
+          task: string
+          user_id: string | null
+        }
+        ComputedFields: never
+        Insert: {
+          created_at?: string
+          error?: string | null
+          id?: string
+          input_tokens?: number | null
+          latency_ms: number
+          model: string
+          output_tokens?: number | null
+          provider: string
+          success: boolean
+          task: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          error?: string | null
+          id?: string
+          input_tokens?: number | null
+          latency_ms?: number
+          model?: string
+          output_tokens?: number | null
+          provider?: string
+          success?: boolean
+          task?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       application_tracker: {
         Row: {
           checklist: NonNullable<Json>
@@ -108,6 +170,48 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      explanation_cache: {
+        Row: {
+          content: string
+          created_at: string
+          model: string
+          profile_bucket: string
+          programme_id: string
+          provider: string
+          source_version: string
+          updated_at: string
+        }
+        ComputedFields: never
+        Insert: {
+          content: string
+          created_at?: string
+          model: string
+          profile_bucket: string
+          programme_id: string
+          provider: string
+          source_version: string
+          updated_at?: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          model?: string
+          profile_bucket?: string
+          programme_id?: string
+          provider?: string
+          source_version?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "explanation_cache_programme_id_fkey"
+            columns: ["programme_id"]
+            isOneToOne: false
+            referencedRelation: "programme"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       fee: {
         Row: {
@@ -758,6 +862,31 @@ export type Database = {
         }
         Relationships: []
       }
+      subscription: {
+        Row: {
+          created_at: string
+          current_period_end: string | null
+          plan: Database["public"]["Enums"]["plan_tier"]
+          updated_at: string
+          user_id: string
+        }
+        ComputedFields: never
+        Insert: {
+          created_at?: string
+          current_period_end?: string | null
+          plan?: Database["public"]["Enums"]["plan_tier"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          current_period_end?: string | null
+          plan?: Database["public"]["Enums"]["plan_tier"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       university: {
         Row: {
           city: string
@@ -885,9 +1014,32 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      ai_usage_daily: {
+        Row: {
+          avg_latency_ms: number | null
+          calls: number | null
+          day: string | null
+          failures: number | null
+          input_tokens: number | null
+          model: string | null
+          output_tokens: number | null
+          provider: string | null
+          task: string | null
+        }
+        ComputedFields: never
+        Relationships: []
+      }
     }
     Functions: {
+      consume_advisor_message: {
+        Args: { p_free_limit?: number; p_user_id: string }
+        Returns: {
+          allowed: boolean
+          daily_limit: number
+          plan: Database["public"]["Enums"]["plan_tier"]
+          used: number
+        }[]
+      }
       current_student_id: { Args: Record<PropertyKey, never>; Returns: string }
       host_matches_domains: { Args: { domains: string[]; host: string }; Returns: boolean }
       url_host: { Args: { url: string }; Returns: string }
@@ -899,6 +1051,7 @@ export type Database = {
       degree_type: "MSc" | "MA" | "MEng" | "MBA" | "MRes" | "MPH" | "LLM" | "MPS" | "Other"
       field_code:
         "computer_data_science" | "public_health" | "business_finance" | "engineering" | "project_management" | "law"
+      plan_tier: "free" | "plus"
       study_mode: "full_time" | "part_time" | "online" | "blended"
       tracker_stage:
         "researching" | "preparing_documents" | "applied" | "offer" | "deposit_paid" | "visa" | "enrolled" | "withdrawn"
@@ -1032,6 +1185,7 @@ export const Constants = {
         "project_management",
         "law",
       ],
+      plan_tier: ["free", "plus"],
       study_mode: ["full_time", "part_time", "online", "blended"],
       tracker_stage: [
         "researching",

@@ -48,3 +48,8 @@ lighthouse-reports/
 # playwright
 /test-results/
 /playwright-report/
+
+# python
+/ingest/.venv/
+__pycache__/
+.pytest_cache/
