@@ -146,8 +146,8 @@ def test_truncated_input_goes_to_review():
 def _stored_requirement():
     return {"min_uk_class": "upper_second", "min_gpa4": None,
             "nigeria_rule": "Bachelor degree with a CGPA of 3.5/5.0 or 3.0/4.0",
-            "ielts_min": 6.5, "toefl_entries": [], "duolingo_min": None, "gre_required": False,
-            "gmat_required": False, "min_work_years": 0}
+            "ielts_min": 6.5, "toefl_entries": [], "duolingo_min": None, "gre_status": "not_required",
+            "gmat_status": "not_required", "min_work_years": 0}
 
 
 def stored(**over):
@@ -249,11 +249,20 @@ def test_cycle_of_start_month():
     assert cycle_of(2027, 1) == "2026/27"
 
 
-def test_either_admissions_test_counts_as_required_in_the_database():
+def test_either_admissions_test_is_stored_as_one_of_required():
     rec = copy.deepcopy(GOOD)
     rec["requirement"]["gre_required"] = rec["requirement"]["gmat_required"] = "one_of_required"
     projected = project_extraction(check(rec).record)["requirement"]
-    assert projected["gre_required"] is True and projected["gmat_required"] is True
+    assert projected["gre_status"] == projected["gmat_status"] == "one_of_required"
+
+
+def test_toefl_score_too_high_for_the_new_scale_goes_to_review_as_0_120():
+    rec = copy.deepcopy(GOOD)
+    rec["requirement"]["english_tests"].append({"test": "TOEFL_iBT", "scale": "1-6", "overall_min": 92, "subscore_min": 4.5})
+    out = check(rec)
+    assert out.record.requirement.english_tests[-1].scale == "0-120"
+    assert out.record.confidence.requirement == 0.6
+    assert {"toefl_scale_conflict", "low_confidence"} <= {i.code for i in out.issues}
 
 
 # --- cleaning -------------------------------------------------------------------------

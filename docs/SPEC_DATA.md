@@ -108,7 +108,7 @@ create type field_code as enum ('computer_data_science', 'public_health', 'busin
 | english_subscores | jsonb null | |
 | english_waiver_text | text null | |
 | waec_english_accepted | boolean | |
-| gre_required / gmat_required | boolean | |
+| gre_status / gmat_status | enum null | required, one_of_required, optional, not_required; null = unknown |
 | min_work_years | numeric(3,1) | default 0 |
 | documents | text[] | sop, references, cv, portfolio |
 | + content columns | | |

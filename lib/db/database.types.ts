@@ -171,6 +171,52 @@ export type Database = {
         }
         Relationships: []
       }
+      cost_estimate: {
+        Row: {
+          amount_minor: number
+          confidence: Database["public"]["Enums"]["confidence_level"]
+          country: Database["public"]["Enums"]["country_code"]
+          created_at: string
+          currency: string
+          id: string
+          is_demo: boolean
+          item: string
+          last_verified_at: string
+          per_year: boolean
+          source_url: string
+          updated_at: string
+        }
+        ComputedFields: never
+        Insert: {
+          amount_minor: number
+          confidence: Database["public"]["Enums"]["confidence_level"]
+          country: Database["public"]["Enums"]["country_code"]
+          created_at?: string
+          currency: string
+          id?: string
+          is_demo?: boolean
+          item: string
+          last_verified_at: string
+          per_year?: boolean
+          source_url: string
+          updated_at?: string
+        }
+        Update: {
+          amount_minor?: number
+          confidence?: Database["public"]["Enums"]["confidence_level"]
+          country?: Database["public"]["Enums"]["country_code"]
+          created_at?: string
+          currency?: string
+          id?: string
+          is_demo?: boolean
+          item?: string
+          last_verified_at?: string
+          per_year?: boolean
+          source_url?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       explanation_cache: {
         Row: {
           content: string
@@ -273,9 +319,11 @@ export type Database = {
           created_at: string
           fetched_at: string
           id: string
+          is_demo: boolean
           quote: string
           rate: number
           rate_kind: string
+          source_url: string | null
           updated_at: string
         }
         ComputedFields: never
@@ -284,9 +332,11 @@ export type Database = {
           created_at?: string
           fetched_at: string
           id?: string
+          is_demo?: boolean
           quote: string
           rate: number
           rate_kind: string
+          source_url?: string | null
           updated_at?: string
         }
         Update: {
@@ -294,9 +344,11 @@ export type Database = {
           created_at?: string
           fetched_at?: string
           id?: string
+          is_demo?: boolean
           quote?: string
           rate?: number
           rate_kind?: string
+          source_url?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -357,6 +409,7 @@ export type Database = {
           created_at: string
           cycle: string
           deadlines: NonNullable<Json>
+          deposit_credited_to_tuition: boolean
           deposit_currency: string | null
           deposit_deadline: string | null
           deposit_minor: number | null
@@ -377,6 +430,7 @@ export type Database = {
           created_at?: string
           cycle: string
           deadlines?: NonNullable<Json>
+          deposit_credited_to_tuition?: boolean
           deposit_currency?: string | null
           deposit_deadline?: string | null
           deposit_minor?: number | null
@@ -396,6 +450,7 @@ export type Database = {
           created_at?: string
           cycle?: string
           deadlines?: NonNullable<Json>
+          deposit_credited_to_tuition?: boolean
           deposit_currency?: string | null
           deposit_deadline?: string | null
           deposit_minor?: number | null
@@ -503,8 +558,8 @@ export type Database = {
           duolingo_min: number | null
           english_subscores: Json | null
           english_waiver_text: string | null
-          gmat_required: boolean
-          gre_required: boolean
+          gmat_status: Database["public"]["Enums"]["test_status"] | null
+          gre_status: Database["public"]["Enums"]["test_status"] | null
           ielts_min: number | null
           is_demo: boolean
           last_verified_at: string
@@ -513,6 +568,7 @@ export type Database = {
           min_work_years: number
           nigeria_rule: string | null
           programme_id: string
+          pte_min: number | null
           source_url: string
           toefl_entries: NonNullable<Json>
           toefl_min: number | null
@@ -528,8 +584,8 @@ export type Database = {
           duolingo_min?: number | null
           english_subscores?: Json | null
           english_waiver_text?: string | null
-          gmat_required?: boolean
-          gre_required?: boolean
+          gmat_status?: Database["public"]["Enums"]["test_status"] | null
+          gre_status?: Database["public"]["Enums"]["test_status"] | null
           ielts_min?: number | null
           is_demo?: boolean
           last_verified_at: string
@@ -538,6 +594,7 @@ export type Database = {
           min_work_years?: number
           nigeria_rule?: string | null
           programme_id: string
+          pte_min?: number | null
           source_url: string
           toefl_entries?: NonNullable<Json>
           toefl_min?: number | null
@@ -552,8 +609,8 @@ export type Database = {
           duolingo_min?: number | null
           english_subscores?: Json | null
           english_waiver_text?: string | null
-          gmat_required?: boolean
-          gre_required?: boolean
+          gmat_status?: Database["public"]["Enums"]["test_status"] | null
+          gre_status?: Database["public"]["Enums"]["test_status"] | null
           ielts_min?: number | null
           is_demo?: boolean
           last_verified_at?: string
@@ -562,6 +619,7 @@ export type Database = {
           min_work_years?: number
           nigeria_rule?: string | null
           programme_id?: string
+          pte_min?: number | null
           source_url?: string
           toefl_entries?: NonNullable<Json>
           toefl_min?: number | null
@@ -784,6 +842,7 @@ export type Database = {
           gmat: number | null
           graduation_year: number | null
           gre: number | null
+          hnd_pgd: boolean
           id: string
           ielts: number | null
           institution_type: string | null
@@ -791,12 +850,18 @@ export type Database = {
           nationality: string | null
           preferred_cities: string[]
           preferred_countries: Database["public"]["Enums"]["country_code"][]
+          pte: number | null
           residence_country: string | null
+          target_cycle: string | null
+          target_term: Database["public"]["Enums"]["intake_term"] | null
+          tests_planned: string[]
           toefl: number | null
+          toefl_scale: string | null
           travel_document: string | null
           tuition_cap_minor: number | null
           updated_at: string
           user_id: string
+          waec_english_grade: string | null
           weights: NonNullable<Json>
           work_years: number
         }
@@ -819,6 +884,7 @@ export type Database = {
           gmat?: number | null
           graduation_year?: number | null
           gre?: number | null
+          hnd_pgd?: boolean
           id?: string
           ielts?: number | null
           institution_type?: string | null
@@ -826,12 +892,18 @@ export type Database = {
           nationality?: string | null
           preferred_cities?: string[]
           preferred_countries?: Database["public"]["Enums"]["country_code"][]
+          pte?: number | null
           residence_country?: string | null
+          target_cycle?: string | null
+          target_term?: Database["public"]["Enums"]["intake_term"] | null
+          tests_planned?: string[]
           toefl?: number | null
+          toefl_scale?: string | null
           travel_document?: string | null
           tuition_cap_minor?: number | null
           updated_at?: string
           user_id: string
+          waec_english_grade?: string | null
           weights?: NonNullable<Json>
           work_years?: number
         }
@@ -853,6 +925,7 @@ export type Database = {
           gmat?: number | null
           graduation_year?: number | null
           gre?: number | null
+          hnd_pgd?: boolean
           id?: string
           ielts?: number | null
           institution_type?: string | null
@@ -860,12 +933,18 @@ export type Database = {
           nationality?: string | null
           preferred_cities?: string[]
           preferred_countries?: Database["public"]["Enums"]["country_code"][]
+          pte?: number | null
           residence_country?: string | null
+          target_cycle?: string | null
+          target_term?: Database["public"]["Enums"]["intake_term"] | null
+          tests_planned?: string[]
           toefl?: number | null
+          toefl_scale?: string | null
           travel_document?: string | null
           tuition_cap_minor?: number | null
           updated_at?: string
           user_id?: string
+          waec_english_grade?: string | null
           weights?: NonNullable<Json>
           work_years?: number
         }
@@ -1063,6 +1142,7 @@ export type Database = {
       intake_term: "fall" | "winter" | "spring" | "summer"
       plan_tier: "free" | "plus"
       study_mode: "full_time" | "part_time" | "online" | "blended"
+      test_status: "required" | "one_of_required" | "optional" | "not_required"
       tracker_stage:
         "researching" | "preparing_documents" | "applied" | "offer" | "deposit_paid" | "visa" | "enrolled" | "withdrawn"
       uk_class_band: "first" | "upper_second" | "lower_second" | "third" | "pass"
@@ -1198,6 +1278,7 @@ export const Constants = {
       intake_term: ["fall", "winter", "spring", "summer"],
       plan_tier: ["free", "plus"],
       study_mode: ["full_time", "part_time", "online", "blended"],
+      test_status: ["required", "one_of_required", "optional", "not_required"],
       tracker_stage: [
         "researching",
         "preparing_documents",

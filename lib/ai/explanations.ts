@@ -72,36 +72,45 @@ function stableStringify(value: unknown): string {
   return JSON.stringify(value) ?? "null"
 }
 
-export type GeneratedExplanation = { content: string; provider: string; model: string }
+export type ExplanationContent = { why: string; watch_out: string | null }
 
-/**
- * Returns the cached explanation for (programme, bucket) when its source version still
- * matches; otherwise calls `generate` once and stores the result.
- */
-export async function cachedExplanation(args: {
-  programmeId: string
-  bucket: string
-  version: string
-  generate: () => Promise<GeneratedExplanation>
-}): Promise<GeneratedExplanation & { cached: boolean }> {
-  const db = serviceClient()
-  const { data: hit } = await db
+/** Cached explanations for a bucket, keeping only those whose source version still matches. */
+export async function readExplanations(
+  bucket: string,
+  versions: ReadonlyMap<string, string>
+): Promise<Map<string, ExplanationContent>> {
+  const { data, error } = await serviceClient()
     .from("explanation_cache")
-    .select("content, provider, model, source_version")
-    .eq("programme_id", args.programmeId)
-    .eq("profile_bucket", args.bucket)
-    .maybeSingle()
-  if (hit && hit.source_version === args.version) {
-    return { content: hit.content, provider: hit.provider, model: hit.model, cached: true }
+    .select("programme_id, content, source_version")
+    .eq("profile_bucket", bucket)
+    .in("programme_id", [...versions.keys()])
+  if (error) console.error("explanation_cache read failed:", error.message)
+  const hits = new Map<string, ExplanationContent>()
+  for (const row of data ?? []) {
+    if (versions.get(row.programme_id) === row.source_version) {
+      hits.set(row.programme_id, JSON.parse(row.content) as ExplanationContent)
+    }
   }
+  return hits
+}
 
-  const fresh = await args.generate()
-  const { error } = await db.from("explanation_cache").upsert({
-    programme_id: args.programmeId,
-    profile_bucket: args.bucket,
-    source_version: args.version,
-    ...fresh,
-  })
+export async function writeExplanations(
+  bucket: string,
+  items: { programmeId: string; version: string; content: ExplanationContent }[],
+  model: { provider: string; model: string }
+): Promise<void> {
+  if (items.length === 0) return
+  const { error } = await serviceClient()
+    .from("explanation_cache")
+    .upsert(
+      items.map((item) => ({
+        programme_id: item.programmeId,
+        profile_bucket: bucket,
+        source_version: item.version,
+        content: JSON.stringify(item.content),
+        provider: model.provider,
+        model: model.model,
+      }))
+    )
   if (error) console.error("explanation_cache upsert failed:", error.message)
-  return { ...fresh, cached: false }
 }

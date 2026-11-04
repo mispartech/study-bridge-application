@@ -92,6 +92,7 @@ const CONTENT_TABLES = [
   "visa_rule",
   "grade_mapping",
   "fx_rate",
+  "cost_estimate",
 ] as const
 
 // ---------------------------------------------------------------------------------
@@ -486,7 +487,7 @@ describe("seed data through the public API (anon key, PostgREST)", () => {
              (select count(distinct field)::int from public.programme where is_demo) fields,
              (select count(*)::int from public.programme where is_demo and title not like '%Demo%') unlabelled`)
     expect(c[0]).toEqual({
-      visa: 17,
+      visa: 19,
       grades: 8,
       demo: 30,
       uk_london: 6,

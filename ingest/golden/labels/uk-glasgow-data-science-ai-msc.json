@@ -52,7 +52,7 @@
       },
       {
         "test": "TOEFL_iBT",
-        "scale": "1-6",
+        "scale": "0-120",
         "overall_min": 92,
         "subscore_min": 4.5
       }
@@ -84,5 +84,9 @@
       "credits_total": null,
       "application_fee": null
     }
-  ]
+  ],
+  "confidence": {
+    "requirement": 0.6
+  },
+  "review_note": "TOEFL 92 sits beside 1-6 sub-scores on the page; stored as 0-120 at confidence 0.6 so it goes to review."
 }

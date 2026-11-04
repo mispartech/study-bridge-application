@@ -14,6 +14,7 @@ import sys
 
 from ..fetch import FetchError, PoliteFetcher, RobotsDisallowed
 from .run import GOLDEN
+from .sanitize import sanitize_html
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -38,7 +39,7 @@ def main(argv: list[str] | None = None) -> int:
                     failures += 1
                     print(f"FAIL {case['slug']} {url}: {type(err).__name__} {err}", file=sys.stderr)
                     continue
-                out.write_text(f"<!-- source: {page.final_url} | rendered: {page.rendered} -->\n{page.html}",
+                out.write_text(f"<!-- source: {page.final_url} | rendered: {page.rendered} -->\n{sanitize_html(page.html)}",
                                encoding="utf-8")
                 print(f"saved {out.name} ({len(page.html):,} bytes{', rendered' if page.rendered else ''})")
     finally:

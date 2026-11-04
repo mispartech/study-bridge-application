@@ -21,6 +21,8 @@ PORTAL_ALLOW_LIST = ("ucas.com", "ouac.on.ca")
 TUITION_RANGE_PER_YEAR = {"GBP": (8_000, 60_000), "CAD": (10_000, 80_000), "USD": (10_000, 120_000)}
 MIN_SECTION_CONFIDENCE = 0.7
 OLD_FEE_YEAR_CONFIDENCE = 0.6
+TOEFL_NEW_SCALE_MAX = 6
+TOEFL_SCALE_CONFLICT_CONFIDENCE = 0.6
 FIRST_CYCLE_MONTH = 8  # an academic cycle 2027/28 runs from August 2027 to July 2028
 
 
@@ -270,9 +272,17 @@ def validate_record(
             record.confidence.fees = min(record.confidence.fees, OLD_FEE_YEAR_CONFIDENCE)
 
     for i, test in enumerate(record.requirement.english_tests if record.requirement else []):
-        if test.test == "TOEFL_iBT" and test.scale is None:
-            add(Issue("toefl_scale_missing", "TOEFL entry doesn't say which scale it is on",
-                      f"requirement.english_tests[{i}]"))
+        if test.test != "TOEFL_iBT":
+            continue
+        path = f"requirement.english_tests[{i}]"
+        if test.scale is None:
+            add(Issue("toefl_scale_missing", "TOEFL entry doesn't say which scale it is on", path))
+        elif test.scale == "1-6" and test.overall_min > TOEFL_NEW_SCALE_MAX:
+            # e.g. a page printing "92 overall" beside the new 1-6 sub-scores: an overall above 6 can't be on that scale.
+            test.scale = "0-120"
+            record.confidence.requirement = min(record.confidence.requirement, TOEFL_SCALE_CONFLICT_CONFIDENCE)
+            add(Issue("toefl_scale_conflict", f"TOEFL {test.overall_min:g} can't be on the 1-6 scale; stored as 0-120",
+                      path))
 
     extracted = len(record.intakes)
     record.intakes = [intake for intake in record.intakes if intake.in_cycle(target_cycle)]

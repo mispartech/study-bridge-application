@@ -55,6 +55,16 @@ export const studentProfileRow = z.object({
   residence_country: isoCountry.nullable(),
   /** Issuer of a non-passport travel document (e.g. PS); matched by visa rules. */
   travel_document: isoCountry.nullable(),
+  tests_planned: z.array(z.enum(["ielts", "toefl", "duolingo", "pte", "gre", "gmat"])),
+  toefl_scale: z.enum(["0-120", "1-6"]).nullable(),
+  pte: z.number().min(10).max(90).nullable(),
+  waec_english_grade: z.enum(["A1", "B2", "B3", "C4", "C5", "C6", "D7", "E8", "F9"]).nullable(),
+  hnd_pgd: z.boolean(),
+  target_cycle: z
+    .string()
+    .regex(/^\d{4}\/\d{2}$/)
+    .nullable(),
+  target_term: z.enum(["fall", "winter", "spring", "summer"]).nullable(),
   degree_title: z.string().nullable(),
   institution_type: z.enum(["federal", "state", "private", "polytechnic"]).nullable(),
   degree_class: ukClassBand.nullable(),
@@ -149,6 +159,8 @@ export const programmeRow = z.object({
   ...timestamps,
 })
 
+const testStatus = z.enum(["required", "one_of_required", "optional", "not_required"])
+
 export const requirementRow = z.object({
   programme_id: uuid,
   min_uk_class: ukClassBand,
@@ -168,8 +180,9 @@ export const requirementRow = z.object({
   english_subscores: json.nullable(),
   english_waiver_text: z.string().nullable(),
   waec_english_accepted: z.boolean(),
-  gre_required: z.boolean(),
-  gmat_required: z.boolean(),
+  pte_min: z.number().min(10).max(90).nullable(),
+  gre_status: testStatus.nullable(),
+  gmat_status: testStatus.nullable(),
   min_work_years: z.number().min(0),
   documents: z.array(z.string()),
   ...content,
@@ -187,6 +200,7 @@ export const intakeRow = z.object({
   deadlines: z.array(intakeDeadline),
   scholarship_deadline: date.nullable(),
   deposit_minor: minor.nullable(),
+  deposit_credited_to_tuition: z.boolean(),
   deposit_currency: currencyCode.nullable(),
   deposit_deadline: date.nullable(),
   ...content,
@@ -269,6 +283,19 @@ export const fxRateRow = z.object({
   rate: z.number().positive(),
   rate_kind: z.enum(["official", "market"]),
   fetched_at: timestamp,
+  source_url: z.string().nullable(),
+  is_demo: z.boolean(),
+  ...timestamps,
+})
+
+export const costEstimateRow = z.object({
+  id: uuid,
+  country: countryCode,
+  item: z.enum(["flights", "health_cover"]),
+  amount_minor: minor,
+  currency: currencyCode,
+  per_year: z.boolean(),
+  ...content,
   ...timestamps,
 })
 
@@ -354,6 +381,7 @@ export const rowSchemas = {
   visa_rule: visaRuleRow,
   grade_mapping: gradeMappingRow,
   fx_rate: fxRateRow,
+  cost_estimate: costEstimateRow,
   source_audit: sourceAuditRow,
   review_queue: reviewQueueRow,
   ai_usage: aiUsageRow,

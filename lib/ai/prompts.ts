@@ -6,7 +6,7 @@ import path from "node:path"
 const PROMPTS_DIR = path.join(process.cwd(), "prompts")
 
 /** Prompt files in /prompts (provider-neutral plain text with {{placeholders}}). */
-export type PromptName = "r1" | "r2" | "r3_extraction"
+export type PromptName = "r1" | "r2_explanations" | "r3_extraction"
 
 /** Replaces every {{name}}; throws on a missing or unused value so templates can't drift silently. */
 export function renderPrompt(template: string, vars: Record<string, string | number>): string {

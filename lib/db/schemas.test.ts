@@ -22,6 +22,7 @@ describe("schemas match the generated database types", () => {
       visa_rule: true,
       grade_mapping: true,
       fx_rate: true,
+      cost_estimate: true,
       source_audit: true,
       review_queue: true,
       ai_usage: true,

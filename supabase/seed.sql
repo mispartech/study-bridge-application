@@ -114,6 +114,19 @@ update public.visa_rule set applies_to_travel_documents = '{PS}'
 where country = 'US' and rule_type = 'nationality_restriction' and 'AF' = any (applies_to_nationalities)
   and applies_to_travel_documents <> '{PS}';
 
+-- Demo government fees for the cost engine. Placeholders, not verified: replace with sourced
+-- rows before launch. (The US row above is the real seed.)
+delete from public.visa_rule where is_demo;
+insert into public.visa_rule
+  (country, rule_type, value, description, effective_from, source_url, last_verified_at, confidence, is_demo)
+values
+  ('UK', 'government_fee', '{"visa_fee_gbp":524,"ihs_gbp_per_year":776}',
+   'Demo figure: student visa fee and Immigration Health Surcharge.', '2025-01-01', 'internal:demo-data',
+   timestamptz '2026-10-15 00:00:00+00', 'estimated', true),
+  ('CA', 'government_fee', '{"study_permit_cad":150,"biometrics_cad":85}',
+   'Demo figure: study permit and biometrics fees.', '2025-01-01', 'internal:demo-data',
+   timestamptz '2026-10-15 00:00:00+00', 'estimated', true);
+
 -- ---------------------------------------------------------------------------
 -- grade_mapping (Nigerian CGPA → UK class), confidence = estimated
 -- ---------------------------------------------------------------------------
@@ -138,6 +151,9 @@ where not exists (select 1 from public.grade_mapping);
 -- ---------------------------------------------------------------------------
 delete from public.university where is_demo;
 delete from public.city_cost where is_demo;
+delete from public.cost_estimate where is_demo;
+delete from public.scholarship where is_demo;
+delete from public.fx_rate where is_demo;
 
 create temp table demo_uni (
   name text, country public.country_code, city text, region text, domain text, sponsor boolean, sevp boolean, dli text
@@ -240,8 +256,8 @@ from demo_full f
 join public.programme pr on pr.university_id = f.university_id and pr.title = f.title and pr.is_demo;
 
 insert into public.requirement
-  (programme_id, min_uk_class, min_gpa4, nigeria_rule, considers_lower_with_experience, ielts_min, toefl_min, toefl_entries, duolingo_min,
-   waec_english_accepted, gre_required, gmat_required, min_work_years, documents,
+  (programme_id, min_uk_class, min_gpa4, nigeria_rule, considers_lower_with_experience, ielts_min, toefl_min, toefl_entries, duolingo_min, pte_min,
+   waec_english_accepted, gre_status, gmat_status, min_work_years, documents,
    source_url, last_verified_at, confidence, is_demo)
 select programme_id, min_class,
        case min_class when 'upper_second' then 3.00 else 2.70 end,
@@ -251,7 +267,11 @@ select programme_id, min_class,
        ielts, case when ielts >= 7 then 100 else 90 end,
        jsonb_build_array(jsonb_build_object('scale', '0-120', 'overall_min', case when ielts >= 7 then 100 else 90 end, 'subscore_min', null)),
        case when ielts >= 7 then 120 else 110 end,
-       country = 'UK', gre, gmat, work,
+       case when ielts >= 7 then 65 else 58 end,
+       country = 'UK',
+       case when gre then 'required' else 'not_required' end::public.test_status,
+       case when gmat then 'required' else 'not_required' end::public.test_status,
+       work,
        case when gmat then '{sop,references,cv,gmat}'::text[] else '{sop,references,cv}'::text[] end,
        'https://www.' || domain || '/courses/' || slug || '/entry-requirements', verified_at, 'university_page', true
 from demo_ids;
@@ -305,5 +325,42 @@ from (values
   ('US', 'Atlanta', 900, 1350, 650)
 ) as c(country, city, rent_low, rent_high, living)
 cross join (values ('university_halls'::public.accommodation_type, 1.0), ('shared_flat', 0.8)) as a(type, factor);
+
+-- Demo flat estimates. Placeholders, not verified.
+insert into public.cost_estimate
+  (country, item, amount_minor, currency, per_year, source_url, last_verified_at, confidence, is_demo)
+values
+  ('UK', 'flights', 70000, 'GBP', false, 'internal:demo-data', timestamptz '2026-10-15 00:00:00+00', 'estimated', true),
+  ('CA', 'flights', 180000, 'CAD', false, 'internal:demo-data', timestamptz '2026-10-15 00:00:00+00', 'estimated', true),
+  ('US', 'flights', 150000, 'USD', false, 'internal:demo-data', timestamptz '2026-10-15 00:00:00+00', 'estimated', true),
+  ('CA', 'health_cover', 90000, 'CAD', true, 'internal:demo-data', timestamptz '2026-10-15 00:00:00+00', 'estimated', true),
+  ('US', 'health_cover', 250000, 'USD', true, 'internal:demo-data', timestamptz '2026-10-15 00:00:00+00', 'estimated', true);
+
+-- Demo scholarships, so the scholarship component has something to score.
+insert into public.scholarship
+  (name, funder, countries, fields, eligible_nationalities, min_uk_class, amount_minor, currency, coverage, deadline,
+   url, source_url, last_verified_at, confidence, is_demo)
+values
+  ('Demo — Global Futures Scholarship', 'Demo Foundation', '{UK}', '{}', '{}', 'upper_second', 500000, 'GBP', 'partial',
+   '2027-03-31', 'https://www.scholarship-demo.example/global-futures', 'https://www.scholarship-demo.example/global-futures',
+   timestamptz '2026-10-20 00:00:00+00', 'estimated', true),
+  ('Demo — Maple Graduate Award', 'Demo Foundation', '{CA}', '{computer_data_science,engineering}', '{}', 'lower_second', 800000, 'CAD', 'partial',
+   '2027-02-28', 'https://www.scholarship-demo.example/maple', 'https://www.scholarship-demo.example/maple',
+   timestamptz '2026-10-20 00:00:00+00', 'estimated', true),
+  ('Demo — Africa Leaders Fund', 'Demo Foundation', '{UK,CA}', '{}', '{NG,GH,KE}', 'first', null, null, 'tuition',
+   '2027-01-31', 'https://www.scholarship-demo.example/africa-leaders', 'https://www.scholarship-demo.example/africa-leaders',
+   timestamptz '2026-10-20 00:00:00+00', 'estimated', true),
+  ('Demo — Early Bird Grant', 'Demo Foundation', '{UK,CA}', '{}', '{}', null, 200000, 'GBP', 'partial',
+   '2026-01-31', 'https://www.scholarship-demo.example/early-bird', 'https://www.scholarship-demo.example/early-bird',
+   timestamptz '2026-10-20 00:00:00+00', 'estimated', true);
+
+-- Demo FX: the latest dated rates found on 2026-11-04 (August-September 2026), not live. NGN per unit.
+insert into public.fx_rate (base, quote, rate, rate_kind, fetched_at, source_url, is_demo) values
+  ('GBP', 'NGN', 1943.98, 'official', '2026-08-08', 'https://techeconomy.ng/market-watch-naira-slides-to-n1487-01-after-n2-01-drop', true),
+  ('USD', 'NGN', 1454.00, 'official', '2026-08-08', 'https://techeconomy.ng/market-watch-naira-slides-to-n1487-01-after-n2-01-drop', true),
+  ('CAD', 'NGN', 1041.00, 'official', '2026-09-01', 'https://techeconomy.ng/naira-trades-at-n1490-in-parallel-market/', true),
+  ('GBP', 'NGN', 2015.00, 'market', '2026-09-01', 'https://techeconomy.ng/naira-trades-at-n1490-in-parallel-market/', true),
+  ('USD', 'NGN', 1490.00, 'market', '2026-09-01', 'https://techeconomy.ng/naira-trades-at-n1490-in-parallel-market/', true),
+  ('CAD', 'NGN', 1130.00, 'market', '2026-09-01', 'https://techeconomy.ng/naira-trades-at-n1490-in-parallel-market/', true);
 
 commit;
