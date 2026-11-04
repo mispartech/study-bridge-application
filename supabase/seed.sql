@@ -257,7 +257,7 @@ join public.programme pr on pr.university_id = f.university_id and pr.title = f.
 
 insert into public.requirement
   (programme_id, min_uk_class, min_gpa4, nigeria_rule, considers_lower_with_experience, ielts_min, toefl_min, toefl_entries, duolingo_min, pte_min,
-   waec_english_accepted, gre_status, gmat_status, min_work_years, documents,
+   waec_english_accepted, waec_min_grade, gre_status, gmat_status, min_work_years, documents,
    source_url, last_verified_at, confidence, is_demo)
 select programme_id, min_class,
        case min_class when 'upper_second' then 3.00 else 2.70 end,
@@ -269,6 +269,7 @@ select programme_id, min_class,
        case when ielts >= 7 then 120 else 110 end,
        case when ielts >= 7 then 65 else 58 end,
        country = 'UK',
+       case when country = 'UK' then 'C6' end,
        case when gre then 'required' else 'not_required' end::public.test_status,
        case when gmat then 'required' else 'not_required' end::public.test_status,
        work,

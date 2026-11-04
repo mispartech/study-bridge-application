@@ -62,7 +62,8 @@
     "gre_required": null,
     "gmat_required": null,
     "min_work_years": null,
-    "documents": []
+    "documents": [],
+    "waec_min_grade": "C6"
   },
   "intakes": [],
   "fees": [

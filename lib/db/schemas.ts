@@ -180,6 +180,7 @@ export const requirementRow = z.object({
   english_subscores: json.nullable(),
   english_waiver_text: z.string().nullable(),
   waec_english_accepted: z.boolean(),
+  waec_min_grade: z.enum(["A1", "B2", "B3", "C4", "C5", "C6", "D7", "E8", "F9"]).nullable(),
   pte_min: z.number().min(10).max(90).nullable(),
   gre_status: testStatus.nullable(),
   gmat_status: testStatus.nullable(),

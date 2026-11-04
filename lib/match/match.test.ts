@@ -110,7 +110,7 @@ describe("normaliseAcademics", () => {
 
 describe("visa filter", () => {
   it("never shows a Nigerian national US programmes in ranked results", () => {
-    const result = rank(rich(), catalogue, OPTIONS)
+    const result = rank(rich({ field: null }), catalogue, OPTIONS)
     expect(result.ranked.filter((r) => r.bundle.university.country === "US")).toEqual([])
     expect(result.restricted.map((r) => r.bundle.university.country)).toEqual(Array(8).fill("US"))
   })
@@ -121,19 +121,120 @@ describe("visa filter", () => {
     expect(restricted[0]!.review_due).toBe("2026-12-27")
   })
   it("lets a nationality with no rule see US programmes", () => {
-    const result = rank(rich({ nationality: "GH" }), catalogue, OPTIONS)
+    const result = rank(rich({ nationality: "GH", gre: 320 }), catalogue, OPTIONS)
     expect(result.restricted).toEqual([])
     expect(result.ranked.some((r) => r.bundle.university.country === "US")).toBe(true)
   })
   it("matches the PS row on travel document, not nationality", () => {
     const palestinian = rich({ nationality: "JO", travel_document: "PS" })
-    expect(rank(palestinian, catalogue, OPTIONS).restricted).toHaveLength(8)
+    expect(rank(palestinian, catalogue, OPTIONS).restricted).toHaveLength(2)
     expect(rank(rich({ nationality: "PS", travel_document: null }), catalogue, OPTIONS).restricted).toEqual([])
   })
   it("ignores a restriction that has ended", () => {
     const c = fresh()
     for (const r of c.visaRules) if (r.rule_type === "nationality_restriction") r.effective_to = "2026-06-01"
     expect(rank(rich(), c, OPTIONS).restricted).toEqual([])
+  })
+})
+
+describe("field filter", () => {
+  const titles = (profile: MatchProfile, c: Catalogue = catalogue) =>
+    rank(profile, c, OPTIONS).ranked.map((r) => r.bundle.programme.title)
+  const analytics = () => {
+    const c = fresh()
+    find(c, "MSc Demo Finance").programme.title = "MSc Demo Business Analytics"
+    find(c, "MBA Demo Global Business").programme.title = "MBA Demo Artificial Intelligence Strategy"
+    return c
+  }
+
+  it("excludes every other field", () => {
+    expect(outcome(rich(), "LLM Demo Energy Law")).toMatchObject({ status: "excluded", filter: "field" })
+    const ranked = rank(rich(), catalogue, OPTIONS).ranked
+    expect(ranked.length).toBeGreaterThan(0)
+    expect(ranked.every((r) => r.bundle.programme.field === "computer_data_science")).toBe(true)
+  })
+  it("keeps other fields out of the restricted list", () => {
+    const { restricted } = rank(rich(), catalogue, OPTIONS)
+    expect(restricted.every((r) => r.bundle.programme.field === "computer_data_science")).toBe(true)
+  })
+  it("doesn't filter before a field is chosen", () => {
+    const fields = new Set(rank(rich({ field: null }), catalogue, OPTIONS).ranked.map((r) => r.bundle.programme.field))
+    expect(fields.size).toBeGreaterThan(1)
+  })
+  it("leaves AI and analytics programmes under another field out by default", () => {
+    expect(titles(rich(), analytics())).not.toContain("MSc Demo Business Analytics")
+  })
+  it("includes them with the related-fields option, flagged", () => {
+    const c = analytics()
+    const profile = rich({ include_related_fields: true })
+    expect(titles(profile, c)).toEqual(
+      expect.arrayContaining(["MSc Demo Business Analytics", "MBA Demo Artificial Intelligence Strategy"])
+    )
+    const related = rank(profile, c, OPTIONS).ranked.find((r) => r.bundle.programme.title.includes("Analytics"))!
+    expect(related.flags).toContain("related_field")
+  })
+  it("doesn't let the option pull in unrelated programmes", () => {
+    expect(titles(rich({ include_related_fields: true }), analytics())).not.toContain("LLM Demo Energy Law")
+  })
+  it("has no related list yet for other fields", () => {
+    const profile = rich({ field: "law", include_related_fields: true })
+    expect(rank(profile, analytics(), OPTIONS).ranked.every((r) => r.bundle.programme.field === "law")).toBe(true)
+  })
+})
+
+describe("near misses", () => {
+  const at = (millions: number, over: Partial<MatchProfile> = {}) =>
+    rank(worked({ budget_total_minor: millions * 1_000_000 * KOBO, ...over }), catalogue, OPTIONS)
+
+  it("returns the ₦40m worked example's nearest programmes when nothing ranks", () => {
+    const { ranked, near_misses } = at(40)
+    expect(ranked).toEqual([])
+    expect(near_misses.length).toBeGreaterThan(0)
+    expect(near_misses.length).toBeLessThanOrEqual(5)
+  })
+  it("orders them by the NGN gap, smallest first", () => {
+    const gaps = at(40).near_misses.map((n) => n.gap_ngn_minor)
+    expect(gaps).toEqual([...gaps].sort((a, b) => Number(a - b)))
+    expect(gaps[0]).toBeGreaterThan(0n)
+  })
+  it("measures the gap from the budget, at the market rate", () => {
+    const [first] = at(40).near_misses
+    expect(first!.gap_ngn_minor).toBe(first!.cost.total_ngn.market - BigInt(40_000_000 * KOBO))
+  })
+  it("lists eligible open scholarships only", () => {
+    const names = at(40).near_misses.flatMap((n) => n.scholarships.map((s) => s.name))
+    expect(names).toContain("Demo — Global Futures Scholarship")
+    expect(names).not.toContain("Demo — Early Bird Grant") // closed
+    expect(names).not.toContain("Demo — Africa Leaders Fund") // needs a First
+  })
+  it("caps the list at 5", () => {
+    const result = rank(worked({ field: null, budget_total_minor: 20_000_000 * KOBO }), catalogue, OPTIONS)
+    expect(result.ranked).toEqual([])
+    expect(result.near_misses).toHaveLength(5)
+  })
+  it("leaves out programmes that fail another filter", () => {
+    const ids = at(40).near_misses.map((n) => n.bundle.programme.title)
+    expect(ids).not.toContain("MS Demo Data Science") // restricted for Nigerian nationals
+    expect(ids).not.toContain("MSc Demo Computer Science") // GRE required, or stale
+  })
+  it("returns none once 3 or more rank", () => {
+    const result = rank(worked({ field: null, budget_total_minor: 80_000_000 * KOBO }), catalogue, OPTIONS)
+    expect(result.ranked.length).toBeGreaterThanOrEqual(3)
+    expect(result.near_misses).toEqual([])
+  })
+  it("still returns them when 1 or 2 rank", () => {
+    const { ranked, near_misses } = at(80)
+    expect(ranked.length).toBeGreaterThan(0)
+    expect(ranked.length).toBeLessThan(3)
+    expect(near_misses.length).toBeGreaterThan(0)
+  })
+  it("keeps over-budget programmes in the excluded list too", () => {
+    const { near_misses, excluded } = at(40)
+    const budget = excluded.filter((e) => e.filter === "budget").map((e) => e.programme_id)
+    for (const n of near_misses) expect(budget).toContain(n.bundle.programme.id)
+  })
+  it("needs a known budget", () => {
+    expect(at(40, { budget_total_minor: null }).near_misses).toEqual([])
   })
 })
 
@@ -192,8 +293,18 @@ describe("English filter", () => {
   })
   it("accepts a WAEC credit where the programme accepts WAEC, and nothing weaker", () => {
     expect(result({ waec_english_grade: "C6" })).toBe("pass")
+    expect(result({ waec_english_grade: "A1" })).toBe("pass")
     expect(result({ waec_english_grade: "D7" })).toBe("fail")
     expect(result({ waec_english_grade: "C6" }, { ...requirement, waec_english_accepted: false })).toBe("fail")
+  })
+  it("uses each requirement's own minimum WAEC grade", () => {
+    const stricter = { ...requirement, waec_min_grade: "B3" }
+    expect(result({ waec_english_grade: "B3" }, stricter)).toBe("pass")
+    expect(result({ waec_english_grade: "C4" }, stricter)).toBe("fail")
+  })
+  it("gives no WAEC waiver when no grade is stated", () => {
+    expect(result({ waec_english_grade: "A1" }, { ...requirement, waec_min_grade: null })).toBe("fail")
+    expect(result({ waec_english_grade: null })).toBe("fail")
   })
   it("accepts an English-medium degree only where the waiver text allows it", () => {
     const waiver = { ...requirement, english_waiver_text: "Degree taught in English in the last 2 years." }
@@ -276,10 +387,7 @@ describe("budget ceiling", () => {
     const cost = total()
     const budget = (cost * 100n + 114n) / 115n // smallest budget whose 115% covers the cost
     expect(outcome(rich({ budget_total_minor: Number(budget) }), NORTHMOOR_AI).status).toBe("passed")
-    expect(outcome(rich({ budget_total_minor: Number(budget - 1n) }), NORTHMOOR_AI)).toMatchObject({
-      status: "excluded",
-      filter: "budget",
-    })
+    expect(outcome(rich({ budget_total_minor: Number(budget - 1n) }), NORTHMOOR_AI).status).toBe("over_budget")
   })
   it("labels affordability at each boundary", () => {
     expect(affordability(10_000n, 10_000n)).toBe("within")
@@ -396,6 +504,29 @@ describe("cost engine", () => {
     const cost = costOf(NORTHMOOR_AI, catalogue, rich({ accommodation_pref: "homestay" }))
     expect(cost).toMatchObject({ accommodation: "shared_flat", accommodation_available: false })
   })
+  it("marks visa fee, health cover and flights as estimated, and not tuition", () => {
+    const lines = Object.fromEntries(costOf(NORTHMOOR_AI).lines.map((l) => [l.key, l]))
+    expect(lines.visa_fee?.estimated).toBe(true)
+    expect(lines.health_cover?.estimated).toBe(true)
+    expect(lines.flights?.estimated).toBe(true)
+    expect(lines.tuition?.estimated).toBe(false)
+  })
+  it("marks Canada's visa fee, health cover and flights as estimated", () => {
+    const lines = costOf("MEng Demo Ocean Engineering").lines
+    expect(
+      lines.filter((l) => ["visa_fee", "health_cover", "flights"].includes(l.key)).map((l) => l.estimated)
+    ).toEqual([true, true, true])
+  })
+  it("marks the US visa fee as estimated while its source is third party", () => {
+    const profile = rich({ nationality: "GH" })
+    const line = costOf("MS Demo Data Science", catalogue, profile).lines.find((l) => l.key === "visa_fee")!
+    expect(line.estimated).toBe(true)
+  })
+  it("stops marking a figure once it comes from an official source", () => {
+    const c = fresh()
+    for (const r of c.visaRules) if (r.rule_type === "government_fee") r.confidence = "official"
+    expect(costOf(NORTHMOOR_AI, c).lines.find((l) => l.key === "visa_fee")!.estimated).toBe(false)
+  })
   it("adds a deposit only when it doesn't count towards tuition", () => {
     const c = fresh()
     expect(costOf(NORTHMOOR_AI, c).lines.some((l) => l.key === "deposit")).toBe(false)
@@ -470,11 +601,15 @@ describe("fit score", () => {
     const body = { target_cycle: "2027/28", weights: { A: 50, B: 0, C: 0, L: 0, S: 0, O: 0 } }
     expect(matchProfile.safeParse(body).success).toBe(false)
   })
-  it("gives co-op credit in career fit, and none without a field match", () => {
+  it("gives co-op credit in career fit", () => {
     const coop = passedScores(rich({ field: "engineering" }), "MEng Demo Electrical Engineering")
     expect(coop.C).toBe(0.8) // field match + co-op; Canada has no post-study work row yet
-    const other = passedScores(rich({ field: "law" }), "MEng Demo Civil Engineering")
-    expect(other.C).toBe(0.4) // co-op + longest post-study work, no field match
+  })
+  it("gives no field credit to a related programme", () => {
+    const c = fresh()
+    find(c, "MSc Demo Finance").programme.title = "MSc Demo Business Analytics"
+    const profile = rich({ include_related_fields: true, ielts: 7 })
+    expect(passedScores(profile, "MSc Demo Business Analytics", c).C).toBe(0.2) // post-study work only
   })
   it("scores a preferred city above a preferred country", () => {
     const city = passedScores(rich({ preferred_cities: ["Manchester"] }), NORTHMOOR_AI)
@@ -521,7 +656,7 @@ describe("diversity", () => {
     const owned = c.programmes.filter((p) => p.university_id === home.id)
     expect(owned).toHaveLength(10)
 
-    const { ranked, more } = rank(rich({ nationality: "GH", ielts: 8, gre: 320, gmat: 700 }), c, OPTIONS)
+    const { ranked, more } = rank(rich({ field: null, nationality: "GH", ielts: 8, gre: 320, gmat: 700 }), c, OPTIONS)
     const fromHome = (list: RankedProgramme[]) => list.filter((r) => r.bundle.university.id === home.id).length
     expect(fromHome(ranked)).toBe(4)
     expect(fromHome(more)).toBeGreaterThan(0)
@@ -546,10 +681,10 @@ describe("diversity", () => {
 })
 
 describe("worked example", () => {
-  const result = rank(worked(), catalogue, OPTIONS)
+  const result = rank(worked({ budget_total_minor: 80_000_000 * KOBO }), catalogue, OPTIONS)
 
   it("filters the US out for nationality", () => {
-    expect(result.restricted).toHaveLength(8)
+    expect(result.restricted).toHaveLength(2)
     expect(result.ranked.some((r) => r.bundle.university.country === "US")).toBe(false)
   })
   it("reads the student as a 2:1", () => {
@@ -559,6 +694,7 @@ describe("worked example", () => {
     const counted =
       result.ranked.length +
       result.more.length +
+      // near misses are also in excluded
       result.restricted.length +
       result.needs_english.length +
       result.excluded.length
@@ -567,7 +703,7 @@ describe("worked example", () => {
   it("prints the results when asked", () => {
     if (!process.env.PRINT_WORKED_EXAMPLE) return
     const naira = (kobo: bigint) => `₦${(Number(kobo / 100n) / 1_000_000).toFixed(1)}m`
-    const budgets = [40, 60, 70, 80]
+    const budgets = [40, 80]
     for (const millions of budgets) {
       const r = rank(worked({ budget_total_minor: millions * 1_000_000 * KOBO }), catalogue, OPTIONS)
       console.log(`\n=== Budget ₦${millions}m: ${r.ranked.length} ranked ===`)
@@ -583,6 +719,14 @@ describe("worked example", () => {
             `${m.bundle.programme.title} (${m.bundle.university.name.replace("Demo — ", "")})`,
             `A${A} B${B} C${C} L${L} S${S}`,
           ].join("  ")
+        )
+      }
+      for (const n of r.near_misses) {
+        const uni = n.bundle.university
+        console.log(
+          `  near miss: ${naira(n.gap_ngn_minor)} over, total ${naira(n.cost.total_ngn.market)}, ` +
+            `${n.bundle.programme.title} (${uni.name.replace("Demo — ", "")}, ${uni.city}); ` +
+            `scholarships: ${n.scholarships.map((s) => s.name.replace("Demo — ", "")).join(", ") || "none"}`
         )
       }
       const reasons = new Map<string, number>()

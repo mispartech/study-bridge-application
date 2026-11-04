@@ -1,12 +1,24 @@
 import { normaliseAcademics } from "./academics"
 import { hardFilter } from "./filters"
-import { fitScore } from "./score"
-import type { Bundle, Catalogue, Cost, Group, MatchOptions, MatchProfile, MatchResult, RankedProgramme } from "./types"
+import { eligibleScholarships, fitScore } from "./score"
+import type {
+  Bundle,
+  Catalogue,
+  Cost,
+  Group,
+  MatchOptions,
+  MatchProfile,
+  MatchResult,
+  NearMiss,
+  RankedProgramme,
+} from "./types"
 
 const TOP_N = 20
 const MAX_PER_UNIVERSITY = 4
 const STRONG_FIT = 75
 const GOOD_FIT = 55
+const NEAR_MISS_BELOW = 3
+const MAX_NEAR_MISSES = 5
 
 export function bundles(catalogue: Catalogue, demoMode: boolean): Bundle[] {
   return catalogue.programmes
@@ -69,8 +81,17 @@ export function applyDiversity(
 
 export function rank(profile: MatchProfile, catalogue: Catalogue, options: MatchOptions): MatchResult {
   const academics = normaliseAcademics(profile, catalogue.gradeMappings)
-  const result: MatchResult = { academics, ranked: [], more: [], restricted: [], needs_english: [], excluded: [] }
+  const result: MatchResult = {
+    academics,
+    ranked: [],
+    more: [],
+    near_misses: [],
+    restricted: [],
+    needs_english: [],
+    excluded: [],
+  }
   const passed: RankedProgramme[] = []
+  const overBudget: NearMiss[] = []
 
   for (const bundle of bundles(catalogue, options.demoMode)) {
     const outcome = hardFilter(bundle, profile, academics, catalogue, options)
@@ -80,6 +101,31 @@ export function rank(profile: MatchProfile, catalogue: Catalogue, options: Match
     } else if (outcome.status === "excluded") {
       const { filter, reason } = outcome
       result.excluded.push({ programme_id: bundle.programme.id, title: bundle.programme.title, filter, reason })
+    } else if (outcome.status === "over_budget") {
+      const { cost, intake, next_deadline } = outcome
+      result.excluded.push({
+        programme_id: bundle.programme.id,
+        title: bundle.programme.title,
+        filter: "budget",
+        reason: "Total first-year cost is above 115% of the budget",
+      })
+      overBudget.push({
+        bundle,
+        cost,
+        intake,
+        next_deadline,
+        gap_ngn_minor: cost.total_ngn.market - BigInt(profile.budget_total_minor!),
+        scholarships: eligibleScholarships(bundle, profile, academics, catalogue, options).map(
+          ({ name, amount_minor, currency, coverage, deadline, url }) => ({
+            name,
+            amount_minor,
+            currency,
+            coverage,
+            deadline,
+            url,
+          })
+        ),
+      })
     } else if (outcome.status === "needs_english") {
       result.needs_english.push({ bundle, tests_planned: outcome.tests_planned, cost: outcome.cost })
     } else {
@@ -99,6 +145,9 @@ export function rank(profile: MatchProfile, catalogue: Catalogue, options: Match
   const { top, rest } = applyDiversity(passed, profile.preferred_countries)
   result.ranked = top
   result.more = rest
+  if (top.length < NEAR_MISS_BELOW) {
+    result.near_misses = overBudget.sort((a, b) => Number(a.gap_ngn_minor - b.gap_ngn_minor)).slice(0, MAX_NEAR_MISSES)
+  }
   return result
 }
 

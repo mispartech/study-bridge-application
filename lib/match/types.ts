@@ -43,6 +43,7 @@ export const matchProfile = z
       .nullable()
       .default(null),
     hnd_pgd: z.boolean().default(false),
+    include_related_fields: z.boolean().default(false),
     field: z
       .enum(["computer_data_science", "public_health", "business_finance", "engineering", "project_management", "law"])
       .nullable()
@@ -100,11 +101,13 @@ export type Academics = {
 }
 
 export type CostLine = {
-  key: "tuition" | "rent" | "living" | "visa_health" | "application_fee" | "deposit" | "flights"
+  key: "tuition" | "rent" | "living" | "visa_fee" | "health_cover" | "application_fee" | "deposit" | "flights"
   label: string
   amount_minor: bigint
   currency: string
   source_url: string
+  /** True unless the figure comes straight from a government or university source, so the UI can label it. */
+  estimated: boolean
 }
 
 export type Affordability = "within" | "stretch" | "out_of_reach" | "unknown"
@@ -139,6 +142,7 @@ export type MatchFlag =
   | "planned_test_counted"
   | "grades_estimated"
   | "older_fee_year"
+  | "related_field"
 
 export type RankedProgramme = {
   bundle: Bundle
@@ -153,6 +157,25 @@ export type RankedProgramme = {
 
 export type RestrictedProgramme = { bundle: Bundle; reason: string; source_url: string; review_due: string | null }
 export type NeedsEnglishProgramme = { bundle: Bundle; tests_planned: string[]; cost: Cost | null }
+export type EligibleScholarship = {
+  name: string
+  amount_minor: number | null
+  currency: string | null
+  coverage: string
+  deadline: string | null
+  url: string
+}
+
+/** Passes every filter except the budget ceiling. */
+export type NearMiss = {
+  bundle: Bundle
+  cost: Cost
+  gap_ngn_minor: bigint
+  intake: Tables<"intake">
+  next_deadline: { label: string; date: string }
+  scholarships: EligibleScholarship[]
+}
+
 export type ExcludedProgramme = { programme_id: string; title: string; filter: string; reason: string }
 
 export type MatchResult = {
@@ -161,6 +184,8 @@ export type MatchResult = {
   ranked: RankedProgramme[]
   /** Everything else that passed, including programmes held back by the caps. */
   more: RankedProgramme[]
+  /** Up to 5 nearest over-budget programmes, only when fewer than 3 rank. */
+  near_misses: NearMiss[]
   restricted: RestrictedProgramme[]
   needs_english: NeedsEnglishProgramme[]
   excluded: ExcludedProgramme[]

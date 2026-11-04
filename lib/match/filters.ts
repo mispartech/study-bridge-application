@@ -2,12 +2,13 @@ import type { Tables } from "@/lib/db/database.types"
 
 import { bandIndex, nigeriaRuleMinimum } from "./academics"
 import { totalCost, withinCeiling } from "./cost"
+import { fieldMatch } from "./fields"
 import type { Academics, Band, Bundle, Catalogue, Cost, MatchFlag, MatchOptions, MatchProfile } from "./types"
 
 const FRESHNESS_DAYS = 120
 const DAY_MS = 86_400_000
 const REACH_MIN_WORK_YEARS = 2
-const WAEC_CREDIT_GRADES = new Set(["A1", "B2", "B3", "C4", "C5", "C6"])
+const WAEC_GRADES = ["A1", "B2", "B3", "C4", "C5", "C6", "D7", "E8", "F9"]
 
 type Requirement = Tables<"requirement">
 type Deadline = { label: string; date: string }
@@ -17,6 +18,7 @@ export type FilterOutcome =
   | { status: "restricted"; reason: string; source_url: string; review_due: string | null }
   | { status: "excluded"; filter: string; reason: string }
   | { status: "needs_english"; tests_planned: string[]; cost: Cost }
+  | { status: "over_budget"; cost: Cost; intake: Intake; next_deadline: Deadline }
   | {
       status: "passed"
       cost: Cost
@@ -76,6 +78,12 @@ export function academicCheck(
   return fail
 }
 
+/** A1 is the best grade. No grade stated by the university, or none from the student, means no waiver. */
+function waecMeetsMinimum(requirement: Requirement, grade: string | null) {
+  if (!requirement.waec_english_accepted || requirement.waec_min_grade === null || grade === null) return false
+  return WAEC_GRADES.indexOf(grade) <= WAEC_GRADES.indexOf(requirement.waec_min_grade)
+}
+
 export type EnglishResult = "pass" | "needs_test" | "fail"
 
 export function englishCheck(
@@ -94,9 +102,7 @@ export function englishCheck(
 
   const waiver = requirement.english_waiver_text ?? ""
   const waived =
-    (requirement.waec_english_accepted &&
-      profile.waec_english_grade !== null &&
-      WAEC_CREDIT_GRADES.has(profile.waec_english_grade)) ||
+    waecMeetsMinimum(requirement, profile.waec_english_grade) ||
     (profile.english_medium_degree && /taught in english|english[- ]medium|majority[- ]english/i.test(waiver))
   if (scored || waived) return { result: "pass", unknown: false, planned: [] }
 
@@ -179,6 +185,9 @@ export function hardFilter(
 ): FilterOutcome {
   const excluded = (filter: string, reason: string): FilterOutcome => ({ status: "excluded", filter, reason })
   if (bundle.programme.is_demo && !options.demoMode) return excluded("demo", "Demo record")
+  // Field comes first, so the restricted list only shows programmes the student actually wants.
+  const field = fieldMatch(bundle.programme, profile)
+  if (field === "none") return excluded("field", `Not in ${profile.field}`)
 
   const restriction = visaRestriction(bundle.university.country, profile, catalogue, options)
   if (restriction) {
@@ -214,7 +223,8 @@ export function hardFilter(
     profile.budget_total_minor !== null &&
     !withinCeiling(cost.total_ngn.market, BigInt(profile.budget_total_minor))
   ) {
-    return excluded("budget", "Total first-year cost is above 115% of the budget")
+    if (english.result !== "pass") return excluded("budget", "Total first-year cost is above 115% of the budget")
+    return { status: "over_budget", cost, ...intakeMatch }
   }
 
   if (english.result === "needs_test") return { status: "needs_english", tests_planned: english.planned, cost }
@@ -225,5 +235,6 @@ export function hardFilter(
   if (english.unknown) flags.push("check_english_requirement")
   if (academics.source === "estimated") flags.push("grades_estimated")
   if (bundle.fee && bundle.fee.fee_year !== profile.target_cycle) flags.push("older_fee_year")
+  if (field === "related") flags.push("related_field")
   return { status: "passed", cost, ...intakeMatch, reach: academic.reach, headroom: academic.headroom, flags }
 }

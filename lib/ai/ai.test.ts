@@ -42,6 +42,7 @@ describe("config", () => {
   it("reads the model per task from config/ai.json", () => {
     expect(modelFor("extraction")).toEqual({ provider: "anthropic", model: "claude-haiku-5-5" })
     expect(modelFor("advisor")).toEqual({ provider: "anthropic", model: "claude-sonnet-5-5" })
+    expect(modelFor("explanations")).toEqual({ provider: "google", model: "gemini-3.6-flash" })
     expect(Object.keys(AI_CONFIG).sort()).toEqual(["advisor", "explanations", "extraction"])
   })
 

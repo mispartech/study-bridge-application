@@ -574,6 +574,7 @@ export type Database = {
           toefl_min: number | null
           updated_at: string
           waec_english_accepted: boolean
+          waec_min_grade: string | null
         }
         ComputedFields: never
         Insert: {
@@ -600,6 +601,7 @@ export type Database = {
           toefl_min?: number | null
           updated_at?: string
           waec_english_accepted?: boolean
+          waec_min_grade?: string | null
         }
         Update: {
           confidence?: Database["public"]["Enums"]["confidence_level"]
@@ -625,6 +627,7 @@ export type Database = {
           toefl_min?: number | null
           updated_at?: string
           waec_english_accepted?: boolean
+          waec_min_grade?: string | null
         }
         Relationships: [
           {

@@ -15,6 +15,11 @@ function summary(result: MatchResult) {
     academics: result.academics,
     ranked: result.ranked.map(card),
     more: result.more.map(card),
+    near_misses: result.near_misses.map(({ bundle, ...r }) => ({
+      programme: bundle.programme,
+      university: bundle.university,
+      ...r,
+    })),
     restricted: result.restricted.map(({ bundle, ...r }) => ({
       programme: bundle.programme,
       university: bundle.university,

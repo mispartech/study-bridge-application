@@ -146,7 +146,8 @@ def test_truncated_input_goes_to_review():
 def _stored_requirement():
     return {"min_uk_class": "upper_second", "min_gpa4": None,
             "nigeria_rule": "Bachelor degree with a CGPA of 3.5/5.0 or 3.0/4.0",
-            "ielts_min": 6.5, "toefl_entries": [], "duolingo_min": None, "gre_status": "not_required",
+            "ielts_min": 6.5, "toefl_entries": [], "duolingo_min": None, "waec_min_grade": None,
+            "gre_status": "not_required",
             "gmat_status": "not_required", "min_work_years": 0}
 
 
@@ -254,6 +255,13 @@ def test_either_admissions_test_is_stored_as_one_of_required():
     rec["requirement"]["gre_required"] = rec["requirement"]["gmat_required"] = "one_of_required"
     projected = project_extraction(check(rec).record)["requirement"]
     assert projected["gre_status"] == projected["gmat_status"] == "one_of_required"
+
+
+def test_waec_min_grade_change_is_detected():
+    rec = copy.deepcopy(GOOD)
+    rec["requirement"]["waec_min_grade"] = "C6"
+    changes = diff(stored(), project_extraction(check(rec).record))
+    assert changes == {"requirement": {"waec_min_grade": {"current": None, "proposed": "C6"}}}
 
 
 def test_toefl_score_too_high_for_the_new_scale_goes_to_review_as_0_120():

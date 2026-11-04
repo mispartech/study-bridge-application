@@ -54,17 +54,16 @@ function locationFit(bundle: Bundle, cost: Cost, profile: MatchProfile) {
   return Math.min(1, base + (cost.accommodation_available ? 0.1 : 0))
 }
 
-function scholarshipFit(
-  bundle: Bundle,
+/** Open scholarships this student can apply for on this programme. */
+export function eligibleScholarships(
+  { programme, university }: Bundle,
   profile: MatchProfile,
   academics: Academics,
   catalogue: Catalogue,
   { now, demoMode }: MatchOptions
 ) {
-  const { fee, programme, university } = bundle
-  if (!fee) return 0
   const today = now.toISOString().slice(0, 10)
-  const eligible = catalogue.scholarships.filter(
+  return catalogue.scholarships.filter(
     (s) =>
       (demoMode || !s.is_demo) &&
       (s.deadline === null || s.deadline > today) &&
@@ -75,6 +74,19 @@ function scholarshipFit(
       (s.min_uk_class === null ||
         (academics.band !== null && bandIndex(academics.band) >= bandIndex(s.min_uk_class as Band)))
   )
+}
+
+function scholarshipFit(
+  bundle: Bundle,
+  profile: MatchProfile,
+  academics: Academics,
+  catalogue: Catalogue,
+  options: MatchOptions
+) {
+  const { fee } = bundle
+  const { demoMode } = options
+  if (!fee) return 0
+  const eligible = eligibleScholarships(bundle, profile, academics, catalogue, options)
   if (eligible.some((s) => s.amount_minor === null)) return 1 // full or tuition cover with no fixed amount
   const halfTuition = toNgn(
     BigInt(fee.tuition_per_year_minor) / 2n,

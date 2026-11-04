@@ -43,6 +43,7 @@ def project_extraction(record: ProgrammeRecord) -> dict[str, Any]:
             "ielts_min": tests.get("IELTS"),
             "toefl": toefl,
             "duolingo_min": tests.get("Duolingo"),
+            "waec_min_grade": req.waec_min_grade,
             "gre_status": req.gre_required,
             "gmat_status": req.gmat_required,
             "min_work_years": req.min_work_years or 0,
@@ -72,6 +73,7 @@ def project_stored(fees: list[dict], intakes: list[dict], requirement: dict | No
             "toefl": sorted((e["scale"], float(e["overall_min"]), float(e.get("subscore_min") or 0))
                             for e in requirement["toefl_entries"]),
             "duolingo_min": num(requirement["duolingo_min"]),
+            "waec_min_grade": requirement["waec_min_grade"],
             "gre_status": requirement["gre_status"],
             "gmat_status": requirement["gmat_status"],
             "min_work_years": float(requirement["min_work_years"] or 0),

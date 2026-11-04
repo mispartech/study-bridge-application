@@ -99,6 +99,7 @@ class Requirement(_M):
     english_tests: list[EnglishTest]
     english_waiver_text: str | None
     waec_english_accepted: bool | None = None
+    waec_min_grade: Literal["A1", "B2", "B3", "C4", "C5", "C6", "D7", "E8", "F9"] | None = None
     gre_required: Requiredness
     gmat_required: Requiredness
     min_work_years: float | None = Field(ge=0)

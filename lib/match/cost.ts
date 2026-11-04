@@ -86,16 +86,22 @@ const num = (rule: VisaRule | undefined, key: string): number | undefined => {
 const majorToMinor = (major: number) => BigInt(Math.round(major * 100))
 
 /** Government fees for one country, in that country's currency. Field names are set by the seed. */
-function governmentFees(country: string, rule: VisaRule | undefined, years: number): bigint | undefined {
-  const fees: Record<string, (number | undefined)[]> = {
-    UK: [num(rule, "visa_fee_gbp"), (num(rule, "ihs_gbp_per_year") ?? NaN) * years],
+function governmentFees(country: string, rule: VisaRule | undefined, years: number) {
+  const visa: Record<string, (number | undefined)[]> = {
+    UK: [num(rule, "visa_fee_gbp")],
     CA: [num(rule, "study_permit_cad"), num(rule, "biometrics_cad")],
     US: [num(rule, "sevis_usd"), num(rule, "mrv_usd"), num(rule, "visa_integrity_usd")],
   }
-  const parts = fees[country]
-  if (!parts || parts.some((p) => p === undefined || Number.isNaN(p))) return undefined
-  return majorToMinor(parts.reduce<number>((a, b) => a + b!, 0))
+  const parts = visa[country]
+  const surcharge = country === "UK" ? num(rule, "ihs_gbp_per_year") : 0
+  if (!parts || surcharge === undefined || parts.some((p) => p === undefined)) return undefined
+  return {
+    visa: majorToMinor(parts.reduce<number>((a, b) => a + b!, 0)),
+    surcharge: majorToMinor(surcharge * years),
+  }
 }
+
+const isEstimated = (confidence: string) => confidence !== "official" && confidence !== "university_page"
 
 export type CostResult = { cost: Cost } | { missing: string }
 
@@ -133,28 +139,32 @@ export function totalCost(
   if (country !== "UK" && !health) return { missing: `no health_cover estimate for ${country}` }
   const healthMinor = health ? BigInt(health.amount_minor) * BigInt(health.per_year ? years : 1) : 0n
 
-  const line = (key: CostLine["key"], label: string, amount: bigint, source_url: string): CostLine => ({
+  const line = (
+    key: CostLine["key"],
+    label: string,
+    amount: bigint,
+    source: { source_url: string; confidence: string }
+  ): CostLine => ({
     key,
     label,
     amount_minor: amount,
     currency,
-    source_url,
+    source_url: source.source_url,
+    estimated: isEstimated(source.confidence),
   })
   const lines: CostLine[] = [
-    line("tuition", "First-year tuition", BigInt(fee.tuition_per_year_minor), fee.source_url),
-    line("rent", `Rent for ${months} months`, rentMonthly * BigInt(months), home.source_url),
-    line(
-      "living",
-      `Living costs for ${months} months`,
-      BigInt(home.living_monthly_minor) * BigInt(months),
-      home.source_url
-    ),
-    line("visa_health", "Visa and health", government + healthMinor, feesRule!.source_url),
-    line("application_fee", "Application fee", BigInt(fee.application_fee_minor), fee.source_url),
-    line("flights", "Flights", BigInt(flights.amount_minor), flights.source_url),
+    line("tuition", "First-year tuition", BigInt(fee.tuition_per_year_minor), fee),
+    line("rent", `Rent for ${months} months`, rentMonthly * BigInt(months), home),
+    line("living", `Living costs for ${months} months`, BigInt(home.living_monthly_minor) * BigInt(months), home),
+    line("visa_fee", "Visa fee", government.visa, feesRule!),
+    health
+      ? line("health_cover", "Health cover", healthMinor, health)
+      : line("health_cover", "Immigration Health Surcharge", government.surcharge, feesRule!),
+    line("application_fee", "Application fee", BigInt(fee.application_fee_minor), fee),
+    line("flights", "Flights", BigInt(flights.amount_minor), flights),
   ]
   if (intake.deposit_minor && !intake.deposit_credited_to_tuition) {
-    lines.push(line("deposit", "Deposit", BigInt(intake.deposit_minor), intake.source_url))
+    lines.push(line("deposit", "Deposit", BigInt(intake.deposit_minor), intake))
   }
 
   const total = lines.reduce((sum, l) => sum + l.amount_minor, 0n)

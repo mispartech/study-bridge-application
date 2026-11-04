@@ -98,6 +98,7 @@
         },
         "english_waiver_text": { "type": ["string", "null"] },
         "waec_english_accepted": { "type": ["boolean", "null"] },
+        "waec_min_grade": { "enum": ["A1", "B2", "B3", "C4", "C5", "C6", "D7", "E8", "F9", null] },
         "gre_required": { "enum": ["required", "optional", "not_required", "one_of_required", null] },
         "gmat_required": { "enum": ["required", "optional", "not_required", "one_of_required", null] },
         "min_work_years": { "type": ["number", "null"], "minimum": 0 },

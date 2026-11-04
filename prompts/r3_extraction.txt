@@ -29,6 +29,8 @@ Rules:
 6. English: list every accepted test with the overall minimum and any sub-score minimum. Set scale to "0-120" or
    "1-6" on every TOEFL iBT entry; if the pages give both scales, record each as a separate entry. Leave scale null
    for other tests. Copy any waiver wording verbatim (e.g. degree taught in English, WAEC/NECO English grades).
+   Set waec_min_grade to the lowest WAEC/NECO English grade the pages accept ("Grade C or above" is C6). If they
+   state no grade, use null.
 7. Admissions tests: set gre_required and gmat_required to "one_of_required" when the programme requires either
    the GRE or the GMAT, not both.
 8. Co-op / placement: has_coop_or_placement is true only when the pages offer a co-op, placement or internship,

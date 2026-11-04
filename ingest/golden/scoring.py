@@ -129,6 +129,7 @@ SCALARS: dict[str, Comparator] = {
     "requirement.nigeria_rule": copied_text,
     "requirement.english_waiver_text": copied_text,
     "requirement.waec_english_accepted": exact,
+    "requirement.waec_min_grade": exact,
     "requirement.gre_required": exact,
     "requirement.gmat_required": exact,
     "requirement.min_work_years": numeric,

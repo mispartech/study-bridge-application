@@ -15,8 +15,9 @@ Ranking is deterministic code, so it is fast, testable and explainable. The AI l
 | Filter | Rule |
 | --- | --- |
 | Visa eligibility | No current `visa_rule` of type `nationality_restriction` for the programme's country lists the student's nationality. Restricted programmes go to a separate "Restricted for your nationality" list with the reason, never into ranked results. The `PS` row matches a travel-document field, not nationality. |
+| Field | The programme's field equals the student's. With the "related fields" option on, closely related programmes count too (`computer_data_science` includes AI and analytics programmes coded under another field). No field chosen yet = no filter. |
 | Academic minimum | Student band ≥ `requirement.min_uk_class` (or `min_gpa4`). If `considers_lower_with_experience` is true, one band below passes when `profile.work_years ≥ 2`, and the programme is grouped as Reach. A university's `nigeria_rule` overrides the `grade_mapping` estimate. |
-| English | Pass if ANY of: (a) an IELTS/Duolingo/PTE score ≥ that test's minimum; (b) a TOEFL score ≥ the minimum **on the same scale as the student's result** (`requirement.toefl_entries[].scale`: "0-120" or "1-6"); (c) the student qualifies for the published waiver (`waec_english_accepted` or `english_medium_degree` where the waiver text allows it). Planned-but-not-taken English tests do not pass this filter; show the programme as "Needs English test" in a separate state instead. |
+| English | Pass if ANY of: (a) an IELTS/Duolingo/PTE score ≥ that test's minimum; (b) a TOEFL score ≥ the minimum **on the same scale as the student's result** (`requirement.toefl_entries[].scale`: "0-120" or "1-6"); (c) the student qualifies for the published waiver (`waec_english_accepted` with the student's grade at or above `waec_min_grade`, or `english_medium_degree` where the waiver text allows it). No stated grade means no WAEC waiver. Planned-but-not-taken English tests do not pass this filter; show the programme as "Needs English test" in a separate state instead. |
 | Admission tests | Uses `gre_status` / `gmat_status`. A `required` test must be held or in `profile.tests_planned`. If both are `one_of_required`, holding or planning either one passes. `optional` and `not_required` never exclude. Null = unknown: pass, but show "Check test requirement". |
 | Budget ceiling | Total first-year cost (section 3 of this file) ≤ `budget_total` × 1.15. |
 | Intake | The programme has an intake in the student's target cycle (e.g. 2027/28 = Sep 2027, Jan 2028, May 2028). An intake with `start_term` and null `start_month` matches on cycle + term. At least one deadline for that intake is still in the future. |
@@ -41,6 +42,7 @@ Fit = 30·A + 25·B + 15·C + 10·L + 10·S + 10·O, each component scored 0–1
 
 - **Strong match:** fit ≥ 75 and within budget. **Good match:** 55–74, or stretch budget (100–115%). **Reach:** academic band one below the minimum, or fit < 55.
 - Diversity: no more than 4 programmes from one university in the top 20; at least 2 countries when the student selected more than one.
+- Near misses: when fewer than 3 programmes rank, return up to 5 nearest over-budget programmes that pass every other filter, as a separate `near_misses` list with the NGN gap and eligible scholarships.
 - Explanations: send the top 20 as JSON to prompt R2 through the AI adapter; return `{programme_id, why, watch_out}`. Cache by `(programme_id, profile_bucket)`; regenerate only when the programme record changes. Results render immediately; explanations stream in after.
 
 ### Required tests (Vitest, 40+ cases), including
@@ -55,9 +57,13 @@ Fit = 30·A + 25·B + 15·C + 10·L + 10·S + 10·O, each component scored 0–1
 
 ### Worked example
 
-A 2:1 (CGPA 3.8 / 5.0) Computer Science graduate from Lagos, ₦40m budget, IELTS 7.0, target Sep 2027, self-catered room.
-The US is filtered out for nationality. Results lean to one-year UK MSc programmes outside London (lower maintenance figure)
-and Canadian public universities with co-op. London options appear as Stretch once the London maintenance figure is added.
+A 2:1 (CGPA 3.8 / 5.0) Computer Science graduate from Lagos, ₦80m budget, IELTS 7.0, target Sep 2027, self-catered room in halls.
+On the 30 demo programmes, the 2 US computing programmes go to the restricted list. A Canadian MSc in Montreal ranks within
+budget (₦59.4m), and a one-year UK MSc in Manchester ranks as Reach and Stretch (₦88.4m). Because fewer than 3 programmes
+rank, a London MSc appears as a near miss, ₦25.0m over budget.
+
+₦40m is below the realistic one-year cost for the UK and Canada: tuition, rent, living costs, visa and flights together
+come to more. At ₦40m nothing ranks, and the same programmes appear as near misses with the NGN gap and eligible scholarships.
 
 ---
 
@@ -89,6 +95,7 @@ university states otherwise.
 
 - **Total first-year cost** = tuition (first year; full-time international) + living (city_cost for the chosen accommodation × months, max 12) + visa and health (UK visa fee + Immigration Health Surcharge; Canada study permit fee + insurance; US SEVIS + visa fees + insurance) + application fee + deposit (if not part of tuition) + flights (flat estimate per country, stored as a config row).
 - **Visa proof-of-funds figure:** UK = outstanding first-year tuition + maintenance (London / outside London, ≤ 9 months, from the current `visa_rule`); Canada = first-year tuition + current single-applicant amount (+ family members) + travel; US = the I-20 cost of attendance where known.
+- Visa fee, health cover and flights come back flagged `estimated` until they are confirmed from a government or university source, so the UI can label them.
 - Show in source currency and in NGN at both `fx_rate` kinds (official, market).
 - Affordability: Within budget (≤ 100%), Stretch (100–115%), Out of reach (> 115%).
 - Visa rules are picked by `effective_from` ≤ the student's expected visa application date (≈ 3 months before intake start), so the UK increase on 30 Nov 2026 and the Graduate Route change on 1 Jan 2027 apply correctly.
