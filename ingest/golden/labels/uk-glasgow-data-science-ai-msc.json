@@ -1,0 +1,88 @@
+{
+  "found": true,
+  "university": {
+    "name": "University of Glasgow",
+    "country": "UK",
+    "city": "Glasgow",
+    "official_domain": "gla.ac.uk"
+  },
+  "programme": {
+    "title": "Data Science & Artificial Intelligence MSc",
+    "degree_type": "MSc",
+    "field": "computer_data_science",
+    "duration_months": 12,
+    "study_mode": "full_time",
+    "stem_designated": null,
+    "has_coop_or_placement": null,
+    "programme_url": "https://www.gla.ac.uk/postgraduate/taught/data-science-artificial-intelligence/",
+    "apply_url": null
+  },
+  "requirement": {
+    "academic_rule_text": "2.1 Hons (or non-UK equivalent) in any degree with Computing as a major subject with at least 50% of credit bearing modules in Computing and Advanced Programming at an average grade of pass.",
+    "min_uk_class": "upper_second",
+    "min_gpa4": null,
+    "considers_lower_with_experience": null,
+    "nigeria_rule": null,
+    "english_tests": [
+      {
+        "test": "IELTS",
+        "overall_min": 6.5,
+        "subscore_min": 6.0
+      },
+      {
+        "test": "PTE",
+        "overall_min": 65,
+        "subscore_min": 60
+      },
+      {
+        "test": "Cambridge",
+        "overall_min": 176,
+        "subscore_min": 169
+      },
+      {
+        "test": "Duolingo",
+        "overall_min": 120,
+        "subscore_min": 110
+      },
+      {
+        "test": "TOEFL_iBT",
+        "scale": "0-120",
+        "overall_min": 90,
+        "subscore_min": 19
+      },
+      {
+        "test": "TOEFL_iBT",
+        "scale": "1-6",
+        "overall_min": 92,
+        "subscore_min": 4.5
+      }
+    ],
+    "english_waiver_text": "Degree from majority-English speaking country (as defined by the UKVI including Canada if taught in English)",
+    "waec_english_accepted": null,
+    "gre_required": null,
+    "gmat_required": null,
+    "min_work_years": null,
+    "documents": ["transcript"]
+  },
+  "intakes": [
+    {
+      "start_month": "2027-09",
+      "application_opens": null,
+      "deadlines": [],
+      "deposit_amount": 2000,
+      "deposit_currency": "GBP",
+      "deposit_deadline": null,
+      "start_term": "fall"
+    }
+  ],
+  "fees": [
+    {
+      "fee_year": "2027/28",
+      "tuition_amount": 34815,
+      "currency": "GBP",
+      "basis": "per_year",
+      "credits_total": null,
+      "application_fee": null
+    }
+  ]
+}

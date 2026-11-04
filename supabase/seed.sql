@@ -240,7 +240,7 @@ from demo_full f
 join public.programme pr on pr.university_id = f.university_id and pr.title = f.title and pr.is_demo;
 
 insert into public.requirement
-  (programme_id, min_uk_class, min_gpa4, nigeria_rule, considers_lower_with_experience, ielts_min, toefl_min, duolingo_min,
+  (programme_id, min_uk_class, min_gpa4, nigeria_rule, considers_lower_with_experience, ielts_min, toefl_min, toefl_entries, duolingo_min,
    waec_english_accepted, gre_required, gmat_required, min_work_years, documents,
    source_url, last_verified_at, confidence, is_demo)
 select programme_id, min_class,
@@ -248,7 +248,9 @@ select programme_id, min_class,
        case when country = 'UK' and min_class = 'upper_second'
             then 'Demo rule: CGPA 3.50/5.0 or 3.00/4.0 from a recognised Nigerian university.' end,
        work > 0 or min_class = 'upper_second',
-       ielts, case when ielts >= 7 then 100 else 90 end, case when ielts >= 7 then 120 else 110 end,
+       ielts, case when ielts >= 7 then 100 else 90 end,
+       jsonb_build_array(jsonb_build_object('scale', '0-120', 'overall_min', case when ielts >= 7 then 100 else 90 end, 'subscore_min', null)),
+       case when ielts >= 7 then 120 else 110 end,
        country = 'UK', gre, gmat, work,
        case when gmat then '{sop,references,cv,gmat}'::text[] else '{sop,references,cv}'::text[] end,
        'https://www.' || domain || '/courses/' || slug || '/entry-requirements', verified_at, 'university_page', true
@@ -262,9 +264,9 @@ from demo_ids;
 
 -- September 2027 for every programme, January 2028 where offered.
 insert into public.intake
-  (programme_id, start_month, application_opens, deadlines, deposit_minor, deposit_currency, deposit_deadline,
+  (programme_id, start_term, cycle, start_month, application_opens, deadlines, deposit_minor, deposit_currency, deposit_deadline,
    source_url, last_verified_at, confidence, is_demo)
-select programme_id, date '2027-09-01', date '2026-10-01',
+select programme_id, 'fall'::public.intake_term, '2027/28', date '2027-09-01', date '2026-10-01',
        jsonb_build_array(jsonb_build_object('label', 'international', 'date',
          case country when 'UK' then '2027-06-30' when 'CA' then '2027-01-31' else '2027-02-01' end)),
        least(tuition::bigint * 10, 5000) * 100, currency,
@@ -272,7 +274,7 @@ select programme_id, date '2027-09-01', date '2026-10-01',
        'https://www.' || domain || '/courses/' || slug || '/apply', verified_at, 'university_page'::public.confidence_level, true
 from demo_ids
 union all
-select programme_id, date '2028-01-01', date '2027-03-01',
+select programme_id, 'winter'::public.intake_term, '2027/28', date '2028-01-01', date '2027-03-01',
        jsonb_build_array(jsonb_build_object('label', 'international', 'date',
          case country when 'UK' then '2027-11-15' when 'CA' then '2027-08-31' else '2027-10-15' end)),
        least(tuition::bigint * 10, 5000) * 100, currency,

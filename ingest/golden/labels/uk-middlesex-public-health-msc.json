@@ -1,0 +1,55 @@
+{
+  "found": true,
+  "university": {
+    "name": "Middlesex University London",
+    "country": "UK",
+    "city": "London",
+    "official_domain": "mdx.ac.uk"
+  },
+  "programme": {
+    "title": "Public Health MSc",
+    "degree_type": "MSc",
+    "field": "public_health",
+    "duration_months": 12,
+    "study_mode": "full_time",
+    "stem_designated": null,
+    "has_coop_or_placement": null,
+    "programme_url": "https://www.mdx.ac.uk/courses/postgraduate/public-health-mscpgdip/",
+    "apply_url": null
+  },
+  "requirement": {
+    "academic_rule_text": "A 2:2 honours degree, or equivalent qualification, in an appropriate subject such as Medicine, Nursing, Psychology, Statistics, Dentistry, Biomedical Sciences or Biosciences. Other degrees with sciences and/or a statistics component will also be considered",
+    "min_uk_class": "lower_second",
+    "min_gpa4": null,
+    "considers_lower_with_experience": true,
+    "nigeria_rule": null,
+    "english_tests": [],
+    "english_waiver_text": null,
+    "waec_english_accepted": null,
+    "gre_required": null,
+    "gmat_required": null,
+    "min_work_years": null,
+    "documents": ["sop"]
+  },
+  "intakes": [
+    {
+      "start_month": "2027-09",
+      "application_opens": null,
+      "deadlines": [],
+      "deposit_amount": null,
+      "deposit_currency": null,
+      "deposit_deadline": null,
+      "start_term": "fall"
+    }
+  ],
+  "fees": [
+    {
+      "fee_year": "2027/28",
+      "tuition_amount": 18700,
+      "currency": "GBP",
+      "basis": "per_year",
+      "credits_total": null,
+      "application_fee": null
+    }
+  ]
+}

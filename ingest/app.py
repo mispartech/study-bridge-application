@@ -24,6 +24,7 @@ from .db import connect
 from .env import load_env
 from .fetch import PoliteFetcher
 from .pipeline import RunResult, Source, run_source
+from .validate import cycle_of
 
 log = logging.getLogger("ingest")
 load_env()
@@ -40,7 +41,7 @@ def require_token(authorization: Annotated[str | None, Header()] = None) -> None
 class SourceIn(BaseModel):
     urls: list[str] = Field(min_length=1, max_length=5)
     target_title: str = Field(min_length=3)
-    target_intake_year: int = Field(ge=2025, le=2035)
+    target_cycle: str = Field(pattern=r"^20[2-3]\d/\d{2}$", examples=["2027/28"])
     programme_id: str | None = None
 
 
@@ -54,7 +55,7 @@ def reverify_all() -> list[RunResult]:
     """Weekly job: re-check every real (non-demo) programme against its source page."""
     with connect() as conn, conn.cursor(row_factory=dict_row) as cur:
         cur.execute(
-            """select p.id, p.title, p.source_url, min(extract(year from i.start_month))::int as year
+            """select p.id, p.title, p.source_url, min(i.start_month) as first_start
                from public.programme p left join public.intake i on i.programme_id = p.id
                where not p.is_demo group by p.id order by p.last_verified_at"""
         )
@@ -63,7 +64,10 @@ def reverify_all() -> list[RunResult]:
     results = []
     try:
         for r in rows:
-            source = Source([r["source_url"]], r["title"], r["year"] or dt.date.today().year + 1, str(r["id"]))
+            start = r["first_start"]
+            today = dt.date.today()
+            cycle = cycle_of(start.year, start.month) if start else cycle_of(today.year + 1, today.month)
+            source = Source([r["source_url"]], r["title"], cycle, str(r["id"]))
             result = run_source(source, fetcher)
             log.info("%s %s %s", result.status, r["title"], "; ".join(result.reasons))
             results.append(result)

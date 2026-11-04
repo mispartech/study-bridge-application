@@ -9,7 +9,7 @@ from __future__ import annotations
 import re
 from typing import Any
 
-from .validate import ProgrammeRecord, to_minor
+from .validate import ProgrammeRecord, norm_fee_year, to_minor
 
 
 def norm_text(value: str | None) -> str | None:
@@ -18,25 +18,21 @@ def norm_text(value: str | None) -> str | None:
     return re.sub(r"\s+", " ", value).strip().lower() or None
 
 
-def norm_fee_year(value: str) -> str:
-    """"2027-2028", "2027/2028", "2027–28" → "2027/28"."""
-    years = re.findall(r"\d{4}|\d{2}", value)
-    if len(years) >= 2 and len(years[0]) == 4:
-        return f"{years[0]}/{years[1][-2:]}"
-    return value.strip()
-
-
 def project_extraction(record: ProgrammeRecord) -> dict[str, Any]:
     req = record.requirement
     tests = {t.test: t.overall_min for t in (req.english_tests if req else [])}
+    toefl = sorted((t.scale or "", t.overall_min, t.subscore_min or 0) for t in (req.english_tests if req else [])
+                   if t.test == "TOEFL_iBT")
     return {
         "fees": sorted(
-            (norm_fee_year(f.fee_year), to_minor(f.tuition_amount), f.currency)
+            (f.fee_year or "", to_minor(f.tuition_amount), f.currency)
             for f in record.fees
             if f.basis == "per_year"
         ),
         "deadlines": sorted(
-            (i.start_month, norm_text(d.label), d.date.isoformat()) for i in record.intakes for d in i.deadlines
+            (i.start_term, i.start_month or "", norm_text(d.label), d.date.isoformat())
+            for i in record.intakes
+            for d in i.deadlines
         ),
         "requirement": None
         if req is None
@@ -45,10 +41,10 @@ def project_extraction(record: ProgrammeRecord) -> dict[str, Any]:
             "min_gpa4": req.min_gpa4,
             "nigeria_rule": norm_text(req.nigeria_rule),
             "ielts_min": tests.get("IELTS"),
-            "toefl_min": tests.get("TOEFL_iBT"),
+            "toefl": toefl,
             "duolingo_min": tests.get("Duolingo"),
-            "gre_required": req.gre_required == "required",
-            "gmat_required": req.gmat_required == "required",
+            "gre_required": req.gre_required in ("required", "one_of_required"),
+            "gmat_required": req.gmat_required in ("required", "one_of_required"),
             "min_work_years": req.min_work_years or 0,
         },
     }
@@ -61,7 +57,8 @@ def project_stored(fees: list[dict], intakes: list[dict], requirement: dict | No
     return {
         "fees": sorted((norm_fee_year(f["fee_year"]), int(f["tuition_per_year_minor"]), f["currency"]) for f in fees),
         "deadlines": sorted(
-            (i["start_month"].strftime("%Y-%m"), norm_text(d["label"]), d["date"])
+            (i["start_term"], i["start_month"].strftime("%Y-%m") if i["start_month"] else "", norm_text(d["label"]),
+             d["date"])
             for i in intakes
             for d in (i["deadlines"] or [])
         ),
@@ -72,7 +69,8 @@ def project_stored(fees: list[dict], intakes: list[dict], requirement: dict | No
             "min_gpa4": num(requirement["min_gpa4"]),
             "nigeria_rule": norm_text(requirement["nigeria_rule"]),
             "ielts_min": num(requirement["ielts_min"]),
-            "toefl_min": num(requirement["toefl_min"]),
+            "toefl": sorted((e["scale"], float(e["overall_min"]), float(e.get("subscore_min") or 0))
+                            for e in requirement["toefl_entries"]),
             "duolingo_min": num(requirement["duolingo_min"]),
             "gre_required": bool(requirement["gre_required"]),
             "gmat_required": bool(requirement["gmat_required"]),

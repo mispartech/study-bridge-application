@@ -99,6 +99,43 @@ describe("generateStructured", () => {
     expect(logUsage).toHaveBeenCalledWith(expect.objectContaining({ success: false }))
   })
 
+  it("retries schema-invalid output once, and only once", async () => {
+    const answers = [
+      { found: "yes", fee: -1 },
+      { found: true, fee: 100 },
+    ]
+    const model = new MockLanguageModelV4({
+      doGenerate: async () => ({
+        content: [
+          {
+            type: "tool-call",
+            toolCallId: "c1",
+            toolName: "record_programme",
+            input: JSON.stringify(answers.shift()),
+          },
+        ],
+        finishReason: { unified: "tool-calls", raw: undefined },
+        usage,
+        warnings: [],
+      }),
+    })
+    const result = await generateStructured("extraction", "prompt", schema, {
+      toolName: "record_programme",
+      languageModelOverride: model,
+    })
+    expect(result.data).toEqual({ found: true, fee: 100 })
+    expect(model.doGenerateCalls).toHaveLength(2)
+
+    const alwaysBad = toolCallModel({ found: "yes", fee: -1 })
+    await expect(
+      generateStructured("extraction", "prompt", schema, {
+        toolName: "record_programme",
+        languageModelOverride: alwaysBad,
+      })
+    ).rejects.toBeInstanceOf(AiValidationError)
+    expect(alwaysBad.doGenerateCalls).toHaveLength(2)
+  })
+
   it("sends the forced tool choice and strips $schema from the tool schema", async () => {
     const model = toolCallModel({ found: false, fee: null })
     await generateStructured("extraction", "prompt", schema, {
@@ -111,6 +148,23 @@ describe("generateStructured", () => {
     expect(tool.name).toBe("record_programme")
     expect(tool.inputSchema).not.toHaveProperty("$schema")
     expect(call.temperature).toBeUndefined()
+  })
+
+  it("types bare enums for providers (Gemini drops untyped and nullable-typed enums)", async () => {
+    const model = toolCallModel({ mode: null, country: "UK" })
+    const enumSchema = {
+      type: "object",
+      properties: { mode: { enum: ["full_time", "part_time", null] }, country: { enum: ["UK", "CA"] } },
+    }
+    await generateStructured("extraction", "prompt", enumSchema, {
+      toolName: "record_programme",
+      languageModelOverride: model,
+    })
+    const tool = model.doGenerateCalls[0]!.tools?.[0] as unknown as { inputSchema: { properties: object } }
+    expect(tool.inputSchema.properties).toEqual({
+      mode: { anyOf: [{ type: "string", enum: ["full_time", "part_time"] }, { type: "null" }] },
+      country: { type: "string", enum: ["UK", "CA"] },
+    })
   })
 
   it("uses native structured output on models without forced tools", async () => {

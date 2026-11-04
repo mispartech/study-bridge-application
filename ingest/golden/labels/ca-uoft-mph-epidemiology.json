@@ -1,0 +1,36 @@
+{
+  "found": true,
+  "university": {
+    "name": "University of Toronto",
+    "country": "CA",
+    "city": "Toronto",
+    "official_domain": "utoronto.ca"
+  },
+  "programme": {
+    "title": "MPH Epidemiology",
+    "degree_type": "MPH",
+    "field": "public_health",
+    "duration_months": null,
+    "study_mode": "full_time",
+    "stem_designated": null,
+    "has_coop_or_placement": true,
+    "programme_url": "https://www.dlsph.utoronto.ca/program/mph-epidemiology/",
+    "apply_url": null
+  },
+  "requirement": {
+    "academic_rule_text": "MPH students are admitted under the General Regulations of the School of Graduate Studies (SGS) and should hold an appropriate bachelor’s degree or its equivalent from a recognized university with at least a mid-B average in final year of the degree, or in the last 5.0 full course equivalents completed at a senior level. Proof of English Language Proficiency is required (see below).",
+    "min_uk_class": null,
+    "min_gpa4": null,
+    "considers_lower_with_experience": null,
+    "nigeria_rule": null,
+    "english_tests": [],
+    "english_waiver_text": "No applicant will be admitted without evidence of English Language Proficiency (ELP). As per the policy of the School of Graduate Studies (SGS), the following applicants do not have to provide direct supporting evidence of ELP in the application.",
+    "waec_english_accepted": null,
+    "gre_required": null,
+    "gmat_required": null,
+    "min_work_years": null,
+    "documents": ["cv", "other", "references"]
+  },
+  "intakes": [],
+  "fees": []
+}

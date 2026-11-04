@@ -1,0 +1,58 @@
+{
+  "found": true,
+  "university": {
+    "name": "University of Warwick",
+    "country": "UK",
+    "city": "Coventry",
+    "official_domain": "warwick.ac.uk"
+  },
+  "programme": {
+    "title": "MSc Finance",
+    "degree_type": "MSc",
+    "field": "business_finance",
+    "duration_months": 12,
+    "study_mode": "full_time",
+    "stem_designated": null,
+    "has_coop_or_placement": null,
+    "programme_url": "https://warwick.ac.uk/study/postgraduate/courses/msc-finance/",
+    "apply_url": null
+  },
+  "requirement": {
+    "academic_rule_text": "2.1 degree at undergraduate level from a UK university, or overseas equivalent.",
+    "min_uk_class": "upper_second",
+    "min_gpa4": null,
+    "considers_lower_with_experience": null,
+    "nigeria_rule": "We would typically require a Bachelors degree from a recognised institution, for entry onto our postgraduate taught courses, with the following equivalencies:",
+    "english_tests": [
+      {
+        "test": "IELTS",
+        "overall_min": 7.0,
+        "subscore_min": 6.0
+      }
+    ],
+    "english_waiver_text": "Applicants who have been educated in Nigeria for at least one academic year completed in the past two years may be accepted without an English Language qualification.",
+    "waec_english_accepted": null,
+    "gre_required": null,
+    "gmat_required": null,
+    "min_work_years": null,
+    "documents": ["references"]
+  },
+  "intakes": [
+    {
+      "start_month": "2027-09",
+      "application_opens": null,
+      "deadlines": [
+        {
+          "label": "on-time deadline",
+          "date": "2027-08-02",
+          "date_precision": "day"
+        }
+      ],
+      "deposit_amount": null,
+      "deposit_currency": null,
+      "deposit_deadline": null,
+      "start_term": "fall"
+    }
+  ],
+  "fees": []
+}

@@ -89,6 +89,7 @@
             "required": ["test", "overall_min"],
             "properties": {
               "test": { "enum": ["IELTS", "TOEFL_iBT", "PTE", "Duolingo", "Cambridge", "Other"] },
+              "scale": { "enum": ["0-120", "1-6", null], "description": "TOEFL iBT only" },
               "overall_min": { "type": "number" },
               "subscore_min": { "type": ["number", "null"] },
               "notes": { "type": ["string", "null"] }
@@ -97,8 +98,8 @@
         },
         "english_waiver_text": { "type": ["string", "null"] },
         "waec_english_accepted": { "type": ["boolean", "null"] },
-        "gre_required": { "enum": ["required", "optional", "not_required", null] },
-        "gmat_required": { "enum": ["required", "optional", "not_required", null] },
+        "gre_required": { "enum": ["required", "optional", "not_required", "one_of_required", null] },
+        "gmat_required": { "enum": ["required", "optional", "not_required", "one_of_required", null] },
         "min_work_years": { "type": ["number", "null"], "minimum": 0 },
         "documents": {
           "type": "array",
@@ -114,9 +115,14 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["start_month", "deadlines"],
+        "required": ["start_term", "start_month", "deadlines"],
         "properties": {
-          "start_month": { "type": "string", "pattern": "^\\d{4}-\\d{2}$" },
+          "start_term": { "enum": ["fall", "winter", "spring", "summer"] },
+          "start_month": {
+            "type": ["string", "null"],
+            "pattern": "^\\d{4}-\\d{2}$",
+            "description": "null when the pages give only a term"
+          },
           "application_opens": { "type": ["string", "null"], "format": "date" },
           "deadlines": {
             "type": "array",
@@ -145,7 +151,10 @@
         "additionalProperties": false,
         "required": ["fee_year", "tuition_amount", "currency", "basis"],
         "properties": {
-          "fee_year": { "type": "string", "description": "e.g. 2027/28 or 2027-2028" },
+          "fee_year": {
+            "type": ["string", "null"],
+            "description": "academic year as YYYY/YY, e.g. 2027/28; null when not printed"
+          },
           "tuition_amount": { "type": "number", "minimum": 0 },
           "currency": { "enum": ["GBP", "CAD", "USD"] },
           "basis": { "enum": ["per_year", "total", "per_credit", "per_term"] },

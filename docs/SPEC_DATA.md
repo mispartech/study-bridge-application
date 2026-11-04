@@ -103,7 +103,8 @@ create type field_code as enum ('computer_data_science', 'public_health', 'busin
 | min_gpa4 | numeric(3,2) null | |
 | nigeria_rule | text null | verbatim from university's Nigeria page |
 | considers_lower_with_experience | boolean | |
-| ielts_min / toefl_min / duolingo_min | numeric null | overall |
+| ielts_min / toefl_min / duolingo_min | numeric null | overall; toefl_min is on the 0-120 scale |
+| toefl_entries | jsonb | one entry per published scale: `{scale: "0-120" or "1-6", overall_min, subscore_min}` |
 | english_subscores | jsonb null | |
 | english_waiver_text | text null | |
 | waec_english_accepted | boolean | |
@@ -117,7 +118,9 @@ create type field_code as enum ('computer_data_science', 'public_health', 'busin
 | --- | --- | --- |
 | id | uuid pk | |
 | programme_id | uuid fk | |
-| start_month | date | |
+| start_term | enum fall, winter, spring, summer | |
+| cycle | text | academic cycle, e.g. 2027/28 |
+| start_month | date null | null when the source gives only a term |
 | application_opens | date null | |
 | deadlines | jsonb | `[{"label":"international","date":"2027-06-30"}]` |
 | scholarship_deadline | date null | |

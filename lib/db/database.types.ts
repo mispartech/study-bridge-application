@@ -355,6 +355,7 @@ export type Database = {
           application_opens: string | null
           confidence: Database["public"]["Enums"]["confidence_level"]
           created_at: string
+          cycle: string
           deadlines: NonNullable<Json>
           deposit_currency: string | null
           deposit_deadline: string | null
@@ -365,7 +366,8 @@ export type Database = {
           programme_id: string
           scholarship_deadline: string | null
           source_url: string
-          start_month: string
+          start_month: string | null
+          start_term: Database["public"]["Enums"]["intake_term"]
           updated_at: string
         }
         ComputedFields: never
@@ -373,6 +375,7 @@ export type Database = {
           application_opens?: string | null
           confidence: Database["public"]["Enums"]["confidence_level"]
           created_at?: string
+          cycle: string
           deadlines?: NonNullable<Json>
           deposit_currency?: string | null
           deposit_deadline?: string | null
@@ -383,13 +386,15 @@ export type Database = {
           programme_id: string
           scholarship_deadline?: string | null
           source_url: string
-          start_month: string
+          start_month?: string | null
+          start_term: Database["public"]["Enums"]["intake_term"]
           updated_at?: string
         }
         Update: {
           application_opens?: string | null
           confidence?: Database["public"]["Enums"]["confidence_level"]
           created_at?: string
+          cycle?: string
           deadlines?: NonNullable<Json>
           deposit_currency?: string | null
           deposit_deadline?: string | null
@@ -400,7 +405,8 @@ export type Database = {
           programme_id?: string
           scholarship_deadline?: string | null
           source_url?: string
-          start_month?: string
+          start_month?: string | null
+          start_term?: Database["public"]["Enums"]["intake_term"]
           updated_at?: string
         }
         Relationships: [
@@ -508,6 +514,7 @@ export type Database = {
           nigeria_rule: string | null
           programme_id: string
           source_url: string
+          toefl_entries: NonNullable<Json>
           toefl_min: number | null
           updated_at: string
           waec_english_accepted: boolean
@@ -532,6 +539,7 @@ export type Database = {
           nigeria_rule?: string | null
           programme_id: string
           source_url: string
+          toefl_entries?: NonNullable<Json>
           toefl_min?: number | null
           updated_at?: string
           waec_english_accepted?: boolean
@@ -555,6 +563,7 @@ export type Database = {
           nigeria_rule?: string | null
           programme_id?: string
           source_url?: string
+          toefl_entries?: NonNullable<Json>
           toefl_min?: number | null
           updated_at?: string
           waec_english_accepted?: boolean
@@ -1051,6 +1060,7 @@ export type Database = {
       degree_type: "MSc" | "MA" | "MEng" | "MBA" | "MRes" | "MPH" | "LLM" | "MPS" | "Other"
       field_code:
         "computer_data_science" | "public_health" | "business_finance" | "engineering" | "project_management" | "law"
+      intake_term: "fall" | "winter" | "spring" | "summer"
       plan_tier: "free" | "plus"
       study_mode: "full_time" | "part_time" | "online" | "blended"
       tracker_stage:
@@ -1185,6 +1195,7 @@ export const Constants = {
         "project_management",
         "law",
       ],
+      intake_term: ["fall", "winter", "spring", "summer"],
       plan_tier: ["free", "plus"],
       study_mode: ["full_time", "part_time", "online", "blended"],
       tracker_stage: [

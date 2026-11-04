@@ -13,7 +13,7 @@ from decimal import Decimal
 from typing import Literal
 from urllib.parse import urlsplit
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 # Application portals accepted for any university (section 4); per-university portals live in
 # university.official_domains.
@@ -21,6 +21,35 @@ PORTAL_ALLOW_LIST = ("ucas.com", "ouac.on.ca")
 TUITION_RANGE_PER_YEAR = {"GBP": (8_000, 60_000), "CAD": (10_000, 80_000), "USD": (10_000, 120_000)}
 MIN_SECTION_CONFIDENCE = 0.7
 OLD_FEE_YEAR_CONFIDENCE = 0.6
+FIRST_CYCLE_MONTH = 8  # an academic cycle 2027/28 runs from August 2027 to July 2028
+
+
+def norm_fee_year(value: str) -> str:
+    """"2027-2028", "2027/2028", "2027–28" and a single "2027" → "2027/28" (a single year is the
+    academic year starting then). Anything without a four-digit year is returned trimmed."""
+    years = re.findall(r"\d{4}|\d{2}", value)
+    if not years or len(years[0]) != 4:
+        return value.strip()
+    start = int(years[0])
+    end = years[1][-2:] if len(years) >= 2 else f"{(start + 1) % 100:02d}"
+    return f"{start}/{end}"
+
+
+def cycle_start(cycle: str) -> int:
+    """First calendar year of a cycle such as "2027/28"."""
+    m = re.match(r"\s*(\d{4})", cycle)
+    if not m:
+        raise ValueError(f"Not a cycle like 2027/28: {cycle!r}")
+    return int(m.group(1))
+
+
+TERM_FIRST_MONTH = {"fall": 8, "winter": 1, "spring": 3, "summer": 6}
+
+
+def cycle_of(year: int, month: int) -> str:
+    """The cycle a start month belongs to: September 2027, January 2028 and May 2028 are all 2027/28."""
+    start = year if month >= FIRST_CYCLE_MONTH else year - 1
+    return f"{start}/{(start + 1) % 100:02d}"
 
 
 class _M(BaseModel):
@@ -50,12 +79,13 @@ class Programme(_M):
 
 class EnglishTest(_M):
     test: Literal["IELTS", "TOEFL_iBT", "PTE", "Duolingo", "Cambridge", "Other"]
+    scale: Literal["0-120", "1-6"] | None = None
     overall_min: float
     subscore_min: float | None = None
     notes: str | None = None
 
 
-Requiredness = Literal["required", "optional", "not_required"] | None
+Requiredness = Literal["required", "optional", "not_required", "one_of_required"] | None
 
 
 class Requirement(_M):
@@ -80,26 +110,42 @@ class Deadline(_M):
 
 
 class Intake(_M):
-    start_month: str = Field(pattern=r"^\d{4}-\d{2}$")
+    start_term: Literal["fall", "winter", "spring", "summer"]
+    start_month: str | None = Field(pattern=r"^\d{4}-\d{2}$")
     application_opens: dt.date | None = None
     deadlines: list[Deadline]
     deposit_amount: float | None = None
     deposit_currency: Literal["GBP", "CAD", "USD"] | None = None
     deposit_deadline: dt.date | None = None
 
-    @property
-    def start_date(self) -> dt.date:
+    def in_cycle(self, cycle: str) -> bool:
+        """A term-only intake has no year of its own, so it can only belong to the target cycle."""
+        if self.start_month is None:
+            return True
         y, m = map(int, self.start_month.split("-"))
-        return dt.date(y, m, 1)
+        return cycle_of(y, m) == cycle
+
+    def start_date(self, cycle: str) -> dt.date:
+        """First day of the start month, or of the term's first month for a term-only intake."""
+        if self.start_month is not None:
+            y, m = map(int, self.start_month.split("-"))
+            return dt.date(y, m, 1)
+        m = TERM_FIRST_MONTH[self.start_term]
+        return dt.date(cycle_start(cycle) + (m < FIRST_CYCLE_MONTH), m, 1)
 
 
 class Fee(_M):
-    fee_year: str
+    fee_year: str | None
     tuition_amount: float = Field(ge=0)
     currency: Literal["GBP", "CAD", "USD"]
     basis: Literal["per_year", "total", "per_credit", "per_term"]
     credits_total: float | None = None
     application_fee: float | None = None
+
+    @field_validator("fee_year")
+    @classmethod
+    def _normalise_fee_year(cls, value: str | None) -> str | None:
+        return None if value is None else norm_fee_year(value)
 
 
 class Scholarship(_M):
@@ -175,15 +221,10 @@ def host_allowed(url: str | None, official_domains: list[str]) -> bool:
     return any(host == d or host.endswith("." + d) for d in allowed)
 
 
-def _fee_year_start(fee_year: str) -> int | None:
-    m = re.search(r"(\d{4})", fee_year)
-    return int(m.group(1)) if m else None
-
-
 def validate_record(
     raw: dict,
     *,
-    target_intake_year: int,
+    target_cycle: str,
     run_date: dt.date,
     official_domains: list[str] | None = None,
     input_truncated: bool = False,
@@ -220,18 +261,32 @@ def validate_record(
             lo, hi = TUITION_RANGE_PER_YEAR[fee.currency]
             if not lo <= per_year <= hi:
                 add(Issue("tuition_out_of_range", f"{fee.currency} {per_year:,.0f}/year outside {lo:,}–{hi:,}", path))
-        start = _fee_year_start(fee.fee_year)
-        if start is not None and start < target_intake_year:
+        if fee.fee_year is None:
+            add(Issue("fee_year_missing", "The pages don't print the academic year for this fee", path))
+            continue
+        m = re.match(r"(\d{4})/", fee.fee_year)  # already normalised to YYYY/YY
+        if m and int(m.group(1)) < cycle_start(target_cycle):
             add(Issue("fee_year_old", "fees not yet published for target year", path))
             record.confidence.fees = min(record.confidence.fees, OLD_FEE_YEAR_CONFIDENCE)
 
+    for i, test in enumerate(record.requirement.english_tests if record.requirement else []):
+        if test.test == "TOEFL_iBT" and test.scale is None:
+            add(Issue("toefl_scale_missing", "TOEFL entry doesn't say which scale it is on",
+                      f"requirement.english_tests[{i}]"))
+
+    extracted = len(record.intakes)
+    record.intakes = [intake for intake in record.intakes if intake.in_cycle(target_cycle)]
+    if extracted and not record.intakes:
+        add(Issue("no_intake_in_cycle", f"None of the {extracted} extracted intakes is in {target_cycle}", "intakes"))
+
     for i, intake in enumerate(record.intakes):
+        start = intake.start_date(target_cycle)
         for j, d in enumerate(intake.deadlines):
             path = f"intakes[{i}].deadlines[{j}]"
             if d.date <= run_date:
                 add(Issue("deadline_in_past", f"{d.label}: {d.date} is not after the run date {run_date}", path))
-            if d.date >= intake.start_date:
-                add(Issue("deadline_after_start", f"{d.label}: {d.date} is not before the {intake.start_month} start",
+            if d.date >= start:
+                add(Issue("deadline_after_start", f"{d.label}: {d.date} is not before the {start:%Y-%m} start",
                           path))
 
     for section, value in record.confidence.model_dump().items():

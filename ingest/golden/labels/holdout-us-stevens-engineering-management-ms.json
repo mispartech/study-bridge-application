@@ -1,0 +1,36 @@
+{
+  "found": true,
+  "university": {
+    "name": "Stevens Institute of Technology",
+    "country": "US",
+    "city": "Hoboken",
+    "official_domain": "stevens.edu"
+  },
+  "programme": {
+    "title": "Master's Degree in Engineering Management",
+    "degree_type": "MEng",
+    "field": "engineering",
+    "duration_months": null,
+    "study_mode": null,
+    "stem_designated": null,
+    "has_coop_or_placement": true,
+    "programme_url": "https://www.stevens.edu/program/engineering-management-masters",
+    "apply_url": null
+  },
+  "requirement": {
+    "academic_rule_text": null,
+    "min_uk_class": null,
+    "min_gpa4": null,
+    "considers_lower_with_experience": null,
+    "nigeria_rule": null,
+    "english_tests": [],
+    "english_waiver_text": null,
+    "waec_english_accepted": null,
+    "gre_required": "optional",
+    "gmat_required": "optional",
+    "min_work_years": null,
+    "documents": ["references", "sop", "transcript"]
+  },
+  "intakes": [],
+  "fees": []
+}

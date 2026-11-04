@@ -1,0 +1,57 @@
+{
+  "found": true,
+  "university": {
+    "name": "Emory University",
+    "country": "US",
+    "city": "Atlanta",
+    "official_domain": "emory.edu"
+  },
+  "programme": {
+    "title": "Master of Public Health (MPH)",
+    "degree_type": "MPH",
+    "field": "public_health",
+    "duration_months": null,
+    "study_mode": null,
+    "stem_designated": null,
+    "has_coop_or_placement": null,
+    "programme_url": "https://sph.emory.edu/admissions",
+    "apply_url": null
+  },
+  "requirement": {
+    "academic_rule_text": null,
+    "min_uk_class": null,
+    "min_gpa4": null,
+    "considers_lower_with_experience": null,
+    "nigeria_rule": null,
+    "english_tests": [],
+    "english_waiver_text": null,
+    "waec_english_accepted": null,
+    "gre_required": "not_required",
+    "gmat_required": null,
+    "min_work_years": null,
+    "documents": ["cv", "references", "sop", "transcript"]
+  },
+  "intakes": [
+    {
+      "start_month": null,
+      "application_opens": null,
+      "deadlines": [
+        {
+          "label": "priority consideration for scholarship opportunities",
+          "date": "2027-01-31",
+          "date_precision": "month"
+        },
+        {
+          "label": "priority deadline for master's and DrPH programs",
+          "date": "2027-01-05",
+          "date_precision": "day"
+        }
+      ],
+      "deposit_amount": null,
+      "deposit_currency": null,
+      "deposit_deadline": null,
+      "start_term": "fall"
+    }
+  ],
+  "fees": []
+}

@@ -157,6 +157,13 @@ export const requirementRow = z.object({
   considers_lower_with_experience: z.boolean(),
   ielts_min: z.number().min(0).max(9).nullable(),
   toefl_min: z.number().min(0).max(120).nullable(),
+  toefl_entries: z.array(
+    z.object({
+      scale: z.enum(["0-120", "1-6"]),
+      overall_min: z.number(),
+      subscore_min: z.number().nullable(),
+    })
+  ),
   duolingo_min: z.number().min(10).max(160).nullable(),
   english_subscores: json.nullable(),
   english_waiver_text: z.string().nullable(),
@@ -173,7 +180,9 @@ export const intakeDeadline = z.object({ label: z.string().min(1), date })
 export const intakeRow = z.object({
   id: uuid,
   programme_id: uuid,
-  start_month: date,
+  start_term: z.enum(["fall", "winter", "spring", "summer"]),
+  cycle: z.string().regex(/^\d{4}\/\d{2}$/),
+  start_month: date.nullable(),
   application_opens: date.nullable(),
   deadlines: z.array(intakeDeadline),
   scholarship_deadline: date.nullable(),

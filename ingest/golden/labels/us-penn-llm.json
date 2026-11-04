@@ -1,0 +1,36 @@
+{
+  "found": true,
+  "university": {
+    "name": "University of Pennsylvania",
+    "country": "US",
+    "city": "Philadelphia",
+    "official_domain": "upenn.edu"
+  },
+  "programme": {
+    "title": "LLM Program",
+    "degree_type": "LLM",
+    "field": "law",
+    "duration_months": null,
+    "study_mode": "full_time",
+    "stem_designated": null,
+    "has_coop_or_placement": null,
+    "programme_url": "https://www.law.upenn.edu/admissions/grad/llm.php",
+    "apply_url": null
+  },
+  "requirement": {
+    "academic_rule_text": null,
+    "min_uk_class": null,
+    "min_gpa4": null,
+    "considers_lower_with_experience": null,
+    "nigeria_rule": null,
+    "english_tests": [],
+    "english_waiver_text": null,
+    "waec_english_accepted": null,
+    "gre_required": null,
+    "gmat_required": null,
+    "min_work_years": null,
+    "documents": []
+  },
+  "intakes": [],
+  "fees": []
+}

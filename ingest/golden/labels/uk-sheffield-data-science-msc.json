@@ -1,0 +1,52 @@
+{
+  "found": true,
+  "university": {
+    "name": "The University of Sheffield",
+    "country": "UK",
+    "city": "Sheffield",
+    "official_domain": "sheffield.ac.uk"
+  },
+  "programme": {
+    "title": "Data Science MSc",
+    "degree_type": "MSc",
+    "field": "computer_data_science",
+    "duration_months": 12,
+    "study_mode": "full_time",
+    "stem_designated": null,
+    "has_coop_or_placement": null,
+    "programme_url": "https://sheffield.ac.uk/postgraduate/taught/courses/2027/data-science-msc",
+    "apply_url": null
+  },
+  "requirement": {
+    "academic_rule_text": "Minimum 2:1 undergraduate honours degree in any subject.",
+    "min_uk_class": "upper_second",
+    "min_gpa4": null,
+    "considers_lower_with_experience": true,
+    "nigeria_rule": "You will usually need a 4 year bachelors degree from a recognised university in a relevant subject for entry. The degree programme must be accredited by NUC. Most postgraduate courses require a UK 2:1 or equivalent for entry, but some courses may consider 2:2 grades. Please see our course finder for specific course requirements.",
+    "english_tests": [
+      {
+        "test": "IELTS",
+        "overall_min": 6.5,
+        "subscore_min": 6
+      }
+    ],
+    "english_waiver_text": "The WAEC West African Senior School Certificate (WASSCE), English Grade C or above can be accepted in place of IELTS or equivalent. Please see our guidance on English language requirements for further information.",
+    "waec_english_accepted": true,
+    "gre_required": null,
+    "gmat_required": null,
+    "min_work_years": null,
+    "documents": []
+  },
+  "intakes": [
+    {
+      "start_month": "2027-09",
+      "application_opens": null,
+      "deadlines": [],
+      "deposit_amount": null,
+      "deposit_currency": null,
+      "deposit_deadline": null,
+      "start_term": "fall"
+    }
+  ],
+  "fees": []
+}

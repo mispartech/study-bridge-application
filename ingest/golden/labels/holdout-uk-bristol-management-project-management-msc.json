@@ -1,0 +1,45 @@
+{
+  "found": true,
+  "university": {
+    "name": "University of Bristol",
+    "country": "UK",
+    "city": "Bristol",
+    "official_domain": "bristol.ac.uk"
+  },
+  "programme": {
+    "title": "MSc Management (Project Management)",
+    "degree_type": "MSc",
+    "field": "project_management",
+    "duration_months": 12,
+    "study_mode": "full_time",
+    "stem_designated": null,
+    "has_coop_or_placement": null,
+    "programme_url": "https://www.bristol.ac.uk/study/postgraduate/taught/msc-management-project-management/",
+    "apply_url": null
+  },
+  "requirement": {
+    "academic_rule_text": "You will typically need an upper second-class honours degree or an international equivalent in any discipline.",
+    "min_uk_class": "upper_second",
+    "min_gpa4": null,
+    "considers_lower_with_experience": true,
+    "nigeria_rule": null,
+    "english_tests": [],
+    "english_waiver_text": null,
+    "waec_english_accepted": null,
+    "gre_required": null,
+    "gmat_required": null,
+    "min_work_years": null,
+    "documents": []
+  },
+  "intakes": [],
+  "fees": [
+    {
+      "fee_year": null,
+      "tuition_amount": 34500,
+      "currency": "GBP",
+      "basis": "per_year",
+      "credits_total": null,
+      "application_fee": null
+    }
+  ]
+}

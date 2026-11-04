@@ -1,0 +1,52 @@
+{
+  "found": true,
+  "university": {
+    "name": "University of Ottawa",
+    "country": "CA",
+    "city": "Ottawa",
+    "official_domain": "uottawa.ca"
+  },
+  "programme": {
+    "title": "Master of Laws (LLM)",
+    "degree_type": "LLM",
+    "field": "law",
+    "duration_months": null,
+    "study_mode": "full_time",
+    "stem_designated": null,
+    "has_coop_or_placement": null,
+    "programme_url": "https://www.uottawa.ca/faculty-law/llmphd/admissions/application-deadlines",
+    "apply_url": null
+  },
+  "requirement": {
+    "academic_rule_text": "To be considered for admission to the master of laws (LLM) program, applicants must have an undergraduate law degree from a Canadian university or an equivalent foreign law degree or, exceptionally, a degree deemed equivalent by the program's Admissions Committee. Candidates must have completed their undergraduate law degree with an average of at least 70% (B), calculated in accordance with graduate studies guidelines. Particular attention is paid to relevant legal experience, prior research and letters of reference. Please review the graduate studies in Law website.",
+    "min_uk_class": null,
+    "min_gpa4": null,
+    "considers_lower_with_experience": true,
+    "nigeria_rule": null,
+    "english_tests": [],
+    "english_waiver_text": null,
+    "waec_english_accepted": null,
+    "gre_required": null,
+    "gmat_required": null,
+    "min_work_years": null,
+    "documents": []
+  },
+  "intakes": [
+    {
+      "start_month": "2027-09",
+      "application_opens": null,
+      "deadlines": [
+        {
+          "label": "international applicants",
+          "date": "2027-02-01",
+          "date_precision": "day"
+        }
+      ],
+      "deposit_amount": null,
+      "deposit_currency": null,
+      "deposit_deadline": null,
+      "start_term": "fall"
+    }
+  ],
+  "fees": []
+}

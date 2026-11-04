@@ -1,0 +1,45 @@
+{
+  "found": true,
+  "university": {
+    "name": "Northeastern University",
+    "country": "US",
+    "city": "Boston",
+    "official_domain": "northeastern.edu"
+  },
+  "programme": {
+    "title": "Master of Science in Project Management",
+    "degree_type": "MSc",
+    "field": "project_management",
+    "duration_months": null,
+    "study_mode": null,
+    "stem_designated": null,
+    "has_coop_or_placement": true,
+    "programme_url": "https://catalog.northeastern.edu/graduate/professional-studies/masters-degree-programs/project-management-ms/",
+    "apply_url": null
+  },
+  "requirement": {
+    "academic_rule_text": null,
+    "min_uk_class": null,
+    "min_gpa4": null,
+    "considers_lower_with_experience": null,
+    "nigeria_rule": null,
+    "english_tests": [],
+    "english_waiver_text": null,
+    "waec_english_accepted": null,
+    "gre_required": null,
+    "gmat_required": null,
+    "min_work_years": null,
+    "documents": []
+  },
+  "intakes": [],
+  "fees": [
+    {
+      "fee_year": "2026/27",
+      "tuition_amount": 1332,
+      "currency": "USD",
+      "basis": "per_credit",
+      "credits_total": 34,
+      "application_fee": null
+    }
+  ]
+}

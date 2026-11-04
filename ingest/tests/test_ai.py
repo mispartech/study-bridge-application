@@ -99,8 +99,22 @@ def test_native_structured_output_where_forced_tools_are_rejected(captured):
 )
 def test_schema_violations_are_rejected(captured, bad):
     captured(tool_response(bad))
+    calls = []
+    captured(tool_response(bad))
+    original = ai.litellm.completion
+    ai.litellm.completion = lambda **kw: (calls.append(kw), original(**kw))[1]
     with pytest.raises(AiValidationError):
         generate_structured("extraction", "p", SCHEMA, tool_name="record_programme")
+    assert len(calls) == 2  # one retry, then it gives up
+
+
+def test_schema_invalid_output_is_retried_once(monkeypatch):
+    responses = [tool_response({"found": "yes", "fee": -1, "deadline": None}),
+                 tool_response({"found": True, "fee": 100, "deadline": None})]
+    monkeypatch.setattr(ai.litellm, "completion", lambda **_: responses.pop(0))
+    result = generate_structured("extraction", "p", SCHEMA, tool_name="record_programme")
+    assert result.data["fee"] == 100
+    assert responses == []
 
 
 def test_missing_key_is_reported(monkeypatch, captured):
@@ -115,6 +129,15 @@ def test_render_prompt_and_r3_placeholders():
     assert render_prompt("Hi {{a}}", {"a": 1}) == "Hi 1"
     with pytest.raises(KeyError):
         render_prompt("Hi {{a}}", {})
-    text = ai.load_prompt("r3_extraction", {"target_title": "MSc X", "target_intake_year": 2027, "page_text": "PAGES"})
+    text = ai.load_prompt("r3_extraction", {"target_title": "MSc X", "target_cycle": "2027/28", "page_text": "PAGES"})
     assert text.startswith("You extract structured data")
-    assert text.endswith("Target intake year: 2027\nPages:\nPAGES")
+    assert text.endswith("Target cycle: 2027/28\nPages:\nPAGES")
+
+
+def test_bare_enums_are_typed_for_providers():
+    # Gemini's conversion turns untyped enums into {} and drops the values of type: [string, null].
+    schema = {"type": "object", "properties": {"mode": {"enum": ["full_time", None]}, "country": {"enum": ["UK"]}}}
+    out = ai._for_provider(schema)
+    assert out["properties"]["mode"] == {"anyOf": [{"type": "string", "enum": ["full_time"]}, {"type": "null"}]}
+    assert out["properties"]["country"] == {"type": "string", "enum": ["UK"]}
+    assert schema["properties"]["mode"] == {"enum": ["full_time", None]}  # validation still uses the original

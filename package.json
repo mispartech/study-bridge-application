@@ -18,7 +18,7 @@
     "db:seed": "node --env-file=.env.local scripts/db.mjs seed",
     "db:status": "node --env-file=.env.local scripts/db.mjs status",
     "db:types": "node --env-file=.env.local scripts/db-types.mjs",
-    "test:db": "vitest run --config vitest.db.config.mts",
+    "test:db": "node --env-file=.env.local node_modules/vitest/vitest.mjs run --config vitest.db.config.mts",
     "test:ingest": "uv run --project ingest python -m pytest ingest/tests -q",
     "ingest:golden:fetch": "uv run --project ingest python -m ingest.golden.fetch",
     "ingest:golden": "uv run --project ingest python -m ingest.golden.run",

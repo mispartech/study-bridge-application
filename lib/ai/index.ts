@@ -43,11 +43,34 @@ function validatorFor(schema: JsonSchemaObject) {
   return v
 }
 
-/** Drops keywords that only describe the document and that some providers reject. */
+/**
+ * Gives every bare string `enum` an explicit type. Gemini's schema conversion turns an
+ * untyped enum into `{}` and drops the values of `type: [string, null]`; the `anyOf` form
+ * for nullable enums survives it.
+ */
+function typedEnums(node: unknown): unknown {
+  if (Array.isArray(node)) return node.map(typedEnums)
+  if (!node || typeof node !== "object") return node
+  const out: Record<string, unknown> = {}
+  for (const [k, v] of Object.entries(node)) out[k] = typedEnums(v)
+  const values = out.enum
+  if (Array.isArray(values) && !("type" in out) && values.every((v) => typeof v === "string" || v === null)) {
+    const strings = values.filter((v) => v !== null)
+    if (values.includes(null)) {
+      delete out.enum
+      out.anyOf = [{ type: "string", enum: strings }, { type: "null" }]
+    } else {
+      out.type = "string"
+    }
+  }
+  return out
+}
+
+/** Drops keywords that only describe the document and that some providers reject; types bare enums. */
 function forProvider(schema: JsonSchemaObject): JsonSchemaObject {
   const rest = { ...schema }
   delete rest.$schema
-  return rest
+  return typedEnums(rest) as JsonSchemaObject
 }
 
 type CallOptions = {
@@ -60,6 +83,8 @@ type CallOptions = {
   abortSignal?: AbortSignal
 }
 
+type StructuredOptions = CallOptions & { toolName?: string; toolDescription?: string }
+
 export type StructuredResult<T> = {
   data: T
   model: ModelRef
@@ -70,13 +95,27 @@ export type StructuredResult<T> = {
 /**
  * One structured generation, validated against `schema`. Uses a forced tool call named
  * `toolName` where the model supports it, otherwise the provider's native structured output.
- * Throws AiValidationError when the model's JSON does not match the schema.
+ * Schema-invalid output is retried once; a second failure throws AiValidationError.
  */
 export async function generateStructured<T = unknown>(
   task: AiTask,
   prompt: string,
   schema: JsonSchemaObject,
-  { toolName = "record", ...opts }: CallOptions & { toolName?: string; toolDescription?: string } = {}
+  options: StructuredOptions = {}
+): Promise<StructuredResult<T>> {
+  try {
+    return await generateStructuredOnce<T>(task, prompt, schema, options)
+  } catch (err) {
+    if (!(err instanceof AiValidationError)) throw err
+    return generateStructuredOnce<T>(task, prompt, schema, options)
+  }
+}
+
+async function generateStructuredOnce<T>(
+  task: AiTask,
+  prompt: string,
+  schema: JsonSchemaObject,
+  { toolName = "record", ...opts }: StructuredOptions
 ): Promise<StructuredResult<T>> {
   const ref = opts.model ?? modelFor(task)
   const model = opts.languageModelOverride ?? languageModel(ref)

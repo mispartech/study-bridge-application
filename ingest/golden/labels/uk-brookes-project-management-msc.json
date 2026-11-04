@@ -1,0 +1,69 @@
+{
+  "found": true,
+  "university": {
+    "name": "Oxford Brookes University",
+    "country": "UK",
+    "city": "Oxford",
+    "official_domain": "brookes.ac.uk"
+  },
+  "programme": {
+    "title": "Project Management MSc",
+    "degree_type": "MSc",
+    "field": "project_management",
+    "duration_months": 12,
+    "study_mode": "full_time",
+    "stem_designated": null,
+    "has_coop_or_placement": true,
+    "programme_url": "https://www.brookes.ac.uk/courses/postgraduate/project-management",
+    "apply_url": null
+  },
+  "requirement": {
+    "academic_rule_text": "A minimum of a second class honours degree (2:2) in any academic discipline, or equivalent overseas degree from a recognised institution or equivalent professional or other qualification.",
+    "min_uk_class": "lower_second",
+    "min_gpa4": null,
+    "considers_lower_with_experience": true,
+    "nigeria_rule": "Please check the individual course listing for the bachelor degree requirement and use the equivalency table below to work out your specific requirement. If you do not meet our minimum requirements, you may still be able to apply for one of our pre-master’s courses.",
+    "english_tests": [
+      {
+        "test": "IELTS",
+        "overall_min": 6.0,
+        "subscore_min": 5.5
+      }
+    ],
+    "english_waiver_text": "if you have completed your undergraduate degree in the UK (at least one full year of study) you will automatically meet our English language requirements",
+    "waec_english_accepted": null,
+    "gre_required": null,
+    "gmat_required": null,
+    "min_work_years": null,
+    "documents": ["references"]
+  },
+  "intakes": [
+    {
+      "start_month": "2027-09",
+      "application_opens": null,
+      "deadlines": [],
+      "deposit_amount": null,
+      "deposit_currency": null,
+      "deposit_deadline": null,
+      "start_term": "fall"
+    }
+  ],
+  "fees": [
+    {
+      "fee_year": "2026/27",
+      "tuition_amount": 19600,
+      "currency": "GBP",
+      "basis": "per_year",
+      "credits_total": null,
+      "application_fee": null
+    },
+    {
+      "fee_year": "2027/28",
+      "tuition_amount": 20800,
+      "currency": "GBP",
+      "basis": "per_year",
+      "credits_total": null,
+      "application_fee": null
+    }
+  ]
+}

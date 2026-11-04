@@ -132,11 +132,31 @@ def _api_key(ref: ModelRef) -> str:
     return key
 
 
+def _typed_enums(node: Any) -> Any:
+    """Gives every bare string `enum` an explicit type. Gemini's schema conversion turns an
+    untyped enum into `{}` and drops the values of `type: [string, null]`; the `anyOf` form
+    for nullable enums survives it."""
+    if isinstance(node, list):
+        return [_typed_enums(child) for child in node]
+    if not isinstance(node, dict):
+        return node
+    out = {k: _typed_enums(v) for k, v in node.items()}
+    values = out.get("enum")
+    if values is not None and "type" not in out and all(isinstance(v, str) or v is None for v in values):
+        strings = [v for v in values if v is not None]
+        if None in values:
+            del out["enum"]
+            out["anyOf"] = [{"type": "string", "enum": strings}, {"type": "null"}]
+        else:
+            out["type"] = "string"
+    return out
+
+
 def _for_provider(schema: dict[str, Any]) -> dict[str, Any]:
-    """Drops document-only keywords that some providers reject."""
+    """Drops document-only keywords that some providers reject and types bare enums."""
     out = copy.deepcopy(schema)
     out.pop("$schema", None)
-    return out
+    return _typed_enums(out)
 
 
 def _request_params(ref: ModelRef, forced: bool) -> dict[str, Any]:
@@ -158,7 +178,15 @@ def _usage(response: Any) -> tuple[int | None, int | None]:
     return getattr(usage, "prompt_tokens", None), getattr(usage, "completion_tokens", None)
 
 
-def generate_structured(
+def generate_structured(task: str, prompt: str, schema: dict[str, Any], **options: Any) -> StructuredResult:
+    """One structured generation, retried once on schema-invalid output. Each attempt logs its usage."""
+    try:
+        return _generate_structured_once(task, prompt, schema, **options)
+    except AiValidationError:
+        return _generate_structured_once(task, prompt, schema, **options)
+
+
+def _generate_structured_once(
     task: str,
     prompt: str,
     schema: dict[str, Any],

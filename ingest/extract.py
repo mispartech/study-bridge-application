@@ -23,14 +23,15 @@ def extract_programme(
     pages: list[tuple[str, str]],
     *,
     target_title: str,
-    target_intake_year: int,
+    target_cycle: str,
     model: ModelRef | None = None,
 ) -> Extraction:
-    """`pages` are (url, raw_html) pairs for one programme (main page plus fees/requirements pages)."""
+    """`pages` are (url, raw_html) pairs for one programme (main page plus fees/requirements pages);
+    `target_cycle` is an academic cycle such as "2027/28"."""
     page_text, truncated = pages_to_text(pages)
     prompt = load_prompt(
         "r3_extraction",
-        {"target_title": target_title, "target_intake_year": target_intake_year, "page_text": page_text},
+        {"target_title": target_title, "target_cycle": target_cycle, "page_text": page_text},
     )
     result = generate_structured(
         "extraction",

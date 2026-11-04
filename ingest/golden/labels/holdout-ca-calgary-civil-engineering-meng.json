@@ -1,0 +1,67 @@
+{
+  "found": true,
+  "university": {
+    "name": "University of Calgary",
+    "country": "CA",
+    "city": "Calgary",
+    "official_domain": "ucalgary.ca"
+  },
+  "programme": {
+    "title": "Civil Engineering Master of Engineering (MEng)",
+    "degree_type": "MEng",
+    "field": "engineering",
+    "duration_months": 24,
+    "study_mode": "full_time",
+    "stem_designated": null,
+    "has_coop_or_placement": true,
+    "programme_url": "https://grad.ucalgary.ca/future-students/graduate/discover-opportunities/explore-programs/civil-engineering-meng-course",
+    "apply_url": null
+  },
+  "requirement": {
+    "academic_rule_text": "A minimum of 3.0 GPA on a 4.0 point system, over the past two years of full-time study (a minimum of 10 full-course equivalents or 60 units) of the undergraduate degree.",
+    "min_uk_class": null,
+    "min_gpa4": 3.0,
+    "considers_lower_with_experience": null,
+    "nigeria_rule": null,
+    "english_tests": [],
+    "english_waiver_text": null,
+    "waec_english_accepted": null,
+    "gre_required": "not_required",
+    "gmat_required": "not_required",
+    "min_work_years": null,
+    "documents": ["transcript"]
+  },
+  "intakes": [
+    {
+      "start_month": "2027-09",
+      "application_opens": null,
+      "deadlines": [
+        {
+          "label": "Deadline for International applicants",
+          "date": "2027-04-01",
+          "date_precision": "day"
+        }
+      ],
+      "deposit_amount": null,
+      "deposit_currency": null,
+      "deposit_deadline": null,
+      "start_term": "fall"
+    },
+    {
+      "start_month": "2028-01",
+      "application_opens": null,
+      "deadlines": [
+        {
+          "label": "Deadline for International applicants",
+          "date": "2027-08-01",
+          "date_precision": "day"
+        }
+      ],
+      "deposit_amount": null,
+      "deposit_currency": null,
+      "deposit_deadline": null,
+      "start_term": "winter"
+    }
+  ],
+  "fees": []
+}

@@ -34,7 +34,7 @@ Status = Literal["verified", "queued_for_review", "broken", "skipped", "failed"]
 class Source:
     urls: list[str]  # main programme page first, then fees / requirements pages
     target_title: str
-    target_intake_year: int
+    target_cycle: str  # e.g. "2027/28"
     programme_id: str | None = None  # known programme being re-verified
 
 
@@ -65,7 +65,7 @@ def run_source(source: Source, fetcher: PoliteFetcher, *, model: ModelRef | None
     content_hash = hashlib.sha256(pages_to_text(pages)[0].encode()).hexdigest()
     try:
         extraction = extract_programme(pages, target_title=source.target_title,
-                                       target_intake_year=source.target_intake_year, model=model)
+                                       target_cycle=source.target_cycle, model=model)
     except Exception as err:  # noqa: BLE001 - recorded, run continues with other sources
         _audit(source, fetched_at, content_hash, change=False, diff_={"extraction_error": str(err)})
         return RunResult(source, "failed", [f"extraction failed: {err}"])
@@ -73,11 +73,14 @@ def run_source(source: Source, fetcher: PoliteFetcher, *, model: ModelRef | None
     stored = _load_stored(source.programme_id) if source.programme_id else None
     outcome = validate_record(
         extraction.result.data,
-        target_intake_year=source.target_intake_year,
+        target_cycle=source.target_cycle,
         run_date=today,
         official_domains=stored["official_domains"] if stored else None,
         input_truncated=extraction.truncated,
     )
+    uni = outcome.record.university
+    if uni is not None and uni.city is None:  # pages often don't name the city; the university table does
+        uni.city = stored["university_city"] if stored else _university_city(uni.official_domain)
     proposed = outcome.record.model_dump(mode="json")
 
     if outcome.broken_source:
@@ -109,7 +112,7 @@ def run_source(source: Source, fetcher: PoliteFetcher, *, model: ModelRef | None
 def _load_stored(programme_id: str) -> dict[str, Any] | None:
     with connect() as conn, conn.cursor(row_factory=dict_row) as cur:
         cur.execute(
-            """select p.*, u.official_domains from public.programme p
+            """select p.*, u.official_domains, u.city as university_city from public.programme p
                join public.university u on u.id = p.university_id where p.id = %s""",
             (programme_id,),
         )
@@ -124,8 +127,18 @@ def _load_stored(programme_id: str) -> dict[str, Any] | None:
         requirement = cur.fetchone()
     snapshot = json.loads(json.dumps({"programme": programme, "fees": fees, "intakes": intakes,
                                       "requirement": requirement}, default=str))
-    return {"official_domains": programme["official_domains"], "fees": fees, "intakes": intakes,
-            "requirement": requirement, "snapshot": snapshot}
+    return {"official_domains": programme["official_domains"], "university_city": programme["university_city"],
+            "fees": fees, "intakes": intakes, "requirement": requirement, "snapshot": snapshot}
+
+
+def _university_city(official_domain: str) -> str | None:
+    """City of a known university matched by domain (new programmes have no stored record yet)."""
+    with connect() as conn:
+        row = conn.execute(
+            "select city from public.university where %s = any(official_domains) and not is_demo limit 1",
+            (official_domain.lower(),),
+        ).fetchone()
+    return row[0] if row else None
 
 
 def _audit(source: Source, fetched_at: dt.datetime, content_hash: str | None, *, change: bool,
