@@ -6,6 +6,7 @@ import {
   generateText as sdkGenerateText,
   jsonSchema,
   Output,
+  stepCountIs,
   streamText,
   tool,
   type LanguageModel,
@@ -187,7 +188,7 @@ async function generateStructuredOnce<T>(
 export function generateText(
   task: AiTask,
   messages: ModelMessage[],
-  { tools, system, ...opts }: CallOptions & { tools?: ToolSet; system?: string } = {}
+  { tools, system, maxSteps = 1, ...opts }: CallOptions & { tools?: ToolSet; system?: string; maxSteps?: number } = {}
 ) {
   const ref = opts.model ?? modelFor(task)
   const started = performance.now()
@@ -196,6 +197,8 @@ export function generateText(
     system,
     messages,
     tools,
+    stopWhen: stepCountIs(maxSteps),
+    prepareStep: ({ stepNumber }) => (stepNumber === maxSteps - 1 ? { toolChoice: "none" as const } : {}),
     maxOutputTokens: opts.maxOutputTokens ?? 16_000,
     abortSignal: opts.abortSignal,
     onFinish: ({ usage }) =>

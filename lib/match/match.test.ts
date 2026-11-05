@@ -9,6 +9,7 @@ import {
   affordability,
   applyDiversity,
   budgetFit,
+  careerFit,
   bundles,
   englishCheck,
   groupFor,
@@ -791,5 +792,39 @@ describe("worked example", () => {
       for (const e of r.excluded) reasons.set(e.filter, (reasons.get(e.filter) ?? 0) + 1)
       console.log("restricted", r.restricted.length, "excluded", Object.fromEntries(reasons))
     }
+  })
+})
+
+describe("post-study work priority in career fit", () => {
+  const options = { now: new Date("2026-11-05T12:00:00Z"), demoMode: true }
+  const base = matchProfile.parse({
+    nationality: "NG",
+    field: "computer_data_science",
+    target_cycle: "2027/28",
+    preferred_countries: ["UK", "CA"],
+  })
+  const cat = demo as unknown as Catalogue
+  const fit = (priority: "low" | "medium" | "high" | null, country: string) => {
+    const bundle = bundles(cat, true).find(
+      (b) => b.university.country === country && b.programme.field === base.field && !b.programme.has_coop_or_placement
+    )!
+    return careerFit(bundle, bundle.intakes[0]!, { ...base, post_study_work: priority }, cat, options)
+  }
+
+  it("keeps today's weights when the student gives no priority", () => {
+    expect(fit(null, "UK")).toBeCloseTo(0.8)
+    expect(fit(null, "CA")).toBeCloseTo(0.6)
+  })
+
+  it("rewards the longest route more when it's marked important", () => {
+    expect(fit("high", "UK")).toBeGreaterThan(fit("medium", "UK"))
+    const gap = (priority: "low" | "medium" | "high") => fit(priority, "UK") - fit(priority, "CA")
+    expect(gap("high")).toBeGreaterThan(gap("medium"))
+    expect(gap("medium")).toBeGreaterThan(gap("low"))
+  })
+
+  it("treats a country with no rule on file as unknown, not zero, once a priority is set", () => {
+    expect(fit("medium", "CA")).toBeCloseTo(0.7)
+    expect(fit("high", "CA")).toBeCloseTo(0.65)
   })
 })

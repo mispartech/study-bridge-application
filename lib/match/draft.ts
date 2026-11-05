@@ -40,6 +40,7 @@ export function toMatchProfile(draft: Draft, now: Date): MatchProfile {
       .filter(Boolean),
     accommodation_pref: draft.accommodation || null,
     dependants: number(draft.dependants) ?? 0,
+    post_study_work: draft.post_study_work || null,
   })
 }
 

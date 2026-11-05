@@ -830,10 +830,13 @@ export type Database = {
         Row: {
           accommodation_pref: Database["public"]["Enums"]["accommodation_type"] | null
           budget_total_minor: number | null
+          campus_or_city: string | null
           career_goal: string | null
           cgpa: number | null
           cgpa_scale: number | null
           completeness: number
+          consent_given_at: string | null
+          consent_version: string | null
           created_at: string
           degree_class: Database["public"]["Enums"]["uk_class_band"] | null
           degree_title: string | null
@@ -848,9 +851,11 @@ export type Database = {
           hnd_pgd: boolean
           id: string
           ielts: number | null
+          include_related_fields: boolean
           institution_type: string | null
           intake_target: string | null
           nationality: string | null
+          post_study_work: string | null
           preferred_cities: string[]
           preferred_countries: Database["public"]["Enums"]["country_code"][]
           pte: number | null
@@ -866,16 +871,20 @@ export type Database = {
           user_id: string
           waec_english_grade: string | null
           weights: NonNullable<Json>
+          wizard_answers: NonNullable<Json>
           work_years: number
         }
         ComputedFields: never
         Insert: {
           accommodation_pref?: Database["public"]["Enums"]["accommodation_type"] | null
           budget_total_minor?: number | null
+          campus_or_city?: string | null
           career_goal?: string | null
           cgpa?: number | null
           cgpa_scale?: number | null
           completeness?: number
+          consent_given_at?: string | null
+          consent_version?: string | null
           created_at?: string
           degree_class?: Database["public"]["Enums"]["uk_class_band"] | null
           degree_title?: string | null
@@ -890,9 +899,11 @@ export type Database = {
           hnd_pgd?: boolean
           id?: string
           ielts?: number | null
+          include_related_fields?: boolean
           institution_type?: string | null
           intake_target?: string | null
           nationality?: string | null
+          post_study_work?: string | null
           preferred_cities?: string[]
           preferred_countries?: Database["public"]["Enums"]["country_code"][]
           pte?: number | null
@@ -908,15 +919,19 @@ export type Database = {
           user_id: string
           waec_english_grade?: string | null
           weights?: NonNullable<Json>
+          wizard_answers?: NonNullable<Json>
           work_years?: number
         }
         Update: {
           accommodation_pref?: Database["public"]["Enums"]["accommodation_type"] | null
           budget_total_minor?: number | null
+          campus_or_city?: string | null
           career_goal?: string | null
           cgpa?: number | null
           cgpa_scale?: number | null
           completeness?: number
+          consent_given_at?: string | null
+          consent_version?: string | null
           created_at?: string
           degree_class?: Database["public"]["Enums"]["uk_class_band"] | null
           degree_title?: string | null
@@ -931,9 +946,11 @@ export type Database = {
           hnd_pgd?: boolean
           id?: string
           ielts?: number | null
+          include_related_fields?: boolean
           institution_type?: string | null
           intake_target?: string | null
           nationality?: string | null
+          post_study_work?: string | null
           preferred_cities?: string[]
           preferred_countries?: Database["public"]["Enums"]["country_code"][]
           pte?: number | null
@@ -949,6 +966,7 @@ export type Database = {
           user_id?: string
           waec_english_grade?: string | null
           weights?: NonNullable<Json>
+          wizard_answers?: NonNullable<Json>
           work_years?: number
         }
         Relationships: []

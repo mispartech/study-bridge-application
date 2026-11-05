@@ -53,3 +53,6 @@ lighthouse-reports/
 /ingest/.venv/
 __pycache__/
 .pytest_cache/
+
+# Raw advisor eval answers; the summary in evals/advisor/report.md is committed
+evals/advisor/results.jsonl

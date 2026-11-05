@@ -25,6 +25,14 @@ export const ACCOMMODATION_LABEL: Record<string, string> = {
   off_campus_shared: "Off-campus shared",
 }
 
+export const ACCOMMODATION_TYPES = [
+  "university_halls",
+  "private_studio",
+  "shared_flat",
+  "homestay",
+  "off_campus_shared",
+] as const
+
 export const COUNTRY_LABEL: Record<string, string> = { UK: "UK", CA: "Canada", US: "USA" }
 
 export const TERM_LABEL: Record<string, string> = { fall: "Fall", winter: "Winter", spring: "Spring", summer: "Summer" }

@@ -304,6 +304,68 @@ describe.each(["shortlist", "application_tracker"] as const)("%s: owner only", (
   })
 })
 
+describe("accounts: one student can't see or change another's data", () => {
+  it("keeps new profile columns, including consent and wizard answers, private", async () => {
+    const [a, b] = [await student(), await student()]
+    await db.query(
+      `update public.student_profile set wizard_answers = '{"cgpa":"3.8"}', consent_given_at = now(), post_study_work = 'high' where id = $1`,
+      [a.studentId]
+    )
+    expect(await rows("authenticated", b.userId, "select * from public.student_profile")).toHaveLength(1)
+    const mine = await rows(
+      "authenticated",
+      b.userId,
+      "select wizard_answers from public.student_profile where id = $1",
+      [a.studentId]
+    )
+    expect(mine).toEqual([])
+    const own = await rows("authenticated", a.userId, "select post_study_work from public.student_profile")
+    expect(own).toEqual([{ post_study_work: "high" }])
+    expect(await rows("anon", null, "select id from public.student_profile").catch(() => [])).toEqual([])
+  })
+
+  it("can't overwrite or delete another student's profile", async () => {
+    const [a, b] = [await student(), await student()]
+    await as("authenticated", b.userId, () =>
+      db.query("update public.student_profile set consent_given_at = now() where id = $1", [a.studentId])
+    )
+    await as("authenticated", b.userId, () =>
+      db.query("delete from public.student_profile where id = $1", [a.studentId])
+    )
+    const { rows: left } = await db.query("select consent_given_at from public.student_profile where id = $1", [
+      a.studentId,
+    ])
+    expect(left).toEqual([{ consent_given_at: null }])
+  })
+
+  it("can't create a profile under another student's user id", async () => {
+    const [a, b] = [await student(), await student()]
+    await db.query("delete from public.student_profile where id = $1", [a.studentId])
+    await refused("authenticated", b.userId, "insert into public.student_profile (user_id) values ($1)", [a.userId])
+  })
+
+  it("can't read, add to, or remove from another student's shortlist", async () => {
+    const [a, b] = [await student(), await student()]
+    const [p1, p2] = await anyProgrammeIds(2)
+    await db.query("insert into public.shortlist (student_id, programme_id) values ($1, $2)", [a.studentId, p1])
+    expect(await rows("authenticated", b.userId, "select * from public.shortlist")).toEqual([])
+    expect(await rows("authenticated", a.userId, "select programme_id from public.shortlist")).toEqual([
+      { programme_id: p1 },
+    ])
+    await refused(
+      "authenticated",
+      b.userId,
+      "insert into public.shortlist (student_id, programme_id) values ($1, $2)",
+      [a.studentId, p2]
+    )
+    await as("authenticated", b.userId, () =>
+      db.query("delete from public.shortlist where student_id = $1", [a.studentId])
+    )
+    const { rows: left } = await db.query("select id from public.shortlist where student_id = $1", [a.studentId])
+    expect(left).toHaveLength(1)
+  })
+})
+
 describe("data integrity", () => {
   it("rejects an apply_url outside the university's official domains", async () => {
     const { rows: p } = await db.query("select id from public.programme limit 1")

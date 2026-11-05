@@ -1,3 +1,4 @@
+import { CircleUser } from "lucide-react"
 import Link from "next/link"
 
 import { ThemeToggle } from "@/components/theme-toggle"
@@ -43,7 +44,16 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <header className="sticky top-0 z-40 border-b border-border bg-canvas pt-[env(safe-area-inset-top)]">
         <div className="flex h-14 items-center justify-between gap-2 px-4 md:pl-28">
           <Logo />
-          <ThemeToggle />
+          <div className="flex items-center gap-1">
+            <Link
+              href="/account"
+              aria-label="Your account"
+              className="flex size-11 items-center justify-center rounded-button hover:bg-surface-subtle"
+            >
+              <CircleUser className="size-5" aria-hidden />
+            </Link>
+            <ThemeToggle />
+          </div>
         </div>
       </header>
 

@@ -1,0 +1,25 @@
+name: Advisor eval
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - "lib/advisor/**"
+      - "prompts/r1_advisor.txt"
+      - "config/ai.json"
+      - "evals/advisor/**"
+
+jobs:
+  eval:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    env:
+      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run eval:advisor

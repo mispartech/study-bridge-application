@@ -72,6 +72,7 @@ export const matchProfile = z
       .nullable()
       .default(null),
     dependants: z.number().int().min(0).default(0),
+    post_study_work: z.enum(["low", "medium", "high"]).nullable().default(null),
     weights: weights.default(DEFAULT_WEIGHTS),
   })
   .refine((p) => p.toefl === null || p.toefl_scale !== null, "toefl_scale is required with a TOEFL score")

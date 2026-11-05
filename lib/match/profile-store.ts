@@ -146,3 +146,54 @@ export const draftStore = {
     listeners.forEach((listener) => listener())
   },
 }
+
+const SAVED_KEY = "sb-saved"
+const NONE_SAVED: string[] = []
+let savedList: string[] | null = null
+const savedListeners = new Set<() => void>()
+
+/** Programmes saved before signing in. They move to the shortlist table on sign-up. */
+export const savedStore = {
+  subscribe(listener: () => void) {
+    savedListeners.add(listener)
+    return () => savedListeners.delete(listener)
+  },
+  get() {
+    if (savedList) return savedList
+    try {
+      savedList = JSON.parse(localStorage.getItem(SAVED_KEY) ?? "[]") as string[]
+    } catch {
+      savedList = NONE_SAVED
+    }
+    return savedList
+  },
+  getServer: () => NONE_SAVED,
+  set(next: string[]) {
+    savedList = next
+    try {
+      localStorage.setItem(SAVED_KEY, JSON.stringify(next))
+    } catch {
+      // The button still works for this visit.
+    }
+    savedListeners.forEach((listener) => listener())
+  },
+}
+
+/** After sign-up the account holds everything, so nothing personal stays in this browser. */
+export function clearBrowserProfile() {
+  try {
+    localStorage.removeItem(DRAFT_KEY)
+    localStorage.removeItem(SAVED_KEY)
+  } catch {
+    // Nothing was stored, then.
+  }
+  for (const name of [PROFILE_COOKIE, COMPLETENESS_COOKIE])
+    document.cookie = `${name}=; path=/; max-age=0; samesite=lax`
+  current = emptyDraft
+  savedList = NONE_SAVED
+  listeners.forEach((listener) => listener())
+  savedListeners.forEach((listener) => listener())
+}
+
+/** Supabase's session cookie is readable, so the client can tell without a network call. */
+export const hasSession = () => document.cookie.includes("-auth-token")

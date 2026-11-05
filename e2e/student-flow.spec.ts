@@ -85,6 +85,8 @@ test.describe("onboarding wizard", () => {
     await expect(page.getByTestId("step-6")).toBeVisible()
     await page.getByRole("button", { name: "See my matches" }).click()
 
+    await expect(page).toHaveURL(/\/sign-in\?reason=wizard/)
+    await page.getByRole("link", { name: "See my matches first" }).click()
     await expect(page).toHaveURL(/\/discover$/)
     await expect(page.getByTestId("match-card").first()).toBeVisible()
   })

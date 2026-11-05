@@ -7,10 +7,14 @@ import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { ProgressRing } from "@/components/ui/progress-ring"
 import {
+  clearBrowserProfile,
   completeness,
   DEFAULT_BUDGET_MILLIONS,
   draftStore,
+  emptyDraft,
+  hasSession,
   saveProfile,
+  savedStore,
   toMatchProfile,
   type Draft,
   type TestKey,
@@ -120,10 +124,32 @@ export function Wizard() {
       .map((cycle) => [cycle, cycle])
   )
 
-  function finish() {
-    const now = new Date()
-    saveProfile(toMatchProfile(draft, now), completeness(draft))
-    router.push("/discover")
+  // Reopening on a signed-in device brings the saved answers back.
+  React.useEffect(() => {
+    if (!hasSession() || draftStore.get() !== emptyDraft) return
+    void fetch("/api/account/profile")
+      .then((res) => (res.ok ? (res.json() as Promise<{ draft: Partial<Draft> | null }>) : null))
+      .then((body) => {
+        if (body?.draft) draftStore.set({ ...emptyDraft, ...body.draft, step: 0 })
+      })
+  }, [])
+
+  async function finish() {
+    saveProfile(toMatchProfile(draft, new Date()), completeness(draft))
+    if (!hasSession()) {
+      router.push("/sign-in?reason=wizard&next=/discover")
+      return
+    }
+    const res = await fetch("/api/account/import", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ accepted: false, draft, saved: savedStore.get() }),
+    })
+    if (res.status === 403) router.push("/consent?next=/discover")
+    else {
+      if (res.ok) clearBrowserProfile()
+      router.push("/discover")
+    }
   }
 
   const steps = [

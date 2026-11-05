@@ -5,6 +5,13 @@ import type { Academics, Band, Bundle, Catalogue, Cost, MatchOptions, MatchProfi
 
 const round1 = (n: number) => Math.round(n * 10) / 10
 const OUTCOMES_UNKNOWN = 0.5
+const UNKNOWN_WORK_RULE = 0.5
+// Career fit's three parts always add up to 1. The student's post-study work priority moves weight towards it.
+const CAREER_WEIGHTS = {
+  low: { field: 0.7, placement: 0.2, work: 0.1 },
+  medium: { field: 0.6, placement: 0.2, work: 0.2 },
+  high: { field: 0.45, placement: 0.15, work: 0.4 },
+}
 // Share of each band's score; a ranking band is the only outcome data the schema holds so far.
 const RANKING_SCORE: Record<string, number> = { top_50: 1, top_100: 0.9, top_200: 0.75, top_500: 0.6 }
 
@@ -21,7 +28,7 @@ export function budgetFit(totalNgn: bigint, budget: number | null): number {
   return Math.max(0, Math.min(1, (1.15 - share) / (1.15 - 0.7)))
 }
 
-function careerFit(
+export function careerFit(
   bundle: Bundle,
   intake: Tables<"intake">,
   profile: MatchProfile,
@@ -37,11 +44,17 @@ function careerFit(
   }
   const countries = profile.preferred_countries.length ? profile.preferred_countries : ["UK", "CA", "US"]
   const longest = Math.max(...countries.map(workMonths))
+  const months = workMonths(university.country)
+  const priority = profile.post_study_work
+  // A student who has told us this matters gets a fair score where we hold no rule yet: unknown isn't zero.
+  const unknown = months === 0 && priority !== null
+  const work = unknown ? UNKNOWN_WORK_RULE : longest > 0 ? months / longest : 0
   const stem = university.country === "US" && programme.stem_designated
+  const weight = CAREER_WEIGHTS[priority ?? "medium"]
   return (
-    (programme.field === profile.field ? 0.6 : 0) +
-    (stem || programme.has_coop_or_placement ? 0.2 : 0) +
-    (longest > 0 && workMonths(university.country) === longest ? 0.2 : 0)
+    (programme.field === profile.field ? weight.field : 0) +
+    (stem || programme.has_coop_or_placement ? weight.placement : 0) +
+    weight.work * work
   )
 }
 

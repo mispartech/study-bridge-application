@@ -90,12 +90,18 @@ export const studentProfileRow = z.object({
   career_goal: z.string().nullable(),
   weights: fitWeights,
   completeness: z.number().int().min(0).max(100),
+  post_study_work: z.enum(["low", "medium", "high"]).nullable(),
+  campus_or_city: z.enum(["campus", "city", "either"]).nullable(),
+  include_related_fields: z.boolean(),
+  wizard_answers: json,
+  consent_given_at: timestamp.nullable(),
+  consent_version: z.string().nullable(),
   ...timestamps,
 })
 
 /** What a signed-in student may send: server-owned fields are omitted, the rest optional. */
 export const studentProfileInsert = studentProfileRow
-  .omit({ id: true, user_id: true, created_at: true, updated_at: true })
+  .omit({ id: true, user_id: true, created_at: true, updated_at: true, consent_given_at: true, consent_version: true })
   .partial()
   .refine((p) => p.cgpa == null || (p.cgpa_scale != null && p.cgpa <= p.cgpa_scale), {
     message: "cgpa needs a cgpa_scale and must not exceed it",

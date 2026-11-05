@@ -41,7 +41,7 @@ beforeEach(() => logUsage.mockClear())
 describe("config", () => {
   it("reads the model per task from config/ai.json", () => {
     expect(modelFor("extraction")).toEqual({ provider: "anthropic", model: "claude-haiku-5-5" })
-    expect(modelFor("advisor")).toEqual({ provider: "anthropic", model: "claude-sonnet-5-5" })
+    expect(modelFor("advisor")).toEqual({ provider: "google", model: "gemini-3.6-flash" })
     expect(modelFor("explanations")).toEqual({ provider: "google", model: "gemini-3.6-flash" })
     expect(Object.keys(AI_CONFIG).sort()).toEqual(["advisor", "explanations", "extraction"])
   })
@@ -177,7 +177,10 @@ describe("generateStructured", () => {
         warnings: [],
       }),
     })
-    const result = await generateStructured("advisor", "prompt", schema, { languageModelOverride: model })
+    const result = await generateStructured("advisor", "prompt", schema, {
+      model: { provider: "anthropic", model: "claude-sonnet-5-5" },
+      languageModelOverride: model,
+    })
     expect(result.data).toEqual({ found: true, fee: 10 })
     expect(model.doGenerateCalls[0]!.responseFormat).toMatchObject({ type: "json" })
   })

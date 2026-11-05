@@ -2,11 +2,12 @@
 
 import { LazyMotion, m, MotionConfig } from "framer-motion"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import * as React from "react"
 
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
-import { saveProfile } from "@/lib/match/profile-store"
+import { saveProfile, savedStore } from "@/lib/match/profile-store"
 import { BAND_LABEL, COUNTRY_LABEL, TERM_LABEL } from "@/lib/match/labels"
 import type { CardView, MatchView, NearMissView } from "@/lib/match/present"
 import type { MatchProfile } from "@/lib/match/types"
@@ -25,43 +26,10 @@ const MAX_COMPARE = 3
 const MILLION_KOBO = 100_000_000
 const GAUGE_MIN = 10
 const GAUGE_MAX = 150
-const SAVED_KEY = "sb-saved"
 
 const loadMotion = () => import("@/components/ui/motion-features").then((mod) => mod.default)
 
 type Tab = "ranked" | "closest" | "restricted"
-
-const NONE_SAVED: string[] = []
-let savedList: string[] | null = null
-const savedListeners = new Set<() => void>()
-
-/** Saved programmes live in this browser until accounts exist. */
-const savedStore = {
-  subscribe(listener: () => void) {
-    savedListeners.add(listener)
-    return () => savedListeners.delete(listener)
-  },
-  get() {
-    if (savedList) return savedList
-    try {
-      savedList = JSON.parse(localStorage.getItem(SAVED_KEY) ?? "[]") as string[]
-    } catch {
-      savedList = NONE_SAVED
-    }
-    return savedList
-  },
-  getServer: () => NONE_SAVED,
-  toggle(id: string) {
-    const list = savedStore.get()
-    savedList = list.includes(id) ? list.filter((s) => s !== id) : [...list, id]
-    try {
-      localStorage.setItem(SAVED_KEY, JSON.stringify(savedList))
-    } catch {
-      // The button still works for this visit.
-    }
-    savedListeners.forEach((listener) => listener())
-  },
-}
 
 function useExplanations(view: MatchView, profile: MatchProfile) {
   const [explanations, setExplanations] = React.useState<Record<string, Explanation>>({})
@@ -384,9 +352,13 @@ type ResultsViewProps = {
   /** Server-rendered cards, shown until the interactive list loads. */
   preview: React.ReactNode
   counts: { ranked: number; closest: number; restricted: number }
+  /** Present when signed in: the programme ids in the student's shortlist. */
+  accountSaved: string[] | null
 }
 
-export function ResultsView({ initialProfile, confidence, grades, preview, counts }: ResultsViewProps) {
+export function ResultsView({ initialProfile, confidence, grades, preview, counts, accountSaved }: ResultsViewProps) {
+  const router = useRouter()
+  const [shortlist, setShortlist] = React.useState(accountSaved)
   const [loaded, setLoaded] = React.useState<MatchView | null>(null)
   const [failed, setFailed] = React.useState(false)
   const [reloads, setReloads] = React.useState(0)
@@ -396,7 +368,8 @@ export function ResultsView({ initialProfile, confidence, grades, preview, count
   const [mode, setMode] = React.useState<"list" | "compare">("list")
   const [filters, setFilters] = React.useState(NO_FILTERS)
   const [compare, setCompare] = React.useState<string[]>([])
-  const saved = React.useSyncExternalStore(savedStore.subscribe, savedStore.get, savedStore.getServer)
+  const browserSaved = React.useSyncExternalStore(savedStore.subscribe, savedStore.get, savedStore.getServer)
+  const saved = shortlist ?? browserSaved
   const { explanations, explaining } = useExplanations(view, profile)
   const now = React.useMemo(() => new Date(view.now || 0), [view.now])
   const firstRun = React.useRef(true)
@@ -405,7 +378,17 @@ export function ResultsView({ initialProfile, confidence, grades, preview, count
   React.useEffect(() => {
     const first = firstRun.current
     firstRun.current = false
-    if (!first) saveProfile(profile)
+    if (!first) {
+      if (shortlist === null) saveProfile(profile)
+      else {
+        const { budget_total_minor, include_related_fields, weights } = profile
+        void fetch("/api/account/profile", {
+          method: "PATCH",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ budget_total_minor, include_related_fields, weights }),
+        })
+      }
+    }
     const controller = new AbortController()
     const load = async (attemptsLeft: number) => {
       const res = await fetch("/api/match", {
@@ -431,7 +414,24 @@ export function ResultsView({ initialProfile, confidence, grades, preview, count
       clearTimeout(retry)
       controller.abort()
     }
-  }, [profile, reloads])
+  }, [profile, reloads, shortlist])
+
+  const toggleSaved = (id: string) => {
+    const on = saved.includes(id)
+    if (shortlist === null) {
+      savedStore.set(on ? saved.filter((s) => s !== id) : [...saved, id])
+      if (!on) router.push("/sign-in?reason=save&next=/discover")
+      return
+    }
+    setShortlist(on ? saved.filter((s) => s !== id) : [...saved, id])
+    void fetch("/api/shortlist", {
+      method: on ? "DELETE" : "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ programme_id: id }),
+    }).then((res) => {
+      if (!res.ok) setShortlist(saved) // Full shortlist, or a dropped connection: show the truth.
+    })
+  }
 
   const update = (patch: Partial<MatchProfile>) => setProfile((p) => ({ ...p, ...patch }))
 
@@ -451,7 +451,7 @@ export function ResultsView({ initialProfile, confidence, grades, preview, count
         explanation={explanations[c.id]}
         explaining={explaining}
         saved={saved.includes(c.id)}
-        onSave={() => savedStore.toggle(c.id)}
+        onSave={() => toggleSaved(c.id)}
         compared={compare.includes(c.id)}
         compareDisabled={!compare.includes(c.id) && compare.length >= MAX_COMPARE}
         onCompare={() => setCompare((ids) => (ids.includes(c.id) ? ids.filter((id) => id !== c.id) : [...ids, c.id]))}

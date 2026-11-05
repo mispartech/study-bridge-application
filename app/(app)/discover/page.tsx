@@ -4,10 +4,12 @@ import Link from "next/link"
 import { connection } from "next/server"
 import { Suspense } from "react"
 
+import { loadAccount } from "@/lib/account/current-account"
 import { PreviewCard } from "@/components/match/preview-card"
 import { ResultsView } from "@/components/match/results-view"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
+import { hasSessionCookie } from "@/lib/auth/server"
 import { rank } from "@/lib/match"
 import { demoModeEnabled, loadCatalogue } from "@/lib/match/catalogue"
 import { COMPLETENESS_COOKIE, matchConfidence, parseProfileCookie, PROFILE_COOKIE } from "@/lib/match/draft"
@@ -36,9 +38,10 @@ function NoProfile() {
 async function Results() {
   await connection()
   const store = await cookies()
-  const profile = parseProfileCookie(store.get(PROFILE_COOKIE)?.value)
+  const account = hasSessionCookie(store.getAll()) ? await loadAccount() : null
+  const profile = account?.profile ?? parseProfileCookie(store.get(PROFILE_COOKIE)?.value)
   if (!profile) return <NoProfile />
-  const score = store.get(COMPLETENESS_COOKIE)?.value
+  const score = account?.completeness ?? store.get(COMPLETENESS_COOKIE)?.value
   const demoMode = demoModeEnabled()
   const catalogue = await loadCatalogue(demoMode)
   const now = new Date()
@@ -46,6 +49,7 @@ async function Results() {
   return (
     <ResultsView
       initialProfile={profile}
+      accountSaved={account?.saved ?? null}
       confidence={matchConfidence(score === undefined ? null : Number(score))}
       grades={view.band ? `${BAND_LABEL[view.band]} (${view.grades_source})` : null}
       counts={{

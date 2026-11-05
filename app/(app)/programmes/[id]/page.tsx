@@ -23,6 +23,8 @@ import {
   type Catalogue,
   type MatchOptions,
 } from "@/lib/match"
+import { loadAccount } from "@/lib/account/current-account"
+import { hasSessionCookie } from "@/lib/auth/server"
 import { demoModeEnabled, loadCatalogue } from "@/lib/match/catalogue"
 import { parseProfileCookie, PROFILE_COOKIE } from "@/lib/match/draft"
 import { ACCOMMODATION_LABEL, BAND_LABEL, COUNTRY_LABEL, nextCycle, TERM_LABEL } from "@/lib/match/labels"
@@ -67,8 +69,11 @@ async function Programme({ params }: { params: Promise<{ id: string }> }) {
   if (!bundle) notFound()
 
   const { programme, university, requirement } = bundle
+  const account = hasSessionCookie(store.getAll()) ? await loadAccount() : null
   const profile =
-    parseProfileCookie(store.get(PROFILE_COOKIE)?.value) ?? matchProfile.parse({ target_cycle: nextCycle(now) })
+    account?.profile ??
+    parseProfileCookie(store.get(PROFILE_COOKIE)?.value) ??
+    matchProfile.parse({ target_cycle: nextCycle(now) })
   const academics = normaliseAcademics(profile, catalogue.gradeMappings)
   const today = now.toISOString().slice(0, 10)
   const intakes = bundle.intakes.filter((i) => i.cycle === profile.target_cycle)

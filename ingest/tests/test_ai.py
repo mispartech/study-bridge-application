@@ -82,7 +82,7 @@ def test_native_structured_output_where_forced_tools_are_rejected(captured):
         usage=None,
     )
     calls = captured(response)
-    result = generate_structured("advisor", "p", SCHEMA)
+    result = generate_structured("advisor", "p", SCHEMA, model=ModelRef("anthropic", "claude-sonnet-5-5"))
     assert result.data["found"] is True
     assert calls[0]["response_format"]["type"] == "json_schema"
     assert "tool_choice" not in calls[0]
