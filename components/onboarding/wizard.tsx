@@ -3,6 +3,8 @@
 import { useRouter } from "next/navigation"
 import * as React from "react"
 
+import { track } from "@/lib/analytics/track"
+
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { ProgressRing } from "@/components/ui/progress-ring"
@@ -134,7 +136,13 @@ export function Wizard() {
       })
   }, [])
 
+  function advance() {
+    track(`onboarding_step_${step + 1}`)
+    update({ step: step + 1 })
+  }
+
   async function finish() {
+    track(`onboarding_step_${step + 1}`)
     saveProfile(toMatchProfile(draft, new Date()), completeness(draft))
     if (!hasSession()) {
       router.push("/sign-in?reason=wizard&next=/discover")
@@ -399,7 +407,7 @@ export function Wizard() {
             Back
           </Button>
         )}
-        <Button className="flex-1" onClick={() => (last ? finish() : update({ step: step + 1 }))}>
+        <Button className="flex-1" onClick={() => (last ? finish() : advance())}>
           {last ? "See my matches" : "Continue"}
         </Button>
       </div>

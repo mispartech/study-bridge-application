@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation"
 
 import { Button } from "@/components/ui/button"
+import { clearAnalytics } from "@/lib/analytics/consent"
 import { supabaseBrowser } from "@/lib/auth/client"
 
 export function SignOutButton() {
@@ -12,6 +13,7 @@ export function SignOutButton() {
       variant="outline"
       onClick={async () => {
         await supabaseBrowser().auth.signOut()
+        clearAnalytics()
         router.replace("/")
         router.refresh()
       }}

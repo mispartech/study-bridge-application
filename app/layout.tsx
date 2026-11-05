@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next"
 import localFont from "next/font/local"
 
+import { DemoBanner } from "@/components/demo-banner"
 import { themeInitScript } from "@/lib/theme"
 import "./globals.css"
 
@@ -75,7 +76,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
       </head>
-      <body className="min-h-dvh">{children}</body>
+      <body className="min-h-dvh">
+        <DemoBanner />
+        {children}
+      </body>
     </html>
   )
 }

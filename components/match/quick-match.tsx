@@ -4,6 +4,8 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import * as React from "react"
 
+import { track } from "@/lib/analytics/track"
+
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { FitRing } from "@/components/ui/fit-ring"
@@ -30,6 +32,7 @@ export function QuickMatch() {
   const [failed, setFailed] = React.useState(false)
 
   async function submit(event: React.FormEvent) {
+    track("landing_quick_match")
     event.preventDefault()
     setLoading(true)
     setFailed(false)

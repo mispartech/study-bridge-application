@@ -2,6 +2,7 @@
 
 import { Bookmark, CalendarClock } from "lucide-react"
 
+import { ApplyLink } from "@/components/analytics/apply-link"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Chip } from "@/components/ui/chip"
@@ -97,9 +98,7 @@ export function MatchCard({
       <div className="flex flex-wrap items-center gap-2">
         {card.apply_url && (
           <Button asChild size="sm" variant="primary">
-            <a href={card.apply_url} target="_blank" rel="noopener noreferrer">
-              Apply
-            </a>
+            <ApplyLink href={card.apply_url}>Apply</ApplyLink>
           </Button>
         )}
         <Button size="sm" variant="outline" aria-pressed={saved} onClick={onSave}>

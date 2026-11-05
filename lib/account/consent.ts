@@ -3,6 +3,10 @@ export const CONSENT_VERSION = "2026-11-draft"
 
 export const DATA_WE_STORE = [
   {
+    what: "Anonymous usage events",
+    why: "Only after you agree, to see which steps work. They use a random id, never your name or email.",
+  },
+  {
     what: "Your email address",
     why: "To sign you in and keep your account yours.",
   },

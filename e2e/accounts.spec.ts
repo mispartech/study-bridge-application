@@ -197,3 +197,112 @@ test.describe("advisor", () => {
     await expect(page.getByLabel("Your question")).toHaveCount(0)
   })
 })
+
+test.describe("plan and settings", () => {
+  test("tracks stage and checklist, and the data export holds them", async ({ page }) => {
+    const userId = await signIn(page)
+    await accept(page)
+    await expect(page).toHaveURL(/\/discover/, { timeout: 20_000 })
+    const { data: profile } = await admin.from("student_profile").select("id").eq("user_id", userId).single()
+    const { data: programme } = await admin.from("programme").select("id, title").eq("is_demo", true).limit(1).single()
+    await admin.from("shortlist").insert({ student_id: profile!.id, programme_id: programme!.id })
+
+    await page.goto("/plan")
+    const item = page.getByTestId("plan-item")
+    await expect(item).toContainText(programme!.title)
+    await page.waitForLoadState("networkidle")
+    await item.getByLabel("Stage").selectOption("applied")
+    await item.getByLabel("Passport").check()
+    await expect(item).toContainText("Documents: 1 of 6 ready")
+    await expect(async () => {
+      const { data } = await admin.from("application_tracker").select("stage, checklist").eq("student_id", profile!.id)
+      expect(data?.[0]?.stage).toBe("applied")
+      expect(JSON.stringify(data?.[0]?.checklist)).toContain('"done":true')
+    }).toPass({ timeout: 10_000 })
+
+    const exported = await (await page.request.get("/api/account")).json()
+    expect(exported.application_tracker).toHaveLength(1)
+    expect(exported.shortlist).toHaveLength(1)
+  })
+
+  test("delete removes the account and needs typing DELETE", async ({ page }) => {
+    const userId = await signIn(page)
+    await accept(page)
+    await expect(page).toHaveURL(/\/discover/, { timeout: 20_000 })
+    expect((await page.request.delete("/api/account", { data: { confirm: "yes" } })).status()).toBe(400)
+
+    await page.goto("/settings")
+    const button = page.getByRole("button", { name: "Delete my account" })
+    await expect(button).toBeDisabled()
+    await page.waitForLoadState("networkidle")
+    await page.getByLabel(/Type DELETE/).fill("DELETE")
+    await button.click()
+    await expect(page).toHaveURL(`${BASE}/`, { timeout: 20_000 })
+    const { data } = await admin.auth.admin.getUserById(userId)
+    expect(data.user).toBeNull()
+    const { data: rows } = await admin.from("student_profile").select("id").eq("user_id", userId)
+    expect(rows).toEqual([])
+  })
+})
+
+test.describe("server-side guards", () => {
+  test("the reminders job and the Paystack webhook refuse unsigned calls", async ({ request }) => {
+    expect((await request.get("/api/cron/reminders")).status()).toBe(401)
+    const webhook = await request.post("/api/webhooks/paystack", {
+      data: { event: "charge.success" },
+      headers: { "x-paystack-signature": "forged" },
+    })
+    expect([401, 503]).toContain(webhook.status())
+  })
+})
+
+test.describe("analytics follow consent", () => {
+  const capture = async (page: Page) => {
+    const events: string[] = []
+    await page.route("https://posthog.invalid/**", (route) => {
+      events.push((route.request().postDataJSON() as { event: string }).event)
+      return route.fulfill({ status: 200, json: {} })
+    })
+    return events
+  }
+
+  test("a visitor who hasn't consented sends nothing and stores no id", async ({ page }) => {
+    const events = await capture(page)
+    await page.goto("/")
+    await page.waitForLoadState("networkidle")
+    await page.getByRole("button", { name: "See my matches" }).click()
+    await expect(page.getByTestId("quick-result").first()).toBeVisible()
+    await page
+      .context()
+      .addCookies([{ name: "sb-profile", value: encodeURIComponent(JSON.stringify(worked)), url: BASE }])
+    await page.goto("/discover")
+    await expect(page.locator('[data-loaded="true"]')).toBeVisible({ timeout: 20_000 })
+    expect(events).toEqual([])
+    expect(await page.evaluate(() => localStorage.getItem("sb-analytics-id"))).toBeNull()
+  })
+
+  test("declining sends nothing; consenting turns events on", async ({ page }) => {
+    const events = await capture(page)
+    const userId = await signIn(page)
+    await expect(page).toHaveURL(/\/consent/)
+    await page.waitForLoadState("networkidle")
+    expect(events).toEqual([])
+    expect((await page.context().cookies()).find((c) => c.name === "sb-analytics")).toBeUndefined()
+
+    await accept(page)
+    await expect(page).toHaveURL(/\/discover/, { timeout: 20_000 })
+    await admin.from("student_profile").update(worked).eq("user_id", userId)
+    await page.goto("/discover")
+    await expect(page.locator('[data-loaded="true"]')).toBeVisible({ timeout: 20_000 })
+    await expect.poll(() => events).toContain("results_viewed")
+  })
+})
+
+test.describe("demo banner", () => {
+  for (const path of ["/", "/sign-in", "/privacy", "/discover", "/onboarding", "/shortlist"]) {
+    test(`shows on ${path}`, async ({ page }) => {
+      await page.goto(path)
+      await expect(page.getByTestId("demo-banner")).toHaveText("Demo data — not real programmes")
+    })
+  }
+})

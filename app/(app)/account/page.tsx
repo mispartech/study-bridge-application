@@ -1,4 +1,5 @@
 import type { Metadata } from "next"
+import Link from "next/link"
 import { redirect } from "next/navigation"
 import { connection } from "next/server"
 import { Suspense } from "react"
@@ -17,6 +18,9 @@ async function Account() {
     <Card className="mx-auto max-w-lg">
       <h1 className="text-2xl font-extrabold">Your account</h1>
       <p className="text-sm text-muted-foreground">Signed in as {user.email}</p>
+      <Link href="/settings" className="text-sm underline">
+        Plan, data and settings
+      </Link>
       <SignOutButton />
     </Card>
   )

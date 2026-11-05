@@ -13,8 +13,13 @@ export async function addToShortlist(
 ): Promise<"added" | "limit" | "no_profile" | "error"> {
   const { data: profile } = await supabase.from("student_profile").select("id").maybeSingle()
   if (!profile) return "no_profile"
-  const { count } = await supabase.from("shortlist").select("id", { count: "exact", head: true })
-  if ((count ?? 0) >= FREE_SHORTLIST_LIMIT) return "limit"
+  const [{ count }, { data: subscription }] = await Promise.all([
+    supabase.from("shortlist").select("id", { count: "exact", head: true }),
+    supabase.from("subscription").select("plan, current_period_end").maybeSingle(),
+  ])
+  const end = subscription?.current_period_end
+  const plus = subscription?.plan === "plus" && (!end || new Date(end) > new Date())
+  if (!plus && (count ?? 0) >= FREE_SHORTLIST_LIMIT) return "limit"
   const { error } = await supabase
     .from("shortlist")
     .upsert(

@@ -38,5 +38,7 @@ export default defineConfig({
     url: `http://localhost:${PORT}/dev`,
     reuseExistingServer: !process.env.CI,
     timeout: 300_000,
+    // A fake PostHog, so tests can prove when events are and aren't sent.
+    env: { NEXT_PUBLIC_POSTHOG_KEY: "phc_test", NEXT_PUBLIC_POSTHOG_HOST: "https://posthog.invalid" },
   },
 })

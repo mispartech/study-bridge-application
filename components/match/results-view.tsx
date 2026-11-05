@@ -7,6 +7,7 @@ import * as React from "react"
 
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
+import { track } from "@/lib/analytics/track"
 import { saveProfile, savedStore } from "@/lib/match/profile-store"
 import { BAND_LABEL, COUNTRY_LABEL, TERM_LABEL } from "@/lib/match/labels"
 import type { CardView, MatchView, NearMissView } from "@/lib/match/present"
@@ -400,6 +401,7 @@ export function ResultsView({ initialProfile, confidence, grades, preview, count
       if (controller.signal.aborted) return
       if (res?.ok) {
         setLoaded((await res.json()) as MatchView)
+        if (first) track("results_viewed")
         setFailed(false)
       } else if (attemptsLeft > 0) {
         retry = setTimeout(() => void load(attemptsLeft - 1), RETRY_MS)
@@ -420,9 +422,13 @@ export function ResultsView({ initialProfile, confidence, grades, preview, count
     const on = saved.includes(id)
     if (shortlist === null) {
       savedStore.set(on ? saved.filter((s) => s !== id) : [...saved, id])
-      if (!on) router.push("/sign-in?reason=save&next=/discover")
+      if (!on) {
+        track("programme_saved")
+        router.push("/sign-in?reason=save&next=/discover")
+      }
       return
     }
+    if (!on) track("programme_saved")
     setShortlist(on ? saved.filter((s) => s !== id) : [...saved, id])
     void fetch("/api/shortlist", {
       method: on ? "DELETE" : "POST",

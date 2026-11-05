@@ -4,6 +4,7 @@ import { notFound } from "next/navigation"
 import { connection } from "next/server"
 import { Suspense } from "react"
 
+import { ApplyLink } from "@/components/analytics/apply-link"
 import { CostSheet } from "@/components/match/cost-sheet"
 import { IncludesEstimates } from "@/components/match/estimated-tag"
 import { Button } from "@/components/ui/button"
@@ -215,9 +216,7 @@ async function Programme({ params }: { params: Promise<{ id: string }> }) {
 
       {applyAllowed && (
         <Button asChild size="lg" block variant="accent">
-          <a href={programme.apply_url} target="_blank" rel="noopener noreferrer">
-            Apply on university site
-          </a>
+          <ApplyLink href={programme.apply_url}>Apply on university site</ApplyLink>
         </Button>
       )}
     </article>

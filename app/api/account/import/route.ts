@@ -2,10 +2,13 @@ import { NextResponse } from "next/server"
 import { z } from "zod"
 
 import { CONSENT_VERSION } from "@/lib/account/consent"
+import { ANALYTICS_COOKIE } from "@/lib/analytics/consent"
 import { draftSchema, draftToRow, hasAnswers } from "@/lib/account/profile-row"
 import { FREE_SHORTLIST_LIMIT } from "@/lib/account/shortlist"
 import { supabaseServer } from "@/lib/auth/server"
 import type { Draft } from "@/lib/match/profile-store"
+
+const ONE_YEAR_SECONDS = 365 * 24 * 60 * 60
 
 const body = z.object({
   /** True only when the student has just accepted the consent screen. */
@@ -50,5 +53,8 @@ export async function POST(request: Request) {
       if (shortlistError) return NextResponse.json({ error: "Could not save your shortlist" }, { status: 500 })
     }
   }
-  return NextResponse.json({ ok: true })
+  // Reaching here means consent is on record, which is what turns analytics on for this browser.
+  const response = NextResponse.json({ ok: true })
+  response.cookies.set(ANALYTICS_COOKIE, "1", { path: "/", sameSite: "lax", maxAge: ONE_YEAR_SECONDS })
+  return response
 }
