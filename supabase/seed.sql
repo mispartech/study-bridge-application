@@ -108,6 +108,20 @@ where not exists (
     and r.effective_from = v.effective_from
 );
 
+-- Post-graduation work permit: length from the IRCC "about" page, conditions from its eligibility page.
+insert into public.visa_rule
+  (country, rule_type, value, description, effective_from, source_url, last_verified_at, confidence)
+select 'CA', 'post_study_work',
+  '{"months":36,"min_programme_months":8,"apply_within_days":180,"language":"CLB 7 or NCLC 7 in all 4 areas","field_of_study_required":false,"details_url":"https://www.canada.ca/en/immigration-refugees-citizenship/services/study-canada/work/after-graduation/eligibility.html"}',
+  'Post-graduation work permit: 3 years after a master''s of at least 8 months, or until your passport expires if sooner. Apply within 180 days of confirmation that you finished. You need CLB 7 or NCLC 7 in all 4 language areas. Master''s graduates have no field of study requirement.',
+  '2024-11-01',
+  'https://www.canada.ca/en/immigration-refugees-citizenship/services/study-canada/work/after-graduation/about.html',
+  timestamptz '2026-11-05 00:00:00+00', 'official'
+where not exists (
+  select 1 from public.visa_rule r
+  where r.country = 'CA' and r.rule_type = 'post_study_work' and r.effective_from = '2024-11-01'
+);
+
 -- Palestinian Authority travel documents are in the full-suspension group. PS is matched against
 -- student_profile.travel_document, not nationality (docs/EXTRACTION.md section 6).
 update public.visa_rule set applies_to_travel_documents = '{PS}'

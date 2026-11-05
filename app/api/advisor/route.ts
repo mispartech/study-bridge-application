@@ -3,8 +3,9 @@ import { z } from "zod"
 
 import { rowToProfile } from "@/lib/account/profile-row"
 import { addToShortlist } from "@/lib/account/shortlist-server"
+import { logGuardTrigger } from "@/lib/advisor/guard-log"
 import { advisorTurn } from "@/lib/advisor/run"
-import { consumeAdvisorMessage } from "@/lib/ai/advisor-quota"
+import { consumeAdvisorMessage, refundAdvisorMessage } from "@/lib/ai/advisor-quota"
 import { supabaseServer } from "@/lib/auth/server"
 import { demoModeEnabled, loadCatalogue } from "@/lib/match/catalogue"
 
@@ -69,13 +70,19 @@ export async function POST(request: Request) {
   const stream = new ReadableStream<Uint8Array>({
     async start(controller) {
       send(controller, { type: "quota", used: quota.used, limit: quota.limit })
+      let failed = false
       try {
-        for await (const event of advisorTurn(parsed.data.messages, ctx, shortlist, user.id)) {
+        const turn = advisorTurn(parsed.data.messages, ctx, shortlist, {
+          userId: user.id,
+          onGuard: (trigger) => logGuardTrigger(user.id, trigger),
+        })
+        for await (const event of turn) {
           if (event.type === "tool") {
             const { name, programmes, sources } = event
             send(controller, { type: "tool", name, programmes, sources })
           } else if (event.type === "error") {
             console.error("Advisor failed:", event.message)
+            failed = true
             send(controller, { type: "error" })
           } else {
             send(controller, event)
@@ -83,7 +90,13 @@ export async function POST(request: Request) {
         }
       } catch (err) {
         console.error("Advisor failed:", err instanceof Error ? err.message : err)
+        failed = true
         send(controller, { type: "error" })
+      }
+      // A failed model call doesn't use up one of the student's messages.
+      if (failed) {
+        const used = await refundAdvisorMessage(user.id).catch(() => quota.used)
+        send(controller, { type: "quota", used, limit: quota.limit })
       }
       if (open) controller.close()
     },

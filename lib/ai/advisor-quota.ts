@@ -31,6 +31,13 @@ export async function advisorQuotaStatus(userId: string): Promise<Pick<AdvisorQu
   return { used: usage?.messages ?? 0, limit: plus ? null : FREE_ADVISOR_MESSAGES_PER_DAY }
 }
 
+/** Gives back a message the model failed to answer. Returns today's new count. */
+export async function refundAdvisorMessage(userId: string): Promise<number> {
+  const { data, error } = await serviceClient().rpc("refund_advisor_message", { p_user_id: userId })
+  if (error) throw new Error(`Advisor refund failed: ${error.message}`)
+  return data
+}
+
 export async function consumeAdvisorMessage(userId: string): Promise<AdvisorQuota> {
   const { data, error } = await serviceClient()
     .rpc("consume_advisor_message", { p_user_id: userId, p_free_limit: FREE_ADVISOR_MESSAGES_PER_DAY })

@@ -549,7 +549,7 @@ describe("seed data through the public API (anon key, PostgREST)", () => {
              (select count(distinct field)::int from public.programme where is_demo) fields,
              (select count(*)::int from public.programme where is_demo and title not like '%Demo%') unlabelled`)
     expect(c[0]).toEqual({
-      visa: 19,
+      visa: 20,
       grades: 8,
       demo: 41,
       uk_london: 9,
@@ -559,5 +559,40 @@ describe("seed data through the public API (anon key, PostgREST)", () => {
       fields: 6,
       unlabelled: 0,
     })
+  })
+})
+
+describe("advisor refunds and B7 tables", () => {
+  const lagosDay = "(now() at time zone 'Africa/Lagos')::date"
+
+  it("refunds one message, never below zero, and only for the service role", async () => {
+    const a = await student()
+    await db.query(`insert into public.advisor_daily_usage (user_id, day, messages) values ($1, ${lagosDay}, 1)`, [
+      a.userId,
+    ])
+    await refused("authenticated", a.userId, "select public.refund_advisor_message($1)", [a.userId])
+    const refund = () => rows("service_role", null, "select public.refund_advisor_message($1) as used", [a.userId])
+    expect(await refund()).toEqual([{ used: 0 }])
+    expect(await refund()).toEqual([{ used: 0 }])
+  })
+
+  it("keeps the guard log and reminder log away from students", async () => {
+    const a = await student()
+    await refused("authenticated", a.userId, "select * from public.advisor_guard_log")
+    await refused("authenticated", a.userId, "select * from public.reminder_log")
+  })
+
+  it("lets a student read their own payments, not another's, and never write one", async () => {
+    const [a, b] = [await student(), await student()]
+    await db.query(
+      "insert into public.payment (user_id, reference, amount_minor, currency) values ($1, 'r1', 100, 'NGN')",
+      [a.userId]
+    )
+    expect(await rows("authenticated", a.userId, "select reference from public.payment")).toHaveLength(1)
+    expect(await rows("authenticated", b.userId, "select reference from public.payment")).toEqual([])
+    await refused("authenticated", a.userId, "update public.payment set status = 'paid'")
+    await refused("authenticated", a.userId, "insert into public.subscription (user_id, plan) values ($1, 'plus')", [
+      a.userId,
+    ])
   })
 })

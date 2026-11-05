@@ -358,6 +358,35 @@ export const subscriptionRow = z.object({
   ...timestamps,
 })
 
+export const advisorGuardLogRow = z.object({
+  id: uuid,
+  user_id: uuid.nullable(),
+  attempt: z.number().int().min(1),
+  outcome: z.enum(["regenerated", "safe_message"]),
+  figures: z.array(z.string()),
+  created_at: timestamp,
+})
+
+export const reminderLogRow = z.object({
+  id: uuid,
+  user_id: uuid,
+  programme_id: uuid.nullable(),
+  kind: z.enum(["deadline", "record_change"]),
+  dedupe_key: z.string(),
+  sent_at: timestamp,
+})
+
+export const paymentRow = z.object({
+  id: uuid,
+  user_id: uuid.nullable(),
+  reference: z.string(),
+  amount_minor: minor,
+  currency: z.string(),
+  status: z.enum(["pending", "paid", "failed"]),
+  paid_at: timestamp.nullable(),
+  ...timestamps,
+})
+
 export const advisorDailyUsageRow = z.object({
   user_id: uuid,
   day: date,
@@ -394,6 +423,9 @@ export const rowSchemas = {
   ai_usage: aiUsageRow,
   subscription: subscriptionRow,
   advisor_daily_usage: advisorDailyUsageRow,
+  advisor_guard_log: advisorGuardLogRow,
+  reminder_log: reminderLogRow,
+  payment: paymentRow,
   explanation_cache: explanationCacheRow,
 } as const
 

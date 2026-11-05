@@ -7,6 +7,7 @@ import { matchProfile, type Catalogue } from "@/lib/match"
 import demo from "@/tests/fixtures/demo-catalogue.json"
 
 import {
+  calculate,
   comparison,
   costBreakdown,
   programmeDetail,
@@ -127,6 +128,33 @@ describe("advisor tools", () => {
     const [over] = programmeSearch({ title_contains: "Data Analytics" }, poor).programmes
     expect(over!.over_budget_by).toMatch(/^₦/)
     expect(over!.budget_left_after).toBeNull()
+  })
+
+  it("calculates budget gaps, accommodation totals, conversions and sums on the server", () => {
+    const programme = id("Data Analytics", "Northmoor")
+    const gap = calculate({ operation: "budget_gap", programme_id: programme, budget_ngn_millions: 1 }, ctx)
+    expect(gap).toMatchObject({ budget: { short: "₦1m" } })
+    expect("over_budget_by" in gap && gap.over_budget_by?.short).toMatch(/^₦/)
+
+    const stays = calculate({ operation: "accommodation_totals", programme_id: programme }, ctx)
+    expect("totals" in stays && stays.totals?.map((t) => t.accommodation)).toEqual(["university_halls", "shared_flat"])
+
+    const sterling = calculate({ operation: "convert", amount: 1000, from: "GBP", to: "NGN" }, ctx)
+    expect(sterling).toMatchObject({ converted: { exact: "₦2,015,000" } })
+    expect(sterling.sources.length).toBeGreaterThan(0)
+    const back = calculate({ operation: "convert", amount: 2_015_000, from: "NGN", to: "GBP" }, ctx)
+    expect(back).toMatchObject({ converted: { exact: "£1,000" } })
+
+    const sum = calculate({ operation: "sum", amounts: [13_761, -10_539], currency: "GBP" }, ctx)
+    expect(sum).toMatchObject({ exact: "£3,222" })
+    expect(calculate({ operation: "sum" }, ctx)).toHaveProperty("error")
+  })
+
+  it("holds Canada's work permit rule, with both IRCC pages as sources", () => {
+    const { rules, sources } = visaRules("CA", undefined, ctx)
+    const permit = rules.find((r) => r.type === "post_study_work")!
+    expect(permit.source_url).toContain("canada.ca")
+    expect(sources.some((s) => s.source_url === permit.details_url)).toBe(true)
   })
 
   it("scholarships carry their source", () => {

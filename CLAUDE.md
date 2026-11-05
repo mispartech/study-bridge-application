@@ -12,7 +12,7 @@ based on grades, tests, budget (in NGN), city and accommodation preferences, and
 
 ## Stack
 Next.js (App Router) + TypeScript + Tailwind + shadcn/ui + Framer Motion; Supabase Postgres + pgvector + RLS;
-Python FastAPI ingestion workers; Claude API (claude-sonnet-5-5 advisor, claude-haiku-5-5 extraction);
+Python FastAPI ingestion workers; AI through the adapter, set per task in /config/ai.json (Gemini Flash advisor for now, claude-haiku-5-5 extraction);
 Paystack; Resend; PostHog.
 
 ## Design tokens
@@ -22,3 +22,4 @@ Headings Plus Jakarta Sans; body Inter with tabular numerals. Radius 16 cards, 1
 
 ## Conventions
 Strict TypeScript, Zod for every API boundary, server components by default, tests with Vitest + Playwright.
+Never read, print or inspect values in .env files. Use .env.example for variable names only.

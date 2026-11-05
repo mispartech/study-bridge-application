@@ -628,7 +628,7 @@ describe("fit score", () => {
   it("adds up with the default weights", () => {
     const s = passedScores(rich(), NORTHMOOR_AI)
     expect(s.A).toBe(0.6)
-    expect(s.C).toBe(0.8) // field match + longest post-study work
+    expect(s.C).toBeCloseTo(0.7) // field match + the UK's 18 months against Canada's 36
     expect(s.O).toBe(0.5) // no outcome data
     expect(s.fit).toBeGreaterThan(0)
     expect(s.fit).toBeLessThanOrEqual(100)
@@ -643,13 +643,13 @@ describe("fit score", () => {
   })
   it("gives co-op credit in career fit", () => {
     const coop = passedScores(rich({ field: "engineering" }), "MEng Demo Electrical Engineering")
-    expect(coop.C).toBe(0.8) // field match + co-op; Canada has no post-study work row yet
+    expect(coop.C).toBe(1) // field match + co-op + the longest post-study work
   })
   it("gives no field credit to a related programme", () => {
     const c = fresh()
     find(c, "MSc Demo Finance").programme.title = "MSc Demo Business Analytics"
     const profile = rich({ include_related_fields: true, ielts: 7 })
-    expect(passedScores(profile, "MSc Demo Business Analytics", c).C).toBe(0.2) // post-study work only
+    expect(passedScores(profile, "MSc Demo Business Analytics", c).C).toBeCloseTo(0.1) // half the longest route
   })
   it("scores a preferred city above a preferred country", () => {
     const city = passedScores(rich({ preferred_cities: ["Manchester"] }), NORTHMOOR_AI)
@@ -812,19 +812,27 @@ describe("post-study work priority in career fit", () => {
   }
 
   it("keeps today's weights when the student gives no priority", () => {
-    expect(fit(null, "UK")).toBeCloseTo(0.8)
-    expect(fit(null, "CA")).toBeCloseTo(0.6)
+    // Canada's 36-month permit is the longest route; the UK's 18 months is half of it.
+    expect(fit(null, "UK")).toBeCloseTo(0.7)
+    expect(fit(null, "CA")).toBeCloseTo(0.8)
   })
 
   it("rewards the longest route more when it's marked important", () => {
-    expect(fit("high", "UK")).toBeGreaterThan(fit("medium", "UK"))
-    const gap = (priority: "low" | "medium" | "high") => fit(priority, "UK") - fit(priority, "CA")
+    expect(fit("high", "CA")).toBeGreaterThan(fit("medium", "CA"))
+    const gap = (priority: "low" | "medium" | "high") => fit(priority, "CA") - fit(priority, "UK")
     expect(gap("high")).toBeGreaterThan(gap("medium"))
     expect(gap("medium")).toBeGreaterThan(gap("low"))
   })
 
   it("treats a country with no rule on file as unknown, not zero, once a priority is set", () => {
-    expect(fit("medium", "CA")).toBeCloseTo(0.7)
-    expect(fit("high", "CA")).toBeCloseTo(0.65)
+    const noRule = {
+      ...cat,
+      visaRules: cat.visaRules.filter((r) => r.country !== "CA" || r.rule_type !== "post_study_work"),
+    }
+    const bundle = bundles(noRule, true).find((b) => b.university.country === "CA" && b.programme.field === base.field)!
+    const score = (priority: "medium" | "high") =>
+      careerFit(bundle, bundle.intakes[0]!, { ...base, post_study_work: priority }, noRule, options)
+    expect(score("medium") - (bundle.programme.has_coop_or_placement ? 0.2 : 0)).toBeCloseTo(0.7)
+    expect(score("high") - (bundle.programme.has_coop_or_placement ? 0.15 : 0)).toBeCloseTo(0.65)
   })
 })

@@ -2,12 +2,8 @@ name: Advisor eval
 
 on:
   workflow_dispatch:
-  pull_request:
-    paths:
-      - "lib/advisor/**"
-      - "prompts/r1_advisor.txt"
-      - "config/ai.json"
-      - "evals/advisor/**"
+  schedule:
+    - cron: "0 2 * * *"
 
 jobs:
   eval:
@@ -22,4 +18,8 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      # Nightly costs less: only last run's failures and the trick questions. The full 200 is manual.
+      - run: npm run eval:advisor:retest
+        if: github.event_name == 'schedule'
       - run: npm run eval:advisor
+        if: github.event_name != 'schedule'

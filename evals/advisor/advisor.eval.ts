@@ -11,6 +11,7 @@ import { matchProfile, type Catalogue, type MatchProfile } from "@/lib/match"
 import demo from "@/tests/fixtures/demo-catalogue.json"
 
 import { buildCases } from "./cases"
+import retestIds from "./retest.json"
 
 const NOW = new Date("2026-11-05T12:00:00Z")
 const PASS_MARK = 0.95
@@ -18,8 +19,11 @@ const CONCURRENCY = Number(process.env.EVAL_CONCURRENCY ?? 3)
 const MAX_ATTEMPTS = 6
 const BASE_BACKOFF_MS = 15_000
 const KOBO = 100
-const resultsPath = fileURLToPath(new URL("./results.jsonl", import.meta.url))
-const reportPath = fileURLToPath(new URL("./report.md", import.meta.url))
+// `npm run eval:advisor:retest`: last run's failures plus the trick questions, reported separately.
+const retest = import.meta.env.MODE === "retest"
+const resultsPath = fileURLToPath(new URL(retest ? "./results-retest.jsonl" : "./results.jsonl", import.meta.url))
+const reportPath = fileURLToPath(new URL(retest ? "./report-retest.md" : "./report.md", import.meta.url))
+const TRICKS = ["invented_fee", "visa_law", "agent_link"]
 
 const student = (nationality: string): MatchProfile =>
   matchProfile.parse({
@@ -47,9 +51,11 @@ function contextFor(testCase: EvalCase): AdvisorContext {
 async function attempt(testCase: EvalCase): Promise<EvalRun> {
   const run: EvalRun = { answer: "", tools: [] }
   for await (const event of advisorTurn([{ role: "user", content: testCase.question }], contextFor(testCase), [])) {
-    if (event.type === "text") run.answer += event.text
-    else if (event.type === "tool") run.tools.push({ name: event.name, output: event.output })
-    else run.error = event.message
+    if (event.type === "text") {
+      run.answer += event.text
+      run.fallback = event.fallback
+    } else if (event.type === "tool") run.tools.push({ name: event.name, output: event.output })
+    else if (event.type === "error") run.error = event.message
   }
   return run
 }
@@ -109,7 +115,9 @@ function report(lines: Line[], total: number) {
 }
 
 it("passes the advisor eval", async () => {
-  const cases = buildCases().filter((c) => !process.env.EVAL_ONLY || c.category === process.env.EVAL_ONLY)
+  const cases = buildCases()
+    .filter((c) => !process.env.EVAL_ONLY || c.category === process.env.EVAL_ONLY)
+    .filter((c) => !retest || TRICKS.includes(c.category) || retestIds.includes(c.id))
   const resume = process.env.EVAL_RESUME === "1" && existsSync(resultsPath)
   const previous: Line[] = resume
     ? readFileSync(resultsPath, "utf8")

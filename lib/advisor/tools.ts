@@ -390,6 +390,7 @@ export function visaRules(country: "UK" | "CA" | "US", nationality: string | und
     .map((r) => ({
       type: r.rule_type,
       description: r.description,
+      details_url: (r.value as { details_url?: string } | null)?.details_url ?? null,
       amounts: ruleAmounts(r.value, r.rule_type, ctx),
       effective_from: r.effective_from,
       effective_to: r.effective_to,
@@ -415,11 +416,12 @@ export function visaRules(country: "UK" | "CA" | "US", nationality: string | und
             },
           ]
         : []),
-      ...rules.map((r) => ({
-        label: r.description,
-        source_url: r.source_url,
-        last_verified_at: r.last_verified_at,
-      })),
+      ...rules.flatMap((r) => [
+        { label: r.description, source_url: r.source_url, last_verified_at: r.last_verified_at },
+        ...(r.details_url
+          ? [{ label: "Eligibility", source_url: r.details_url, last_verified_at: r.last_verified_at }]
+          : []),
+      ]),
     ],
   }
 }
@@ -450,6 +452,99 @@ export function comparison(ids: string[], ctx: AdvisorContext) {
     gap_between_totals: spread === null ? null : money(spread, "NGN"),
     programmes: details.map((d) => d.card),
     sources: details.map((d) => sourceOf(d.card)),
+  }
+}
+
+const SYMBOL: Record<string, string> = { NGN: "₦", GBP: "£", CAD: "CA$", USD: "US$" }
+const toMinor = (amount: number) => BigInt(Math.round(amount * 100))
+const exact = (minor: bigint, currency: string) => `${SYMBOL[currency]}${(Number(minor) / 100).toLocaleString("en-GB")}`
+const both = (minor: bigint, currency: string) => ({ short: money(minor, currency), exact: exact(minor, currency) })
+
+const CURRENCIES = ["NGN", "GBP", "CAD", "USD"] as const
+type Calculation = {
+  operation: "budget_gap" | "accommodation_totals" | "convert" | "sum"
+  programme_id?: string
+  budget_ngn_millions?: number
+  accommodation?: MatchProfile["accommodation_pref"]
+  amount?: number
+  amounts?: number[]
+  from?: (typeof CURRENCIES)[number]
+  to?: (typeof CURRENCIES)[number]
+  currency?: (typeof CURRENCIES)[number]
+}
+
+function fxSource(currency: string, ctx: AdvisorContext): Source[] {
+  const { fxRates } = ctx.catalogue
+  const row = fxRates
+    .filter((r) => r.base === currency && r.rate_kind === "market" && (ctx.options.demoMode || !r.is_demo))
+    .sort((a, b) => b.fetched_at.localeCompare(a.fetched_at))[0]
+  return row?.source_url
+    ? [{ label: `${currency} rate`, source_url: row.source_url, last_verified_at: row.fetched_at }]
+    : []
+}
+
+/** Sums and conversions happen here, in integer minor units, so the model never does arithmetic. */
+export function calculate(input: Calculation, ctx: AdvisorContext) {
+  const { fxRates } = ctx.catalogue
+  const { demoMode } = ctx.options
+  const unable = (message: string) => ({ error: message, sources: [] as Source[] })
+
+  if (input.operation === "sum") {
+    if (!input.amounts?.length || !input.currency) return unable("sum needs amounts and a currency")
+    const total = input.amounts.reduce((sum, amount) => sum + toMinor(amount), 0n)
+    return { currency: input.currency, ...both(total, input.currency), sources: [] as Source[] }
+  }
+
+  if (input.operation === "convert") {
+    const { amount, from, to } = input
+    if (amount === undefined || !from || !to) return unable("convert needs amount, from and to")
+    const ngn = toNgn(toMinor(amount), from, "market", fxRates, demoMode)
+    const perUnit = toNgn(100_000_000n, to, "market", fxRates, demoMode)
+    if (ngn === undefined || !perUnit) return unable("No exchange rate on file for that currency.")
+    const converted = (ngn * 100_000_000n + perUnit / 2n) / perUnit
+    return {
+      original: both(toMinor(amount), from),
+      converted: both(converted, to),
+      sources: [...fxSource(from, ctx), ...fxSource(to, ctx)],
+    }
+  }
+
+  const bundle = input.programme_id ? find(input.programme_id, ctx) : undefined
+  if (!bundle) return notFound
+
+  if (input.operation === "accommodation_totals") {
+    const totals = ACCOMMODATION_TYPES.flatMap((type) => {
+      const cost = costOf(bundle, ctx, type)
+      return cost?.accommodation_available
+        ? [
+            {
+              accommodation: type,
+              total: money(cost.total_ngn.market, "NGN"),
+              total_local: money(cost.total_minor, cost.currency),
+            },
+          ]
+        : []
+    })
+    return { programme: bundle.programme.title, totals, sources: [sourceOf(programmeCard(bundle, ctx))] }
+  }
+
+  const cost = costOf(bundle, ctx, input.accommodation ?? undefined)
+  if (!cost) return unable("A cost record is missing for this programme.")
+  const budget = input.budget_ngn_millions
+    ? toMinor(input.budget_ngn_millions * 1_000_000)
+    : ctx.profile.budget_total_minor === null
+      ? null
+      : BigInt(ctx.profile.budget_total_minor)
+  if (budget === null) return unable("The student hasn't given a budget.")
+  const gap = budget - cost.total_ngn.market
+  return {
+    programme: bundle.programme.title,
+    accommodation: cost.accommodation,
+    budget: both(budget, "NGN"),
+    total: both(cost.total_ngn.market, "NGN"),
+    budget_left_after: gap >= 0n ? both(gap, "NGN") : null,
+    over_budget_by: gap < 0n ? both(-gap, "NGN") : null,
+    sources: [sourceOf(programmeCard(bundle, ctx))],
   }
 }
 
@@ -511,6 +606,22 @@ export function advisorTools(ctx: AdvisorContext): ToolSet {
       description: "Compare up to 3 programmes side by side.",
       inputSchema: z.object({ ids: z.array(z.string()).min(2).max(3) }),
       execute: async ({ ids }) => comparison(ids, ctx),
+    }),
+    calculate: tool({
+      description:
+        "Do any sum or conversion. Never work out a figure yourself. budget_gap: a programme's total against a budget. accommodation_totals: a programme's total with each accommodation type. convert: amount between currencies at our recorded rate. sum: add amounts in one currency (negative numbers subtract).",
+      inputSchema: z.object({
+        operation: z.enum(["budget_gap", "accommodation_totals", "convert", "sum"]),
+        programme_id: z.string().optional(),
+        budget_ngn_millions: z.number().positive().optional(),
+        accommodation: z.enum(ACCOMMODATION_TYPES).optional(),
+        amount: z.number().optional().describe("For convert, in whole units"),
+        amounts: z.array(z.number()).max(20).optional().describe("For sum, in whole units"),
+        from: z.enum(CURRENCIES).optional(),
+        to: z.enum(CURRENCIES).optional(),
+        currency: z.enum(CURRENCIES).optional().describe("For sum"),
+      }),
+      execute: async (input) => calculate(input, ctx),
     }),
     add_to_shortlist: tool({
       description: "Save a programme to the student's shortlist.",

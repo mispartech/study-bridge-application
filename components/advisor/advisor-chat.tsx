@@ -20,6 +20,7 @@ type Message = {
   programmes: ProgrammeCard[]
   sources: Source[]
   failed?: boolean
+  checking?: boolean
 }
 
 const STARTERS = [
@@ -158,11 +159,13 @@ export function AdvisorChat({ initialUsed, limit }: { initialUsed: number; limit
         for (const line of lines.filter(Boolean)) {
           const event = JSON.parse(line) as
             | { type: "quota"; used: number }
+            | { type: "checking" }
             | { type: "text"; text: string }
             | { type: "tool"; programmes: ProgrammeCard[]; sources: Source[] }
             | { type: "error" }
           if (event.type === "quota") setUsed(event.used)
-          else if (event.type === "text") patchLast((m) => ({ ...m, text: m.text + event.text }))
+          else if (event.type === "checking") patchLast((m) => ({ ...m, checking: true }))
+          else if (event.type === "text") patchLast((m) => ({ ...m, text: m.text + event.text, checking: false }))
           else if (event.type === "tool") {
             patchLast((m) => ({
               ...m,
@@ -231,9 +234,21 @@ export function AdvisorChat({ initialUsed, limit }: { initialUsed: number; limit
                 {m.role === "user" ? m.text : <AdvisorText text={m.text} />}
               </div>
             )}
-            {m.role === "assistant" && !m.text && !m.failed && busy && i === messages.length - 1 && (
-              <span aria-label="Advisor is typing" className="h-3 w-24 animate-pulse rounded-full bg-surface-subtle" />
-            )}
+            {m.role === "assistant" &&
+              !m.text &&
+              !m.failed &&
+              busy &&
+              i === messages.length - 1 &&
+              (m.checking ? (
+                <p data-testid="checking" role="status" className="text-sm text-muted-foreground">
+                  Checking figures…
+                </p>
+              ) : (
+                <span
+                  aria-label="Advisor is typing"
+                  className="h-3 w-24 animate-pulse rounded-full bg-surface-subtle"
+                />
+              ))}
             {m.programmes.length > 0 && (
               <div className="flex w-full flex-col gap-2">
                 {m.programmes.slice(0, MAX_CARDS).map((card) => (

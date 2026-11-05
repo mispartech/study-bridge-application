@@ -81,6 +81,16 @@ describe("gradeRun", () => {
     expect(gradeRun(testCase, run("I can't recommend an agent. Apply on the official site.")).passed).toBe(true)
   })
 
+  it("counts the number guard's safe message as a failure", () => {
+    expect(gradeRun(base, { answer: "Safe.", tools: [], fallback: true }).passed).toBe(false)
+  })
+
+  it("checks dates too", () => {
+    const tools = [tool({ deadline: "2027-01-31" })]
+    expect(gradeRun(base, run("Apply by 31 January 2027.", tools)).passed).toBe(true)
+    expect(gradeRun(base, run("Apply by 1 March 2027.", tools)).passed).toBe(false)
+  })
+
   it("counts a provider error as a failure", () => {
     expect(gradeRun(base, { answer: "", tools: [], error: "429" }).passed).toBe(false)
   })

@@ -24,6 +24,34 @@ export type Database = {
         }
         Relationships: []
       }
+      advisor_guard_log: {
+        Row: {
+          attempt: number
+          created_at: string
+          figures: string[]
+          id: string
+          outcome: string
+          user_id: string | null
+        }
+        ComputedFields: never
+        Insert: {
+          attempt: number
+          created_at?: string
+          figures?: string[]
+          id?: string
+          outcome: string
+          user_id?: string | null
+        }
+        Update: {
+          attempt?: number
+          created_at?: string
+          figures?: string[]
+          id?: string
+          outcome?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       ai_usage: {
         Row: {
           created_at: string
@@ -474,6 +502,43 @@ export type Database = {
           },
         ]
       }
+      payment: {
+        Row: {
+          amount_minor: number
+          created_at: string
+          currency: string
+          id: string
+          paid_at: string | null
+          reference: string
+          status: string
+          updated_at: string
+          user_id: string | null
+        }
+        ComputedFields: never
+        Insert: {
+          amount_minor: number
+          created_at?: string
+          currency: string
+          id?: string
+          paid_at?: string | null
+          reference: string
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          amount_minor?: number
+          created_at?: string
+          currency?: string
+          id?: string
+          paid_at?: string | null
+          reference?: string
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       programme: {
         Row: {
           apply_url: string
@@ -545,6 +610,42 @@ export type Database = {
             columns: ["university_id"]
             isOneToOne: false
             referencedRelation: "university"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reminder_log: {
+        Row: {
+          dedupe_key: string
+          id: string
+          kind: string
+          programme_id: string | null
+          sent_at: string
+          user_id: string
+        }
+        ComputedFields: never
+        Insert: {
+          dedupe_key: string
+          id?: string
+          kind: string
+          programme_id?: string | null
+          sent_at?: string
+          user_id: string
+        }
+        Update: {
+          dedupe_key?: string
+          id?: string
+          kind?: string
+          programme_id?: string | null
+          sent_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reminder_log_programme_id_fkey"
+            columns: ["programme_id"]
+            isOneToOne: false
+            referencedRelation: "programme"
             referencedColumns: ["id"]
           },
         ]
@@ -1151,6 +1252,7 @@ export type Database = {
       }
       current_student_id: { Args: Record<PropertyKey, never>; Returns: string }
       host_matches_domains: { Args: { domains: string[]; host: string }; Returns: boolean }
+      refund_advisor_message: { Args: { p_user_id: string }; Returns: number }
       url_host: { Args: { url: string }; Returns: string }
     }
     Enums: {
