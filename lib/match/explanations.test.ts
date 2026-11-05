@@ -116,6 +116,15 @@ describe("R2 explanations", () => {
     expect(JSON.stringify(input.student)).not.toContain("NG")
   })
 
+  it("formats money the way the UI shows it", () => {
+    const input = r2Input(profile, result, result.ranked.slice(0, 1), NOW)
+    expect(input.student.budget).toBe("₦80m")
+    expect(input.programmes[0]!.total_first_year).toMatch(/^₦\d+(\.\d)?m$/)
+    expect(input.programmes[0]!.total_first_year_local).toMatch(/^(£|CA\$)\d+(\.\d)?k$/)
+    expect(input.programmes[0]!.cost_breakdown[0]!.amount).toMatch(/^(£|CA\$)/)
+    expect(input.programmes[0]!.cost_breakdown.some((l) => l.estimated)).toBe(true)
+  })
+
   it("buckets by field, band, budget band and nationality group", () => {
     expect(explanationBucket(profile, result, catalogue)).toBe(
       "computer_data_science|upper_second|70m_plus|NG_restricted"

@@ -3,10 +3,10 @@ import Link from "next/link"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { NavLinks } from "./nav-links"
 
-function Logo() {
+export function Logo() {
   return (
     <Link
-      href="/discover"
+      href="/"
       className="flex items-center gap-2 rounded-button font-heading text-lg font-extrabold tracking-tight"
     >
       <svg viewBox="0 0 32 32" className="size-8" aria-hidden>

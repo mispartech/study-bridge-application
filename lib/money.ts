@@ -18,6 +18,37 @@ export type FormatMoneyOptions = {
   compact?: boolean
 }
 
+const SHORT_SYMBOL: Record<Currency, string> = { NGN: "₦", GBP: "£", CAD: "CA$", USD: "US$" }
+
+/** One short form for the UI and for R2, so explanations read the same as the screen: ₦59.4m, £34.8k, CA$900. */
+export function formatShort(amountMinor: bigint | number, currency: Currency): string {
+  const minor = BigInt(amountMinor)
+  const negative = minor < 0n
+  const major = Number(negative ? -minor : minor) / 10 ** MINOR_DIGITS[currency]
+  const oneDecimal = (n: number) => (Math.round(n * 10) / 10).toString()
+  let text = Math.round(major).toLocaleString("en-GB")
+  if (major >= 999_950) text = `${oneDecimal(major / 1_000_000)}m`
+  else if (major >= 1000) text = `${oneDecimal(major / 1000)}k`
+  return `${negative ? "-" : ""}${SHORT_SYMBOL[currency]}${text}`
+}
+
+export type FxRates = Partial<Record<Currency, number>>
+
+const RATE_SCALE = 10_000n
+
+/** Converts through NGN with rates from the database (NGN per one unit), keeping integer arithmetic. */
+export function convertMinor(amountMinor: bigint, from: Currency, to: Currency, ngnPerUnit: FxRates): bigint | null {
+  if (from === to) return amountMinor
+  const rate = (currency: Currency) => {
+    if (currency === "NGN") return RATE_SCALE
+    const value = ngnPerUnit[currency]
+    return value ? BigInt(Math.round(value * Number(RATE_SCALE))) : null
+  }
+  const [fromRate, toRate] = [rate(from), rate(to)]
+  if (fromRate === null || toRate === null) return null
+  return (amountMinor * fromRate + toRate / 2n) / toRate
+}
+
 /**
  * Formats an integer amount in minor units. Works on bigint so large NGN amounts in kobo
  * never lose precision through floating point.

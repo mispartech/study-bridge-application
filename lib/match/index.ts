@@ -5,8 +5,3 @@ export { applyDiversity, bundles, groupFor, rank, TOP_N } from "./rank"
 export { academicFit, budgetFit, eligibleScholarships, fitScore } from "./score"
 export { fieldMatch } from "./fields"
 export * from "./types"
-
-/** JSON for API responses: money is bigint internally and travels as a string. */
-export function serialise(value: unknown): string {
-  return JSON.stringify(value, (_, v) => (typeof v === "bigint" ? v.toString() : v))
-}

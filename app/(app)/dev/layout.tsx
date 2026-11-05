@@ -1,3 +1,5 @@
+import "./dev.css"
+
 import type { Metadata } from "next"
 import { FlaskConical } from "lucide-react"
 

@@ -2,37 +2,10 @@ import { NextResponse } from "next/server"
 import { z } from "zod"
 
 import { demoModeEnabled, loadCatalogue } from "@/lib/match/catalogue"
-import { matchProfile, rank, serialise, type MatchResult, type RankedProgramme } from "@/lib/match"
+import { matchProfile, rank } from "@/lib/match"
+import { presentResult } from "@/lib/match/present"
 
-function summary(result: MatchResult) {
-  const card = ({ bundle, ...r }: RankedProgramme) => ({
-    programme: bundle.programme,
-    university: bundle.university,
-    fee: bundle.fee,
-    ...r,
-  })
-  return {
-    academics: result.academics,
-    ranked: result.ranked.map(card),
-    more: result.more.map(card),
-    near_misses: result.near_misses.map(({ bundle, ...r }) => ({
-      programme: bundle.programme,
-      university: bundle.university,
-      ...r,
-    })),
-    restricted: result.restricted.map(({ bundle, ...r }) => ({
-      programme: bundle.programme,
-      university: bundle.university,
-      ...r,
-    })),
-    needs_english: result.needs_english.map(({ bundle, ...r }) => ({
-      programme: bundle.programme,
-      university: bundle.university,
-      ...r,
-    })),
-    excluded: result.excluded,
-  }
-}
+const QUICK_RESULTS = 3
 
 export async function POST(request: Request) {
   const body: unknown = await request.json().catch(() => null)
@@ -42,6 +15,18 @@ export async function POST(request: Request) {
   }
   const demoMode = demoModeEnabled()
   const catalogue = await loadCatalogue(demoMode)
-  const result = rank(parsed.data, catalogue, { now: new Date(), demoMode })
-  return new Response(serialise(summary(result)), { headers: { "content-type": "application/json" } })
+  const now = new Date()
+  const result = rank(parsed.data, catalogue, { now, demoMode })
+  const view = presentResult(result, parsed.data, catalogue, now)
+  if (!parsed.data.quick_match) return NextResponse.json(view)
+  // The landing page shows 3 results, and every byte counts on its first visit.
+  const { ranked, near_misses } = view
+  return NextResponse.json({
+    ...view,
+    ranked: ranked.slice(0, QUICK_RESULTS),
+    near_misses: near_misses.slice(0, QUICK_RESULTS),
+    more: [],
+    restricted: [],
+    needs_english: [],
+  })
 }

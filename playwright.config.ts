@@ -15,8 +15,23 @@ export default defineConfig({
   },
   projects: [
     // 360px Android baseline from CLAUDE.md.
-    { name: "mobile-360", use: { ...devices["Galaxy S9+"], viewport: { width: 360, height: 740 } } },
-    { name: "desktop", use: { ...devices["Desktop Chrome"], viewport: { width: 1280, height: 800 } } },
+    {
+      name: "mobile-360",
+      testIgnore: /slow-3g/,
+      use: { ...devices["Galaxy S9+"], viewport: { width: 360, height: 740 } },
+    },
+    {
+      name: "desktop",
+      testIgnore: /slow-3g/,
+      use: { ...devices["Desktop Chrome"], viewport: { width: 1280, height: 800 } },
+    },
+    // Timing test: runs alone, after everything else, so parallel tests can't skew it.
+    {
+      name: "slow-3g",
+      testMatch: /slow-3g/,
+      dependencies: ["mobile-360", "desktop"],
+      use: { ...devices["Galaxy S9+"], viewport: { width: 360, height: 740 } },
+    },
   ],
   webServer: {
     command: `npm run build && npm run start -- --port ${PORT}`,

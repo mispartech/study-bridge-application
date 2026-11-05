@@ -91,9 +91,8 @@ test.describe("app shell", () => {
     }
   })
 
-  test("root redirects to Discover", async ({ page }) => {
-    await page.goto("/")
-    await expect(page).toHaveURL(/\/discover$/)
-    await expect(page.getByRole("heading", { level: 1, name: "Discover" })).toBeVisible()
+  test("Discover asks for a profile before there is one", async ({ page }) => {
+    await page.goto("/discover")
+    await expect(page.getByRole("heading", { level: 1, name: "Let's find your matches" })).toBeVisible()
   })
 })

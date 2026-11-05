@@ -58,12 +58,13 @@ Fit = 30·A + 25·B + 15·C + 10·L + 10·S + 10·O, each component scored 0–1
 ### Worked example
 
 A 2:1 (CGPA 3.8 / 5.0) Computer Science graduate from Lagos, ₦80m budget, IELTS 7.0, target Sep 2027, self-catered room in halls.
-On the 30 demo programmes, the 2 US computing programmes go to the restricted list. A Canadian MSc in Montreal ranks within
-budget (₦59.4m), and a one-year UK MSc in Manchester ranks as Reach and Stretch (₦88.4m). Because fewer than 3 programmes
-rank, a London MSc appears as a near miss, ₦25.0m over budget.
+On the 41 demo programmes, the 4 US computing programmes go to the restricted list. Results lean to Canadian public universities
+with co-op (the top match is a Halifax MSc at ₦47.2m) and one-year UK MSc programmes outside London (Glasgow ₦64.9m, Leeds ₦68.4m).
+London options appear as Stretch once the London maintenance figure is added (₦83.8m).
 
 ₦40m is below the realistic one-year cost for the UK and Canada: tuition, rent, living costs, visa and flights together
-come to more. At ₦40m nothing ranks, and the same programmes appear as near misses with the NGN gap and eligible scholarships.
+come to more. At ₦40m nothing ranks, and the 5 nearest programmes appear as near misses with the NGN gap and eligible
+scholarships; the closest is ₦7.2m over budget.
 
 ---
 

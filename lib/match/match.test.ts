@@ -65,7 +65,7 @@ function find(c: Catalogue, title: string, university?: string) {
 }
 
 const NORTHMOOR_AI = "MSc Demo Artificial Intelligence"
-const THAMESBANK_DS = "MSc Demo Data Science"
+const THAMESBANK_HEALTH = "MSc Demo Global Public Health"
 
 function outcome(profile: MatchProfile, title: string, c: Catalogue = catalogue, options = OPTIONS) {
   const bundle = bundles(c, options.demoMode).find((b) => b.programme.title === title)!
@@ -112,7 +112,7 @@ describe("visa filter", () => {
   it("never shows a Nigerian national US programmes in ranked results", () => {
     const result = rank(rich({ field: null }), catalogue, OPTIONS)
     expect(result.ranked.filter((r) => r.bundle.university.country === "US")).toEqual([])
-    expect(result.restricted.map((r) => r.bundle.university.country)).toEqual(Array(8).fill("US"))
+    expect(result.restricted.map((r) => r.bundle.university.country)).toEqual(Array(10).fill("US"))
   })
   it("gives the reason and source for a restriction", () => {
     const { restricted } = rank(rich(), catalogue, OPTIONS)
@@ -127,13 +127,43 @@ describe("visa filter", () => {
   })
   it("matches the PS row on travel document, not nationality", () => {
     const palestinian = rich({ nationality: "JO", travel_document: "PS" })
-    expect(rank(palestinian, catalogue, OPTIONS).restricted).toHaveLength(2)
+    expect(rank(palestinian, catalogue, OPTIONS).restricted).toHaveLength(4)
     expect(rank(rich({ nationality: "PS", travel_document: null }), catalogue, OPTIONS).restricted).toEqual([])
   })
   it("ignores a restriction that has ended", () => {
     const c = fresh()
     for (const r of c.visaRules) if (r.rule_type === "nationality_restriction") r.effective_to = "2026-06-01"
     expect(rank(rich(), c, OPTIONS).restricted).toEqual([])
+  })
+})
+
+describe("quick match", () => {
+  const quick = (over: Partial<MatchProfile> = {}) =>
+    matchProfile.parse({
+      quick_match: true,
+      nationality: "NG",
+      field: "computer_data_science",
+      cgpa: 3.8,
+      cgpa_scale: 5,
+      budget_total_minor: 80_000_000 * KOBO,
+      target_cycle: "2027/28",
+      ...over,
+    })
+
+  it("ranks with only field, CGPA and budget", () => {
+    expect(rank(quick(), catalogue, OPTIONS).ranked.length).toBeGreaterThanOrEqual(3)
+  })
+  it("still applies the visa filter", () => {
+    const { ranked, restricted } = rank(quick(), catalogue, OPTIONS)
+    expect(ranked.some((r) => r.bundle.university.country === "US")).toBe(false)
+    expect(restricted.length).toBeGreaterThan(0)
+  })
+  it("flags the checks it left for later", () => {
+    const flags = rank(quick(), catalogue, OPTIONS).ranked[0]!.flags
+    expect(flags).toEqual(expect.arrayContaining(["check_test_requirement", "check_english_requirement"]))
+  })
+  it("doesn't skip those checks without the flag", () => {
+    expect(rank(quick({ quick_match: false }), catalogue, OPTIONS).ranked).toEqual([])
   })
 })
 
@@ -170,8 +200,17 @@ describe("field filter", () => {
     expect(titles(profile, c)).toEqual(
       expect.arrayContaining(["MSc Demo Business Analytics", "MBA Demo Artificial Intelligence Strategy"])
     )
-    const related = rank(profile, c, OPTIONS).ranked.find((r) => r.bundle.programme.title.includes("Analytics"))!
-    expect(related.flags).toContain("related_field")
+    const related = rank(profile, c, OPTIONS).ranked.filter((r) => r.flags.includes("related_field"))
+    expect(related.map((r) => r.bundle.programme.field)).not.toContain("computer_data_science")
+    expect(related.length).toBeGreaterThan(0)
+  })
+  it("finds the demo Business Analytics programme with the option on", () => {
+    expect(titles(rich())).not.toContain("MSc Demo Business Analytics")
+    expect(
+      rank(rich({ include_related_fields: true }), catalogue, OPTIONS)
+        .more.concat(rank(rich({ include_related_fields: true }), catalogue, OPTIONS).ranked)
+        .map((r) => r.bundle.programme.title)
+    ).toContain("MSc Demo Business Analytics")
   })
   it("doesn't let the option pull in unrelated programmes", () => {
     expect(titles(rich({ include_related_fields: true }), analytics())).not.toContain("LLM Demo Energy Law")
@@ -213,9 +252,9 @@ describe("near misses", () => {
     expect(result.near_misses).toHaveLength(5)
   })
   it("leaves out programmes that fail another filter", () => {
-    const ids = at(40).near_misses.map((n) => n.bundle.programme.title)
-    expect(ids).not.toContain("MS Demo Data Science") // restricted for Nigerian nationals
-    expect(ids).not.toContain("MSc Demo Computer Science") // GRE required, or stale
+    const misses = at(40).near_misses
+    expect(misses.every((n) => n.bundle.university.country !== "US")).toBe(true) // restricted for Nigerian nationals
+    expect(misses.some((n) => n.bundle.university.name.includes("Pacific Ridge"))).toBe(false) // GRE required
   })
   it("returns none once 3 or more rank", () => {
     const result = rank(worked({ field: null, budget_total_minor: 80_000_000 * KOBO }), catalogue, OPTIONS)
@@ -223,7 +262,7 @@ describe("near misses", () => {
     expect(result.near_misses).toEqual([])
   })
   it("still returns them when 1 or 2 rank", () => {
-    const { ranked, near_misses } = at(80)
+    const { ranked, near_misses } = at(50)
     expect(ranked.length).toBeGreaterThan(0)
     expect(ranked.length).toBeLessThan(3)
     expect(near_misses.length).toBeGreaterThan(0)
@@ -465,7 +504,7 @@ describe("demo data", () => {
     expect(result.ranked).toEqual([])
     expect(result.restricted).toEqual([])
     expect(bundles(catalogue, false)).toEqual([])
-    expect(bundles(catalogue, true)).toHaveLength(30)
+    expect(bundles(catalogue, true)).toHaveLength(41)
   })
 })
 
@@ -556,7 +595,7 @@ describe("cost engine", () => {
     expect(lookup("2027-01-01")?.value).toMatchObject({ months: 18 })
   })
   it("uses the London and outside-London proof-of-funds figures", () => {
-    expect(costOf(THAMESBANK_DS).proof_of_funds_minor).toBe((31_500n + 1570n * 9n) * 100n)
+    expect(costOf(THAMESBANK_HEALTH).proof_of_funds_minor).toBe((27_800n + 1570n * 9n) * 100n)
     expect(costOf(NORTHMOOR_AI).proof_of_funds_minor).toBe((28_600n + 1203n * 9n) * 100n)
   })
   it("uses Canada's single-applicant amount, plus family and travel", () => {
@@ -651,7 +690,7 @@ describe("diversity", () => {
   it("caps one university at 4 in the top 20, on 10 demo programmes from one university", () => {
     const c = fresh()
     const home = c.universities.find((u) => u.name.includes("Clydeside"))!
-    const extras = c.programmes.filter((p) => p.university_id !== home.id).slice(0, 8)
+    const extras = c.programmes.filter((p) => p.university_id !== home.id).slice(0, 7)
     for (const p of extras) p.university_id = home.id
     const owned = c.programmes.filter((p) => p.university_id === home.id)
     expect(owned).toHaveLength(10)
@@ -684,13 +723,32 @@ describe("worked example", () => {
   const result = rank(worked({ budget_total_minor: 80_000_000 * KOBO }), catalogue, OPTIONS)
 
   it("filters the US out for nationality", () => {
-    expect(result.restricted).toHaveLength(2)
+    expect(result.restricted).toHaveLength(4)
     expect(result.ranked.some((r) => r.bundle.university.country === "US")).toBe(false)
   })
   it("reads the student as a 2:1", () => {
     expect(result.academics.band).toBe("upper_second")
   })
-  it("accounts for all 30 demo programmes", () => {
+  it("puts a Canadian co-op programme first and London at Stretch", () => {
+    const [first] = result.ranked
+    expect(first!.bundle.university.country).toBe("CA")
+    expect(first!.bundle.programme.has_coop_or_placement).toBe(true)
+    const london = result.ranked.filter((r) => r.bundle.university.city === "London")
+    expect(london.length).toBeGreaterThan(0)
+    expect(london.every((r) => r.cost.affordability === "stretch")).toBe(true)
+  })
+  it("ranks UK programmes outside London within budget", () => {
+    const outside = result.ranked.filter(
+      (r) => r.bundle.university.country === "UK" && r.bundle.university.city !== "London"
+    )
+    expect(outside.some((r) => r.cost.affordability === "within")).toBe(true)
+  })
+  it("returns 5 near misses and no ranked results at ₦40m", () => {
+    const low = rank(worked(), catalogue, OPTIONS)
+    expect(low.ranked).toEqual([])
+    expect(low.near_misses).toHaveLength(5)
+  })
+  it("accounts for all 41 demo programmes", () => {
     const counted =
       result.ranked.length +
       result.more.length +
@@ -698,7 +756,7 @@ describe("worked example", () => {
       result.restricted.length +
       result.needs_english.length +
       result.excluded.length
-    expect(counted).toBe(30)
+    expect(counted).toBe(41)
   })
   it("prints the results when asked", () => {
     if (!process.env.PRINT_WORKED_EXAMPLE) return

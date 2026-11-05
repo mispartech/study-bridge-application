@@ -259,4 +259,4 @@ Seed notes:
 A university's published Nigeria rule (requirement.nigeria_rule) always overrides this table.
 
 ## Seed: demo programmes
-30 realistic but clearly FAKE programmes with `is_demo = true` and names prefixed "Demo —": 12 UK (6 London, 6 outside), 10 Canada (mix of provinces, public), 8 US. Spread across all 6 field codes and fee bands, with intakes in Sep 2027 and Jan 2028.
+41 realistic but clearly FAKE programmes with `is_demo = true` and names prefixed "Demo —": 18 UK (9 London, 9 outside), 13 Canada (mix of provinces, public), 10 US. Spread across all 6 field codes and fee bands, with intakes in Sep 2027 and Jan 2028.

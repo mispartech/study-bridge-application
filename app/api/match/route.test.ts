@@ -44,6 +44,16 @@ describe("POST /api/match", () => {
     expect(body.near_misses.length).toBeGreaterThan(0)
     expect(typeof body.near_misses[0]!.gap_ngn_minor).toBe("string")
   })
+  it("stays small enough for a Slow 3G connection", async () => {
+    const res = await post(profile)
+    expect((await res.text()).length).toBeLessThan(40_000) // about 6 KB gzipped
+  })
+  it("returns only the 3 results a quick match shows", async () => {
+    const res = await post({ ...profile, ielts: null, quick_match: true })
+    const body = (await res.json()) as { ranked: unknown[]; restricted: unknown[] }
+    expect(body.ranked).toHaveLength(3)
+    expect(body.restricted).toEqual([])
+  })
   it("flags estimated cost lines for the UI", async () => {
     const res = await post(profile)
     const body = (await res.json()) as { ranked: { cost: { lines: { key: string; estimated: boolean }[] } }[] }
@@ -54,12 +64,13 @@ describe("POST /api/match", () => {
     const res = await post(profile)
     expect(res.status).toBe(200)
     const body = (await res.json()) as {
-      ranked: { cost: { total_minor: unknown } }[]
+      ranked: { cost: { total_minor: unknown }; apply_url: string }[]
       restricted: unknown[]
       excluded: unknown[]
     }
-    expect(body.restricted).toHaveLength(2)
+    expect(body.restricted).toHaveLength(4)
     expect(body.ranked.length).toBeGreaterThan(0)
     expect(typeof body.ranked[0]!.cost.total_minor).toBe("string")
+    expect(body.ranked[0]!.apply_url).toContain("-demo.example")
   })
 })

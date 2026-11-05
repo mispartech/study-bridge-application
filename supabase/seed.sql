@@ -226,7 +226,20 @@ insert into demo_prog values
   ('Demo — Lakefront University', 'MS Demo Finance', 'MSc', 'business_finance', 12, true, false, 55900, 90, 'upper_second', 7.0, false, true, 0, 16, false),
   ('Demo — Lakefront University', 'LLM Demo US Law for Foreign Lawyers', 'LLM', 'law', 9, false, false, 64500, 90, 'upper_second', 7.0, false, false, 0, 55, false),
   ('Demo — Peachtree University', 'MS Demo Project Management', 'MSc', 'project_management', 18, false, true, 31200, 65, 'lower_second', 6.5, false, false, 2, 7, true),
-  ('Demo — Peachtree University', 'MBA Demo Healthcare Management', 'MBA', 'business_finance', 21, false, false, 47300, 65, 'lower_second', 6.5, false, true, 3, 120, true);
+  ('Demo — Peachtree University', 'MBA Demo Healthcare Management', 'MBA', 'business_finance', 21, false, false, 47300, 65, 'lower_second', 6.5, false, true, 3, 120, true),
+  -- Computer and data science across fee bands, so results pages have enough to show (10)
+  ('Demo — Clydeside University', 'MSc Demo Computing', 'MSc', 'computer_data_science', 12, false, false, 17800, 0, 'lower_second', 6.0, false, false, 0, 6, true),
+  ('Demo — Pennine Institute of Technology', 'MSc Demo Applied AI', 'MSc', 'computer_data_science', 12, false, true, 19400, 0, 'lower_second', 6.5, false, false, 0, 12, true),
+  ('Demo — Northmoor University', 'MSc Demo Data Analytics', 'MSc', 'computer_data_science', 12, false, false, 24500, 0, 'upper_second', 6.5, false, false, 0, 18, false),
+  ('Demo — Riverside Metropolitan University', 'MSc Demo Cyber Security', 'MSc', 'computer_data_science', 12, false, true, 21000, 0, 'lower_second', 6.0, false, false, 0, 9, true),
+  ('Demo — Kingsgate College London', 'MSc Demo Machine Learning', 'MSc', 'computer_data_science', 12, false, false, 35900, 90, 'upper_second', 7.0, false, false, 0, 21, false),
+  ('Demo — Atlantic Harbour University', 'MSc Demo Computer Science', 'MSc', 'computer_data_science', 16, false, true, 19800, 100, 'lower_second', 6.5, false, false, 0, 14, true),
+  ('Demo — Foothills University', 'MSc Demo Data Science', 'MSc', 'computer_data_science', 12, false, true, 24500, 145, 'upper_second', 6.5, false, false, 0, 24, false),
+  ('Demo — Lakeshore University', 'MSc Demo Machine Learning', 'MSc', 'computer_data_science', 16, false, true, 48000, 125, 'upper_second', 7.0, false, false, 0, 16, false),
+  ('Demo — Peachtree University', 'MS Demo Business Intelligence', 'MSc', 'computer_data_science', 18, true, true, 28900, 65, 'lower_second', 6.5, false, false, 0, 13, true),
+  ('Demo — Lakefront University', 'MS Demo Computer Science', 'MSc', 'computer_data_science', 12, true, false, 52000, 90, 'upper_second', 7.0, false, false, 0, 27, false),
+  -- Outside the computing field code, for the "related fields" option
+  ('Demo — Thamesbank University', 'MSc Demo Business Analytics', 'MSc', 'business_finance', 12, false, false, 26400, 0, 'upper_second', 6.5, false, false, 0, 17, false);
 
 -- Expand programmes with their university and currency.
 create temp table demo_full on commit drop as

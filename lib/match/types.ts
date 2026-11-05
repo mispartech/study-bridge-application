@@ -44,6 +44,8 @@ export const matchProfile = z
       .default(null),
     hnd_pgd: z.boolean().default(false),
     include_related_fields: z.boolean().default(false),
+    /** Landing page: only field, CGPA and budget are known, so English and admission tests are checked later. */
+    quick_match: z.boolean().default(false),
     field: z
       .enum(["computer_data_science", "public_health", "business_finance", "engineering", "project_management", "law"])
       .nullable()

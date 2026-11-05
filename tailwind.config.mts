@@ -41,8 +41,15 @@ const config: Config = {
         ring: v("focus"),
       },
       fontFamily: {
-        sans: ["var(--font-inter)", "ui-sans-serif", "system-ui", "sans-serif"],
-        heading: ["var(--font-jakarta)", "var(--font-inter)", "ui-sans-serif", "system-ui", "sans-serif"],
+        sans: ["var(--font-inter)", "var(--font-inter-ext)", "ui-sans-serif", "system-ui", "sans-serif"],
+        heading: [
+          "var(--font-jakarta)",
+          "var(--font-inter)",
+          "var(--font-inter-ext)",
+          "ui-sans-serif",
+          "system-ui",
+          "sans-serif",
+        ],
       },
       borderRadius: {
         card: "16px",

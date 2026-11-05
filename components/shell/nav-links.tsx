@@ -2,14 +2,14 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import { Suspense } from "react"
 
 import { cn } from "@/lib/utils"
 import { isActive, NAV_ITEMS } from "./nav-items"
 
-/** Shared by the mobile bottom bar and the desktop rail; only the layout differs. */
-export function NavLinks({ orientation }: { orientation: "horizontal" | "vertical" }) {
-  const pathname = usePathname()
+type Orientation = "horizontal" | "vertical"
 
+function NavList({ orientation, pathname }: { orientation: Orientation; pathname: string }) {
   return (
     <ul className={cn("flex", orientation === "horizontal" ? "h-full items-stretch justify-around" : "flex-col gap-2")}>
       {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
@@ -39,5 +39,19 @@ export function NavLinks({ orientation }: { orientation: "horizontal" | "vertica
         )
       })}
     </ul>
+  )
+}
+
+function ActiveNavList({ orientation }: { orientation: Orientation }) {
+  return <NavList orientation={orientation} pathname={usePathname()} />
+}
+
+/** Shared by the mobile bottom bar and the desktop rail; only the layout differs. */
+export function NavLinks({ orientation }: { orientation: Orientation }) {
+  // Dynamic routes don't know the path while prerendering, so links render first and the highlight follows.
+  return (
+    <Suspense fallback={<NavList orientation={orientation} pathname="" />}>
+      <ActiveNavList orientation={orientation} />
+    </Suspense>
   )
 }

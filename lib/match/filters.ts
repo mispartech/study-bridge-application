@@ -204,10 +204,14 @@ export function hardFilter(
   const academic = academicCheck(requirement, profile, academics)
   if (!academic.passes) return excluded("academic", `Needs ${requirement.min_uk_class} or above`)
 
-  const english = englishCheck(requirement, profile)
+  const english: ReturnType<typeof englishCheck> = profile.quick_match
+    ? { result: "pass", unknown: true, planned: [] }
+    : englishCheck(requirement, profile)
   if (english.result === "fail") return excluded("english", "No accepted English result or waiver")
 
-  const tests = admissionTestCheck(requirement, profile)
+  const tests: ReturnType<typeof admissionTestCheck> = profile.quick_match
+    ? { passes: true, unknown: true, planned: false }
+    : admissionTestCheck(requirement, profile)
   if (!tests.passes) return excluded("admission_tests", tests.reason!)
 
   const intakeMatch = matchingIntake(bundle.intakes, profile, options.now)

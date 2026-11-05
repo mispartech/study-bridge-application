@@ -13,6 +13,8 @@ import {
   type ExplanationContent,
 } from "@/lib/ai/explanations"
 
+import { formatShort, type Currency } from "@/lib/money"
+
 import { TOP_N, type Catalogue, type MatchProfile, type MatchResult, type RankedProgramme } from "."
 
 const DAY_MS = 86_400_000
@@ -29,7 +31,7 @@ export function r2Input(profile: MatchProfile, result: MatchResult, items: Ranke
       field: profile.field,
       academic_band: result.academics.band,
       work_years: profile.work_years,
-      budget_ngn: profile.budget_total_minor === null ? null : Math.round(profile.budget_total_minor / 100),
+      budget: profile.budget_total_minor === null ? null : formatShort(profile.budget_total_minor, "NGN"),
       target_cycle: profile.target_cycle,
       preferred_countries: profile.preferred_countries,
       preferred_cities: profile.preferred_cities,
@@ -46,11 +48,12 @@ export function r2Input(profile: MatchProfile, result: MatchResult, items: Ranke
       reach_grades: r.reach,
       scores: r.scores,
       affordability: r.cost.affordability,
-      total_first_year_ngn: Number(r.cost.total_ngn.market / 100n),
+      total_first_year: formatShort(r.cost.total_ngn.market, "NGN"),
+      total_first_year_local: formatShort(r.cost.total_minor, r.cost.currency as Currency),
       cost_breakdown: r.cost.lines.map((l) => ({
         item: l.label,
-        amount: Number(l.amount_minor) / 100,
-        currency: l.currency,
+        amount: formatShort(l.amount_minor, l.currency as Currency),
+        estimated: l.estimated,
       })),
       next_deadline: r.next_deadline,
       days_to_deadline: Math.ceil((new Date(r.next_deadline.date).getTime() - now.getTime()) / DAY_MS),

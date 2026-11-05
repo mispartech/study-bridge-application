@@ -489,11 +489,11 @@ describe("seed data through the public API (anon key, PostgREST)", () => {
     expect(c[0]).toEqual({
       visa: 19,
       grades: 8,
-      demo: 30,
-      uk_london: 6,
-      uk_other: 6,
-      ca: 10,
-      us: 8,
+      demo: 41,
+      uk_london: 9,
+      uk_other: 9,
+      ca: 13,
+      us: 10,
       fields: 6,
       unlabelled: 0,
     })

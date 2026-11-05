@@ -6,8 +6,21 @@ import type { Catalogue } from "./types"
 
 export const demoModeEnabled = () => process.env.NEXT_PUBLIC_DEMO_MODE === "true"
 
-/** Everything matching reads. Demo rows are left out unless demo mode is on. */
-export async function loadCatalogue(demoMode: boolean): Promise<Catalogue> {
+// Facts change weekly at most, and matching runs on every slider drag.
+const CACHE_MS = 5 * 60 * 1000
+const cache = new Map<boolean, { at: number; catalogue: Promise<Catalogue> }>()
+
+/** Everything matching reads, cached in memory. Demo rows are left out unless demo mode is on. */
+export function loadCatalogue(demoMode: boolean): Promise<Catalogue> {
+  const hit = cache.get(demoMode)
+  if (hit && Date.now() - hit.at < CACHE_MS) return hit.catalogue
+  const catalogue = fetchCatalogue(demoMode)
+  cache.set(demoMode, { at: Date.now(), catalogue })
+  catalogue.catch(() => cache.delete(demoMode))
+  return catalogue
+}
+
+async function fetchCatalogue(demoMode: boolean): Promise<Catalogue> {
   const db = serviceClient()
   const withoutDemo = <Q extends { eq: (column: "is_demo", value: boolean) => Q }>(query: Q) =>
     demoMode ? query : query.eq("is_demo", false)
