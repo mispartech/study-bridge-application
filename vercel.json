@@ -1,5 +1,6 @@
 {
   "framework": "nextjs",
   "outputDirectory": ".next",
+  "regions": ["fra1"],
   "crons": [{ "path": "/api/cron/reminders", "schedule": "0 7 * * *" }]
 }

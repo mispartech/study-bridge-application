@@ -33,6 +33,7 @@
     "@ai-sdk/google": "4.0.100",
     "@ai-sdk/openai": "4.0.97",
     "@openrouter/ai-sdk-provider": "3.1.0",
+    "@sentry/nextjs": "11.8.0",
     "@supabase/ssr": "0.12.7",
     "@supabase/supabase-js": "2.118.0",
     "ai": "7.0.145",

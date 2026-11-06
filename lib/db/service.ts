@@ -2,6 +2,8 @@ import "server-only"
 
 import { createClient, type SupabaseClient } from "@supabase/supabase-js"
 
+import { requireEnv } from "@/lib/server-errors"
+
 import type { Database } from "./database.types"
 
 let client: SupabaseClient<Database> | undefined
@@ -12,9 +14,9 @@ let client: SupabaseClient<Database> | undefined
  */
 export function serviceClient(): SupabaseClient<Database> {
   if (client) return client
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY
-  if (!url || !key) throw new Error("NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY must be set")
-  client = createClient<Database>(url, key, { auth: { persistSession: false, autoRefreshToken: false } })
+  const env = requireEnv("NEXT_PUBLIC_SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY")
+  client = createClient<Database>(env.NEXT_PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  })
   return client
 }

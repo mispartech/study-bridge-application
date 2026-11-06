@@ -26,6 +26,13 @@ Add variables in **Vercel → Project → Settings → Environment Variables**. 
 | `NEXT_PUBLIC_POSTHOG_KEY` | Optional | Optional | No | PostHog → Project Settings → Project API Key. Without it, no analytics are sent. Events are sent only after a student gives consent. |
 | `NEXT_PUBLIC_POSTHOG_HOST` | Optional | Optional | No | `https://eu.i.posthog.com` for an EU project (the default if unset), or `https://us.i.posthog.com` for a US project. |
 
+## Error reporting
+
+| Variable | Preview | Production | Secret | Where to get it |
+| --- | --- | --- | --- | --- |
+| `SENTRY_DSN` | Optional | Optional | No | Sentry (free Developer plan) → create a Next.js project → Project Settings → Client Keys (DSN). Without it, the server reports nothing. |
+| `NEXT_PUBLIC_SENTRY_DSN` | Optional | Optional | No | The same DSN. Without it, the browser reports nothing. |
+
 ## Admin pages
 
 | Variable | Preview | Production | Secret | Where to get it |
@@ -64,6 +71,18 @@ Add variables in **Vercel → Project → Settings → Environment Variables**. 
 **GitHub → Repository → Settings → Secrets and variables → Actions**
 
 - Add `GEMINI_API_KEY`. The advisor eval workflow needs it. Scheduled runs start only once the workflow is on `main`.
+
+## Reading a failed API call
+
+| Code | Meaning | Fix |
+| --- | --- | --- |
+| `SERVER_ENV_MISSING` | A server variable is unset. The response names which. | Add it for that environment, then redeploy. |
+| `SERVER_ENV_REJECTED` | The variable is set, but Supabase refused it. | Copy the key again, with no quotes or spaces, then redeploy. |
+| `SERVER_ERROR` | Anything else. | Check Vercel logs and Sentry. |
+
+## Regions
+
+Supabase runs in `eu-central-2` (Zurich). Vercel has no Zurich region, so functions run in `fra1` (Frankfurt), the closest one. This is set in `vercel.json`.
 
 ## Before you rely on this
 
