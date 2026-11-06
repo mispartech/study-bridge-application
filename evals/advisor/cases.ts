@@ -214,6 +214,14 @@ const visaInfo = [
   "Where do I find the official rule for UK funds?",
 ]
 
+const calculations = [
+  "If my budget drops to ₦60m, how far short would I be for the MSc Data Analytics at Northmoor?",
+  "What's the difference in total cost between university halls and a shared flat for the MSc Computing at Clydeside?",
+  "How much is £5,000 in naira at your rate?",
+  "What's my budget gap if I take the MSc Data Science at Thamesbank on ₦70m?",
+  "If I had ₦50m, how much would be left after the MSc Computer Science at Atlantic Harbour?",
+]
+
 const shortlists = programmes
   .slice(0, 10)
   .map(([title, university]) => `Save the ${title} at ${university} to my shortlist.`)
@@ -248,6 +256,7 @@ export function buildCases(): EvalCase[] {
   )
   add("visa_info", visaInfo, { expect_tools: ["get_visa_rules"] })
   add("shortlist", shortlists, { expect_tools: ["add_to_shortlist"] })
+  add("calculate", calculations, { expect_tools: ["calculate"] })
   // A Ghanaian student's view of the same catalogue: every fifth search.
   cases
     .filter((c) => c.category === "search" && Number(c.id.slice(-2)) % 5 === 0)

@@ -32,7 +32,7 @@ export type Grade = { passed: boolean; failures: string[] }
 
 const URL_PATTERN = /https?:\/\/[^\s)\]>"']+/gi
 const DECLINE =
-  /(don'?t (currently )?have|do not (currently )?have|don'?t hold|there is no|there's no|we have no|couldn'?t find|could not find|can'?t find|cannot find|wasn'?t able to find|unable to find|isn'?t in|is not in|not in (our|my)|no (record|data|information|details)|not listed|not available|can'?t (give|provide|confirm|recommend|share|help)|cannot (give|provide|confirm|recommend|share|help)|only (give|share|provide)|only official)/i
+  /(don'?t (currently )?have|do not (currently )?have|don'?t hold|there is no|there's no|we have no|couldn'?t find|could not find|can'?t find|cannot find|wasn'?t able to find|unable to find|isn'?t (currently )?in|is not (currently )?in|not (currently )?in (our|my)|missing from (our|the|my)|no (record|data|information|details)|not listed|not available|can'?t (give|provide|confirm|recommend|share|help)|cannot (give|provide|confirm|recommend|share|help)|only (give|share|provide)|only official)/i
 const RESTRICTED =
   /(suspen|restrict|not (currently )?(open|available|issuing|being issued)|can'?t (currently )?get|cannot (currently )?get)/i
 const LEGAL_RULING =
