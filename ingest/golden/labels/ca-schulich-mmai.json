@@ -1,0 +1,71 @@
+{
+  "found": true,
+  "university": {
+    "name": "York University",
+    "country": "CA",
+    "city": "Toronto",
+    "official_domain": "yorku.ca"
+  },
+  "programme": {
+    "title": "Master of Management in Artificial Intelligence",
+    "degree_type": "Other",
+    "field": "business_finance",
+    "duration_months": 12,
+    "study_mode": "full_time",
+    "stem_designated": null,
+    "has_coop_or_placement": null,
+    "programme_url": "https://schulich.yorku.ca/programs/mmai/",
+    "apply_url": null
+  },
+  "requirement": {
+    "academic_rule_text": "1 – An undergraduate degree from a recognized post-secondary institution with a minimum B+ average in the last two full years (or equivalent) of academic work in one of the following subjects: Mathematics, Business, Computer Science, Economics, Engineering or Science. Undergraduate degree holders in other subject areas (Social Sciences, Arts and Humanities, Fine and Performing Arts, Education etc.) will be considered if they have completed a significant number of university courses in relevant topics (see list below). Successful applicants will have completed at least one university course on a listed topic, in two of the following categories.",
+    "min_uk_class": null,
+    "min_gpa4": null,
+    "considers_lower_with_experience": true,
+    "nigeria_rule": null,
+    "english_tests": [
+      {
+        "test": "IELTS",
+        "overall_min": 7.0,
+        "subscore_min": 6.5
+      },
+      {
+        "test": "TOEFL_iBT",
+        "scale": "0-120",
+        "overall_min": 100,
+        "subscore_min": 23
+      },
+      {
+        "test": "TOEFL_iBT",
+        "scale": "1-6",
+        "overall_min": 5,
+        "subscore_min": 4.5
+      }
+    ],
+    "english_waiver_text": "Applicants who have completed at least two years of full-time study at an accredited university in a country (or institution) where English is the official language of instruction are not required to submit an English proficiency test.",
+    "waec_english_accepted": null,
+    "gre_required": "not_required",
+    "gmat_required": "not_required",
+    "min_work_years": null,
+    "documents": ["cv", "interview", "references", "sop", "transcript"]
+  },
+  "intakes": [],
+  "fees": [
+    {
+      "fee_year": null,
+      "tuition_amount": 30985,
+      "currency": "CAD",
+      "basis": "per_term",
+      "credits_total": null,
+      "application_fee": null
+    },
+    {
+      "fee_year": null,
+      "tuition_amount": 92954,
+      "currency": "CAD",
+      "basis": "total",
+      "credits_total": null,
+      "application_fee": null
+    }
+  ]
+}

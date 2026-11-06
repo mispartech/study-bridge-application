@@ -1,0 +1,61 @@
+{
+  "found": true,
+  "university": {
+    "name": "The University of British Columbia",
+    "country": "CA",
+    "city": "Vancouver",
+    "official_domain": "ubc.ca"
+  },
+  "programme": {
+    "title": "Master of Engineering in Electrical and Computer Engineering (MEng)",
+    "degree_type": "MEng",
+    "field": "engineering",
+    "duration_months": null,
+    "study_mode": "full_time",
+    "stem_designated": null,
+    "has_coop_or_placement": true,
+    "programme_url": "https://www.grad.ubc.ca/prospective-students/graduate-degree-programs/master-of-engineering-electrical-computer-engineering",
+    "apply_url": null
+  },
+  "requirement": {
+    "academic_rule_text": null,
+    "min_uk_class": null,
+    "min_gpa4": null,
+    "considers_lower_with_experience": null,
+    "nigeria_rule": null,
+    "english_tests": [],
+    "english_waiver_text": null,
+    "waec_english_accepted": null,
+    "gre_required": null,
+    "gmat_required": null,
+    "min_work_years": null,
+    "documents": []
+  },
+  "intakes": [
+    {
+      "start_month": "2027-09",
+      "application_opens": "2026-10-01",
+      "deadlines": [
+        {
+          "label": "International Applicant Deadline",
+          "date": "2026-12-12",
+          "date_precision": "day"
+        }
+      ],
+      "deposit_amount": 1000,
+      "deposit_currency": "CAD",
+      "deposit_deadline": null,
+      "start_term": "fall"
+    }
+  ],
+  "fees": [
+    {
+      "fee_year": null,
+      "tuition_amount": 27419.34,
+      "currency": "CAD",
+      "basis": "per_year",
+      "credits_total": null,
+      "application_fee": 168.25
+    }
+  ]
+}

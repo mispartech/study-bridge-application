@@ -1,0 +1,86 @@
+{
+  "found": true,
+  "university": {
+    "name": "Brunel University London",
+    "country": "UK",
+    "city": "London",
+    "official_domain": "brunel.ac.uk"
+  },
+  "programme": {
+    "title": "Engineering Management MSc",
+    "degree_type": "MSc",
+    "field": "engineering",
+    "duration_months": 12,
+    "study_mode": "full_time",
+    "stem_designated": null,
+    "has_coop_or_placement": null,
+    "programme_url": "https://www.brunel.ac.uk/study/courses/engineering-management-msc",
+    "apply_url": null
+  },
+  "requirement": {
+    "academic_rule_text": "A 2:2 (or above) UK Honours degree or equivalent internationally recognised qualification in an Engineering, Science, Maths or technology subject.",
+    "min_uk_class": "lower_second",
+    "min_gpa4": null,
+    "considers_lower_with_experience": null,
+    "nigeria_rule": null,
+    "english_tests": [
+      {
+        "test": "IELTS",
+        "overall_min": 6,
+        "subscore_min": 5.5
+      },
+      {
+        "test": "PTE",
+        "overall_min": 59,
+        "subscore_min": 59
+      },
+      {
+        "test": "Other",
+        "overall_min": 6,
+        "subscore_min": 5.5
+      },
+      {
+        "test": "TOEFL_iBT",
+        "scale": "1-6",
+        "overall_min": 4.5,
+        "subscore_min": 4
+      }
+    ],
+    "english_waiver_text": null,
+    "waec_english_accepted": null,
+    "gre_required": null,
+    "gmat_required": null,
+    "min_work_years": null,
+    "documents": []
+  },
+  "intakes": [
+    {
+      "start_month": "2027-09",
+      "application_opens": null,
+      "deadlines": [],
+      "deposit_amount": null,
+      "deposit_currency": null,
+      "deposit_deadline": null,
+      "start_term": "fall"
+    },
+    {
+      "start_month": "2028-01",
+      "application_opens": null,
+      "deadlines": [],
+      "deposit_amount": null,
+      "deposit_currency": null,
+      "deposit_deadline": null,
+      "start_term": "winter"
+    }
+  ],
+  "fees": [
+    {
+      "fee_year": "2027/28",
+      "tuition_amount": 25535,
+      "currency": "GBP",
+      "basis": "per_year",
+      "credits_total": null,
+      "application_fee": null
+    }
+  ]
+}

@@ -1,0 +1,69 @@
+{
+  "found": true,
+  "university": {
+    "name": "Dalhousie University",
+    "country": "CA",
+    "city": "Halifax",
+    "official_domain": "dal.ca"
+  },
+  "programme": {
+    "title": "Epidemiology and Applied Health Research (MSc)",
+    "degree_type": "MSc",
+    "field": "public_health",
+    "duration_months": 24,
+    "study_mode": "full_time",
+    "stem_designated": null,
+    "has_coop_or_placement": true,
+    "programme_url": "https://www.dal.ca/study/programs/graduate-professional/epidemiology-applied-health-research-msc.html",
+    "apply_url": null
+  },
+  "requirement": {
+    "academic_rule_text": "An honours undergraduate degree or equivalent.",
+    "min_uk_class": null,
+    "min_gpa4": null,
+    "considers_lower_with_experience": null,
+    "nigeria_rule": null,
+    "english_tests": [
+      {
+        "test": "IELTS",
+        "overall_min": 7.5,
+        "subscore_min": null
+      },
+      {
+        "test": "TOEFL_iBT",
+        "scale": "0-120",
+        "overall_min": 100,
+        "subscore_min": null
+      }
+    ],
+    "english_waiver_text": null,
+    "waec_english_accepted": null,
+    "gre_required": null,
+    "gmat_required": null,
+    "min_work_years": null,
+    "documents": ["cv", "other", "references", "sop", "transcript"]
+  },
+  "intakes": [
+    {
+      "start_month": "2027-09",
+      "application_opens": null,
+      "deadlines": [
+        {
+          "label": "considered for Dalhousie University scholarships and other external funding opportunities",
+          "date": "2026-11-01",
+          "date_precision": "day"
+        },
+        {
+          "label": "all other completed applications",
+          "date": "2027-01-31",
+          "date_precision": "day"
+        }
+      ],
+      "deposit_amount": null,
+      "deposit_currency": null,
+      "deposit_deadline": null,
+      "start_term": "fall"
+    }
+  ],
+  "fees": []
+}

@@ -1,0 +1,30 @@
+[project]
+name = "studybridge-ingest"
+version = "0.1.0"
+description = "StudyBridge ingestion workers: fetch, clean, extract, validate, diff, review."
+requires-python = ">=3.11"
+dependencies = [
+  "litellm[mcp]==1.106.0",  # the mcp extra: litellm imports mcp whenever tools are passed
+  "mcp==2.3.0",
+  "jsonschema==4.26.0",
+  "psycopg[binary]==3.3.6",
+  "pydantic==2.14.1",
+  "fastapi==0.149.0",
+  "uvicorn==0.54.0",
+  "apscheduler==3.11.3",
+  "playwright==1.64.0",
+  "httpx==0.28.1",
+  "selectolax==1.0.1",
+]
+
+[dependency-groups]
+dev = ["pytest==9.1.1", "respx==0.23.1"]
+
+[tool.uv]
+# Not a distributable package: run from the repo root as `python -m ingest.<module>`.
+package = false
+# Dependency policy: only versions published at least two weeks before the last lock refresh.
+exclude-newer = "2026-10-20T00:00:00Z"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

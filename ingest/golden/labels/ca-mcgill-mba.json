@@ -1,0 +1,79 @@
+{
+  "found": true,
+  "university": {
+    "name": "McGill University",
+    "country": "CA",
+    "city": "Montréal",
+    "official_domain": "mcgill.ca"
+  },
+  "programme": {
+    "title": "Master of Business Administration (MBA)",
+    "degree_type": "MBA",
+    "field": "business_finance",
+    "duration_months": 16,
+    "study_mode": "full_time",
+    "stem_designated": null,
+    "has_coop_or_placement": null,
+    "programme_url": "https://www.mcgill.ca/desautels/programs/mba",
+    "apply_url": null
+  },
+  "requirement": {
+    "academic_rule_text": null,
+    "min_uk_class": null,
+    "min_gpa4": null,
+    "considers_lower_with_experience": null,
+    "nigeria_rule": null,
+    "english_tests": [
+      {
+        "test": "IELTS",
+        "overall_min": 7.0,
+        "subscore_min": 7.0
+      },
+      {
+        "test": "TOEFL_iBT",
+        "scale": "0-120",
+        "overall_min": 100,
+        "subscore_min": 20
+      }
+    ],
+    "english_waiver_text": "For international candidates who did not complete a degree from a recognized English-medium university, proof of English proficiency is required. TOEFL iBT (internet-based test) 100 with a minimum score of 20 in each category or IELTS Academic 7.0 overall with no score below 7.0 is required. In order to meet the English requirement, please have the test provider send official results. Only tests taken at Test Centers are accepted for admission, at-home tests are not accepted.",
+    "waec_english_accepted": null,
+    "gre_required": "one_of_required",
+    "gmat_required": "one_of_required",
+    "min_work_years": 2,
+    "documents": ["cv", "interview", "references", "sop", "transcript"]
+  },
+  "intakes": [
+    {
+      "start_month": "2027-08",
+      "application_opens": null,
+      "deadlines": [
+        {
+          "label": "First application deadline",
+          "date": "2026-11-15",
+          "date_precision": "day"
+        },
+        {
+          "label": "Second application deadline",
+          "date": "2027-01-15",
+          "date_precision": "day"
+        },
+        {
+          "label": "Final deadline for international students",
+          "date": "2027-03-15",
+          "date_precision": "day"
+        },
+        {
+          "label": "Final deadline for Canadian citizens and permanent residents",
+          "date": "2027-05-15",
+          "date_precision": "day"
+        }
+      ],
+      "deposit_amount": 5000,
+      "deposit_currency": "CAD",
+      "deposit_deadline": null,
+      "start_term": "fall"
+    }
+  ],
+  "fees": []
+}

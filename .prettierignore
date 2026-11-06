@@ -1,0 +1,11 @@
+.next
+node_modules
+coverage
+playwright-report
+test-results
+lighthouse-reports
+package-lock.json
+next-env.d.ts
+*.md
+ingest/.venv
+ingest/golden/pages

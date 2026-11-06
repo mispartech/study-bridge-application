@@ -1,0 +1,55 @@
+{
+  "found": true,
+  "university": {
+    "name": "Queen Mary University of London",
+    "country": "UK",
+    "city": "London",
+    "official_domain": "qmul.ac.uk"
+  },
+  "programme": {
+    "title": "Laws LLM",
+    "degree_type": "LLM",
+    "field": "law",
+    "duration_months": 12,
+    "study_mode": "full_time",
+    "stem_designated": null,
+    "has_coop_or_placement": null,
+    "programme_url": "https://www.qmul.ac.uk/postgraduate/taught/coursefinder/courses/laws-llm/",
+    "apply_url": null
+  },
+  "requirement": {
+    "academic_rule_text": "A 2:1 or above at undergraduate level in Law or a degree with substantial law content.",
+    "min_uk_class": "upper_second",
+    "min_gpa4": null,
+    "considers_lower_with_experience": true,
+    "nigeria_rule": null,
+    "english_tests": [],
+    "english_waiver_text": null,
+    "waec_english_accepted": null,
+    "gre_required": null,
+    "gmat_required": null,
+    "min_work_years": null,
+    "documents": []
+  },
+  "intakes": [
+    {
+      "start_month": "2027-09",
+      "application_opens": null,
+      "deadlines": [],
+      "deposit_amount": 2000,
+      "deposit_currency": "GBP",
+      "deposit_deadline": null,
+      "start_term": "fall"
+    }
+  ],
+  "fees": [
+    {
+      "fee_year": null,
+      "tuition_amount": 34650,
+      "currency": "GBP",
+      "basis": "per_year",
+      "credits_total": null,
+      "application_fee": null
+    }
+  ]
+}

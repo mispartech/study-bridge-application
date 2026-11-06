@@ -1,0 +1,74 @@
+{
+  "found": true,
+  "university": {
+    "name": "Georgetown University",
+    "country": "US",
+    "city": "Washington, D.C.",
+    "official_domain": "georgetown.edu"
+  },
+  "programme": {
+    "title": "M.S. in Data Science & Analytics",
+    "degree_type": "MSc",
+    "field": "computer_data_science",
+    "duration_months": 16,
+    "study_mode": "full_time",
+    "stem_designated": null,
+    "has_coop_or_placement": null,
+    "programme_url": "https://analytics.georgetown.edu/",
+    "apply_url": null
+  },
+  "requirement": {
+    "academic_rule_text": null,
+    "min_uk_class": null,
+    "min_gpa4": null,
+    "considers_lower_with_experience": null,
+    "nigeria_rule": null,
+    "english_tests": [],
+    "english_waiver_text": null,
+    "waec_english_accepted": null,
+    "gre_required": null,
+    "gmat_required": null,
+    "min_work_years": null,
+    "documents": []
+  },
+  "intakes": [
+    {
+      "start_month": null,
+      "application_opens": null,
+      "deadlines": [
+        {
+          "label": "Priority Deadline",
+          "date": "2027-01-15",
+          "date_precision": "day"
+        },
+        {
+          "label": "Final Deadline",
+          "date": "2027-02-15",
+          "date_precision": "day"
+        }
+      ],
+      "deposit_amount": null,
+      "deposit_currency": null,
+      "deposit_deadline": null,
+      "start_term": "fall"
+    }
+  ],
+  "fees": [
+    {
+      "fee_year": "2026/27",
+      "tuition_amount": 2758,
+      "currency": "USD",
+      "basis": "per_credit",
+      "credits_total": 30,
+      "application_fee": null
+    },
+    {
+      "fee_year": "2026/27",
+      "tuition_amount": 82740,
+      "currency": "USD",
+      "basis": "total",
+      "credits_total": 30,
+      "application_fee": null
+    }
+  ]
+}

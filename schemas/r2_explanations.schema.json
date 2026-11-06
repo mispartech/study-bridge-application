@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["explanations"],
+  "properties": {
+    "explanations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["programme_id", "why", "watch_out"],
+        "properties": {
+          "programme_id": { "type": "string" },
+          "why": { "type": "string", "minLength": 1 },
+          "watch_out": { "type": ["string", "null"] }
+        }
+      }
+    }
+  }
+}

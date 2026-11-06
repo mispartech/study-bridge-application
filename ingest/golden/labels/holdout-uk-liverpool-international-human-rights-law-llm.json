@@ -1,0 +1,79 @@
+{
+  "found": true,
+  "university": {
+    "name": "University of Liverpool",
+    "country": "UK",
+    "city": "Liverpool",
+    "official_domain": "liverpool.ac.uk"
+  },
+  "programme": {
+    "title": "International Human Rights Law LLM",
+    "degree_type": "LLM",
+    "field": "law",
+    "duration_months": null,
+    "study_mode": "full_time",
+    "stem_designated": null,
+    "has_coop_or_placement": true,
+    "programme_url": "https://www.liverpool.ac.uk/courses/international-human-rights-law-llm",
+    "apply_url": null
+  },
+  "requirement": {
+    "academic_rule_text": "We accept a 2:2 honours degree from a UK university, or an equivalent academic qualification from a similar non-UK institution. This degree should be in Law (BA or LLB) or a closely related subject, including Political Science, Sociology, Philosophy, International Relations, Banking, Management Studies, Humanities, Social Sciences and Economics.",
+    "min_uk_class": "lower_second",
+    "min_gpa4": null,
+    "considers_lower_with_experience": null,
+    "nigeria_rule": null,
+    "english_tests": [
+      {
+        "test": "IELTS",
+        "overall_min": 6.5,
+        "subscore_min": 6.0
+      },
+      {
+        "test": "Duolingo",
+        "overall_min": 125,
+        "subscore_min": 110
+      },
+      {
+        "test": "PTE",
+        "overall_min": 61,
+        "subscore_min": 59
+      },
+      {
+        "test": "Other",
+        "overall_min": 70,
+        "subscore_min": 65
+      },
+      {
+        "test": "TOEFL_iBT",
+        "scale": "0-120",
+        "overall_min": 88,
+        "subscore_min": 19
+      },
+      {
+        "test": "TOEFL_iBT",
+        "scale": "1-6",
+        "overall_min": 4.5,
+        "subscore_min": 4
+      }
+    ],
+    "english_waiver_text": "You'll need to demonstrate competence in the use of English language, unless you’re from a majority English speaking country.",
+    "waec_english_accepted": true,
+    "gre_required": null,
+    "gmat_required": null,
+    "min_work_years": null,
+    "documents": [],
+    "waec_min_grade": "C6"
+  },
+  "intakes": [],
+  "fees": [
+    {
+      "fee_year": "2027/28",
+      "tuition_amount": 29000,
+      "currency": "GBP",
+      "basis": "per_year",
+      "credits_total": null,
+      "application_fee": null
+    }
+  ]
+}

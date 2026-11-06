@@ -1,0 +1,14 @@
+/* Showcase-only styles, split from globals.css so student pages don't carry them on a slow connection. */
+@import "tailwindcss/theme" layer(theme) theme(reference);
+@import "tailwindcss/utilities" layer(utilities) source(none);
+@import "../../../styles/tokens.css";
+
+@config "../../../tailwind.config.mts";
+@source "./";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@utility money {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+}

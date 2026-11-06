@@ -1,0 +1,72 @@
+{
+  "found": true,
+  "university": {
+    "name": "Georgetown University",
+    "country": "US",
+    "city": "Washington, D.C.",
+    "official_domain": "georgetown.edu"
+  },
+  "programme": {
+    "title": "Full-time MBA",
+    "degree_type": "MBA",
+    "field": "business_finance",
+    "duration_months": 21,
+    "study_mode": "full_time",
+    "stem_designated": null,
+    "has_coop_or_placement": null,
+    "programme_url": "https://msb.georgetown.edu/mba/",
+    "apply_url": null
+  },
+  "requirement": {
+    "academic_rule_text": null,
+    "min_uk_class": null,
+    "min_gpa4": null,
+    "considers_lower_with_experience": null,
+    "nigeria_rule": null,
+    "english_tests": [],
+    "english_waiver_text": null,
+    "waec_english_accepted": null,
+    "gre_required": null,
+    "gmat_required": null,
+    "min_work_years": 2,
+    "documents": []
+  },
+  "intakes": [
+    {
+      "start_month": null,
+      "application_opens": null,
+      "deadlines": [
+        {
+          "label": "Early Action Deadline",
+          "date": "2026-09-09",
+          "date_precision": "day"
+        },
+        {
+          "label": "Round 1 Deadline",
+          "date": "2026-10-01",
+          "date_precision": "day"
+        },
+        {
+          "label": "Round 2 Deadline",
+          "date": "2027-01-06",
+          "date_precision": "day"
+        },
+        {
+          "label": "Round 3 Deadline",
+          "date": "2027-04-01",
+          "date_precision": "day"
+        },
+        {
+          "label": "Round 4 Deadline",
+          "date": "2027-05-17",
+          "date_precision": "day"
+        }
+      ],
+      "deposit_amount": null,
+      "deposit_currency": null,
+      "deposit_deadline": null,
+      "start_term": "fall"
+    }
+  ],
+  "fees": []
+}

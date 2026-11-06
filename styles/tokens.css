@@ -1,0 +1,79 @@
+/*
+ * StudyBridge design tokens.
+ *
+ * Brand tokens (ink … muted) are the light values from CLAUDE.md. Everything marked
+ * "derived" exists to keep text at WCAG AA (≥ 4.5:1) on its background; status hues
+ * like warning #F59F00 are too light to carry text on white by themselves.
+ *
+ * Dark mode applies with `.dark` on <html>, set by the theme script in app/layout.tsx
+ * from the stored choice or prefers-color-scheme.
+ */
+
+:root {
+  color-scheme: light;
+
+  /* Brand */
+  --sb-ink: #15132b;
+  --sb-canvas: #f8f7fc;
+  --sb-surface: #ffffff;
+  --sb-primary: #5b4cf5;
+  --sb-accent: #ff7a59;
+  --sb-success: #12b886;
+  --sb-warning: #f59f00;
+  --sb-danger: #f03e5e;
+  --sb-muted: #6e6a85;
+
+  /* Derived: text/strokes on light backgrounds */
+  --sb-on-primary: #ffffff;
+  --sb-on-accent: #15132b;
+  --sb-primary-strong: #4a3ae0;
+  --sb-success-strong: #0b7a59;
+  --sb-warning-strong: #8a5300;
+  --sb-danger-strong: #c2183c;
+
+  /* Derived: tinted backgrounds for chips and banners */
+  --sb-primary-tint: color-mix(in srgb, var(--sb-primary) 14%, var(--sb-surface));
+  --sb-success-tint: color-mix(in srgb, var(--sb-success) 14%, var(--sb-surface));
+  --sb-warning-tint: color-mix(in srgb, var(--sb-warning) 14%, var(--sb-surface));
+  --sb-danger-tint: color-mix(in srgb, var(--sb-danger) 14%, var(--sb-surface));
+
+  /* Derived: structure */
+  --sb-surface-subtle: color-mix(in srgb, var(--sb-ink) 5%, var(--sb-surface));
+  --sb-border: color-mix(in srgb, var(--sb-ink) 12%, var(--sb-surface));
+  --sb-track: color-mix(in srgb, var(--sb-ink) 10%, var(--sb-surface));
+  --sb-focus: var(--sb-primary);
+  --sb-scrim: rgb(21 19 43 / 0.5);
+}
+
+.dark {
+  color-scheme: dark;
+
+  /* Brand (dark) */
+  --sb-ink: #f1f0fa;
+  --sb-canvas: #0e0d1c;
+  --sb-surface: #1a1830;
+  --sb-primary: #8b80ff;
+  --sb-accent: #ff8d70;
+  --sb-success: #3dd6a3;
+  --sb-warning: #ffb938;
+  --sb-danger: #ff6f88;
+  --sb-muted: #a6a2be;
+
+  /* Derived (dark) */
+  --sb-on-primary: #0e0d1c;
+  --sb-on-accent: #15132b;
+  --sb-primary-strong: #a69eff;
+  --sb-success-strong: #5be3b5;
+  --sb-warning-strong: #ffc65c;
+  --sb-danger-strong: #ff8da1;
+
+  --sb-primary-tint: color-mix(in srgb, var(--sb-primary) 18%, var(--sb-surface));
+  --sb-success-tint: color-mix(in srgb, var(--sb-success) 18%, var(--sb-surface));
+  --sb-warning-tint: color-mix(in srgb, var(--sb-warning) 18%, var(--sb-surface));
+  --sb-danger-tint: color-mix(in srgb, var(--sb-danger) 18%, var(--sb-surface));
+
+  --sb-surface-subtle: color-mix(in srgb, var(--sb-ink) 6%, var(--sb-surface));
+  --sb-border: color-mix(in srgb, var(--sb-ink) 14%, var(--sb-surface));
+  --sb-track: color-mix(in srgb, var(--sb-ink) 14%, var(--sb-surface));
+  --sb-scrim: rgb(0 0 0 / 0.6);
+}

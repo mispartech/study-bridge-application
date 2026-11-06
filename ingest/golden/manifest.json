@@ -1,0 +1,237 @@
+{
+  "note": "Golden set for docs/EXTRACTION.md section 5. Pages fetched with the polite fetcher; labels hand-checked against the saved pages. Cases with \"holdout\": true are reported separately. They have been run once on Gemini Flash, so add fresh unseen pages before using them for a model comparison.",
+  "cases": [
+    {
+      "slug": "uk-qmul-laws-llm",
+      "target_title": "Laws LLM",
+      "target_cycle": "2027/28",
+      "country": "GB",
+      "tags": ["london", "law", "multi_programme"],
+      "urls": ["https://www.qmul.ac.uk/postgraduate/taught/coursefinder/courses/laws-llm/"]
+    },
+    {
+      "slug": "uk-brunel-project-management-msc",
+      "target_title": "Project Management MSc",
+      "target_cycle": "2027/28",
+      "country": "GB",
+      "tags": ["london", "project_management"],
+      "urls": ["https://www.brunel.ac.uk/study/courses/project-management-msc"]
+    },
+    {
+      "slug": "uk-middlesex-public-health-msc",
+      "target_title": "Public Health MSc",
+      "target_cycle": "2027/28",
+      "country": "GB",
+      "tags": ["london", "public_health"],
+      "urls": ["https://www.mdx.ac.uk/courses/postgraduate/public-health-mscpgdip/"]
+    },
+    {
+      "slug": "uk-brunel-engineering-management-msc",
+      "target_title": "Engineering Management MSc",
+      "target_cycle": "2027/28",
+      "country": "GB",
+      "tags": ["london", "engineering"],
+      "urls": ["https://www.brunel.ac.uk/study/courses/engineering-management-msc"]
+    },
+    {
+      "slug": "uk-sheffield-data-science-msc",
+      "target_title": "Data Science MSc",
+      "target_cycle": "2027/28",
+      "country": "GB",
+      "tags": ["computer_data_science", "nigeria_rule"],
+      "urls": [
+        "https://sheffield.ac.uk/postgraduate/taught/courses/2027/data-science-msc",
+        "https://sheffield.ac.uk/international/entry-requirements/nigeria"
+      ]
+    },
+    {
+      "slug": "uk-brookes-project-management-msc",
+      "target_title": "Project Management MSc",
+      "target_cycle": "2027/28",
+      "country": "GB",
+      "tags": ["project_management", "nigeria_rule"],
+      "urls": [
+        "https://www.brookes.ac.uk/courses/postgraduate/project-management",
+        "https://www.brookes.ac.uk/study/international-students/your-country/nigeria/entry-requirements"
+      ]
+    },
+    {
+      "slug": "uk-warwick-finance-msc",
+      "target_title": "MSc Finance",
+      "target_cycle": "2027/28",
+      "country": "GB",
+      "tags": ["business_finance", "nigeria_rule"],
+      "urls": [
+        "https://warwick.ac.uk/study/postgraduate/courses/msc-finance/",
+        "https://warwick.ac.uk/study/international/countryinformation/africa/nigeria/"
+      ]
+    },
+    {
+      "slug": "uk-glasgow-data-science-ai-msc",
+      "target_title": "Data Science & Artificial Intelligence MSc",
+      "target_cycle": "2027/28",
+      "country": "GB",
+      "tags": ["computer_data_science"],
+      "urls": ["https://www.gla.ac.uk/postgraduate/taught/data-science-artificial-intelligence/"]
+    },
+    {
+      "slug": "ca-schulich-mmai",
+      "target_title": "Master of Management in Artificial Intelligence",
+      "target_cycle": "2027/28",
+      "country": "CA",
+      "tags": ["business_finance"],
+      "urls": ["https://schulich.yorku.ca/programs/mmai/"]
+    },
+    {
+      "slug": "ca-mcgill-mba",
+      "target_title": "Master of Business Administration (MBA)",
+      "target_cycle": "2027/28",
+      "country": "CA",
+      "tags": ["quebec", "business_finance"],
+      "urls": [
+        "https://www.mcgill.ca/desautels/programs/mba",
+        "https://www.mcgill.ca/desautels/programs/mba/admissions"
+      ]
+    },
+    {
+      "slug": "ca-uottawa-llm",
+      "target_title": "Master of Laws (LLM)",
+      "target_cycle": "2027/28",
+      "country": "CA",
+      "tags": ["law"],
+      "urls": [
+        "https://www.uottawa.ca/faculty-law/llmphd/admissions/application-deadlines",
+        "https://catalogue.uottawa.ca/en/graduate/master-laws-llm/"
+      ]
+    },
+    {
+      "slug": "ca-ubc-meng-ece",
+      "target_title": "Master of Engineering in Electrical and Computer Engineering (MEng)",
+      "target_cycle": "2027/28",
+      "country": "CA",
+      "tags": ["engineering"],
+      "urls": [
+        "https://www.grad.ubc.ca/prospective-students/graduate-degree-programs/master-of-engineering-electrical-computer-engineering"
+      ]
+    },
+    {
+      "slug": "ca-uoft-mph-epidemiology",
+      "target_title": "MPH Epidemiology",
+      "target_cycle": "2027/28",
+      "country": "CA",
+      "tags": ["public_health"],
+      "urls": ["https://www.dlsph.utoronto.ca/program/mph-epidemiology/"]
+    },
+    {
+      "slug": "ca-waterloo-meng-ece",
+      "target_title": "Electrical and Computer Engineering - Master of Engineering (MEng)",
+      "target_cycle": "2027/28",
+      "country": "CA",
+      "tags": ["engineering"],
+      "urls": [
+        "https://uwaterloo.ca/future-graduate-students/programs/by-faculty/engineering/electrical-and-computer-engineering-master-engineering-meng"
+      ]
+    },
+    {
+      "slug": "us-georgetown-data-science-analytics-ms",
+      "target_title": "Master of Science in Data Science & Analytics",
+      "target_cycle": "2027/28",
+      "country": "US",
+      "tags": ["computer_data_science", "per_credit"],
+      "urls": [
+        "https://analytics.georgetown.edu/",
+        "https://analytics.georgetown.edu/admissions-tuition/financial-aid-scholarships/"
+      ]
+    },
+    {
+      "slug": "us-northeastern-project-management-ms",
+      "target_title": "Master of Science in Project Management",
+      "target_cycle": "2027/28",
+      "country": "US",
+      "tags": ["project_management", "per_credit"],
+      "urls": [
+        "https://catalog.northeastern.edu/graduate/professional-studies/masters-degree-programs/project-management-ms/",
+        "https://studentfinance.northeastern.edu/billing-payments/tuition-and-fees/"
+      ]
+    },
+    {
+      "slug": "us-penn-llm",
+      "target_title": "LLM Program",
+      "target_cycle": "2027/28",
+      "country": "US",
+      "tags": ["law"],
+      "urls": ["https://www.law.upenn.edu/admissions/grad/llm.php"]
+    },
+    {
+      "slug": "us-denver-computer-science-ms",
+      "target_title": "Computer Science MS",
+      "target_cycle": "2027/28",
+      "country": "US",
+      "tags": ["computer_data_science"],
+      "urls": ["https://www.du.edu/academics/admission-steps/computer-science-ms-2027-2028"]
+    },
+    {
+      "slug": "us-georgetown-mba",
+      "target_title": "Full-time MBA",
+      "target_cycle": "2027/28",
+      "country": "US",
+      "tags": ["business_finance"],
+      "urls": ["https://msb.georgetown.edu/mba/"]
+    },
+    {
+      "slug": "us-emory-mph",
+      "target_title": "Master of Public Health (MPH)",
+      "target_cycle": "2027/28",
+      "country": "US",
+      "tags": ["public_health", "month_only_deadline"],
+      "urls": ["https://sph.emory.edu/admissions"]
+    },
+    {
+      "slug": "holdout-uk-bristol-management-project-management-msc",
+      "target_title": "MSc Management (Project Management)",
+      "target_cycle": "2027/28",
+      "country": "GB",
+      "tags": ["project_management"],
+      "holdout": true,
+      "urls": ["https://www.bristol.ac.uk/study/postgraduate/taught/msc-management-project-management/"]
+    },
+    {
+      "slug": "holdout-uk-liverpool-international-human-rights-law-llm",
+      "target_title": "International Human Rights Law LLM",
+      "target_cycle": "2027/28",
+      "country": "GB",
+      "tags": ["law"],
+      "holdout": true,
+      "urls": ["https://www.liverpool.ac.uk/courses/international-human-rights-law-llm"]
+    },
+    {
+      "slug": "holdout-ca-calgary-civil-engineering-meng",
+      "target_title": "Civil Engineering - MEng - Course",
+      "target_cycle": "2027/28",
+      "country": "CA",
+      "tags": ["engineering"],
+      "holdout": true,
+      "urls": [
+        "https://grad.ucalgary.ca/future-students/graduate/discover-opportunities/explore-programs/civil-engineering-meng-course"
+      ]
+    },
+    {
+      "slug": "holdout-ca-dalhousie-epidemiology-msc",
+      "target_title": "Epidemiology and Applied Health Research (MSc)",
+      "target_cycle": "2027/28",
+      "country": "CA",
+      "tags": ["public_health"],
+      "holdout": true,
+      "urls": ["https://www.dal.ca/study/programs/graduate-professional/epidemiology-applied-health-research-msc.html"]
+    },
+    {
+      "slug": "holdout-us-stevens-engineering-management-ms",
+      "target_title": "Engineering Management Master's",
+      "target_cycle": "2027/28",
+      "country": "US",
+      "tags": ["engineering"],
+      "holdout": true,
+      "urls": ["https://www.stevens.edu/program/engineering-management-masters"]
+    }
+  ]
+}

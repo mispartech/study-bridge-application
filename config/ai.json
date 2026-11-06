@@ -1,0 +1,5 @@
+{
+  "extraction": { "provider": "anthropic", "model": "claude-haiku-5-5" },
+  "explanations": { "provider": "google", "model": "gemini-3.6-flash" },
+  "advisor": { "provider": "google", "model": "gemini-3.6-flash" }
+}
