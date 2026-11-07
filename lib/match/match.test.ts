@@ -519,9 +519,10 @@ describe("cost engine", () => {
   }
 
   it("adds up a UK programme by hand", () => {
-    // Manchester halls: tuition 28,600 + rent 725 × 12 + living 380 × 12 + visa 524 + IHS 776 + flights 700
+    // Manchester halls: tuition 28,600 + rent 725 × 12 + living 380 × 12 + visa 558 + IHS 776 + flights 700
+    // (the visa fee and IHS are the official GOV.UK figures, verified 2026-11-07)
     const cost = costOf(NORTHMOOR_AI)
-    expect(cost.total_minor).toBe((28_600n + 8_700n + 4_560n + 524n + 776n + 700n) * 100n)
+    expect(cost.total_minor).toBe((28_600n + 8_700n + 4_560n + 558n + 776n + 700n) * 100n)
     expect(cost.currency).toBe("GBP")
   })
   it("converts to NGN at both rate kinds", () => {
@@ -544,18 +545,18 @@ describe("cost engine", () => {
     const cost = costOf(NORTHMOOR_AI, catalogue, rich({ accommodation_pref: "homestay" }))
     expect(cost).toMatchObject({ accommodation: "shared_flat", accommodation_available: false })
   })
-  it("marks visa fee, health cover and flights as estimated, and not tuition", () => {
+  it("marks only the flights as estimated once the UK fees are official", () => {
     const lines = Object.fromEntries(costOf(NORTHMOOR_AI).lines.map((l) => [l.key, l]))
-    expect(lines.visa_fee?.estimated).toBe(true)
-    expect(lines.health_cover?.estimated).toBe(true)
+    expect(lines.visa_fee?.estimated).toBe(false)
+    expect(lines.health_cover?.estimated).toBe(false)
     expect(lines.flights?.estimated).toBe(true)
     expect(lines.tuition?.estimated).toBe(false)
   })
-  it("marks Canada's visa fee, health cover and flights as estimated", () => {
+  it("marks Canada's health cover and flights as estimated, but not its official permit fee", () => {
     const lines = costOf("MEng Demo Ocean Engineering").lines
     expect(
       lines.filter((l) => ["visa_fee", "health_cover", "flights"].includes(l.key)).map((l) => l.estimated)
-    ).toEqual([true, true, true])
+    ).toEqual([false, true, true])
   })
   it("marks the US visa fee as estimated while its source is third party", () => {
     const profile = rich({ nationality: "GH" })

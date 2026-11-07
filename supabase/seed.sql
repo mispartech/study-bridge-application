@@ -122,6 +122,27 @@ where not exists (
   where r.country = 'CA' and r.rule_type = 'post_study_work' and r.effective_from = '2024-11-01'
 );
 
+-- Government fees verified on official pages on 2026-11-07. effective_from is the date the source page
+-- shows the fee in force, the earliest date we can vouch for, not when the fee first applied.
+insert into public.visa_rule
+  (country, rule_type, value, description, effective_from, source_url, last_verified_at, confidence)
+select v.country::public.country_code, 'government_fee', v.value::jsonb, v.description, v.effective_from::date,
+       v.source_url, timestamptz '2026-11-07 00:00:00+00', 'official'
+from (values
+  ('UK', '{"visa_fee_gbp":558,"ihs_gbp_per_year":776,"details_url":"https://www.gov.uk/healthcare-immigration-application/how-much-pay"}',
+   'Student visa from outside the UK: £558. Immigration Health Surcharge for students: £776 a year, charged on the length of the visa.',
+   '2026-10-08',
+   'https://www.gov.uk/government/publications/visa-regulations-revised-table/home-office-immigration-and-nationality-fees-8-october-2026'),
+  ('CA', '{"study_permit_cad":150,"biometrics_cad":85}',
+   'Study permit (including extensions): CAD 150 per person. Biometrics: CAD 85 per individual.',
+   '2026-09-21', 'https://ircc.canada.ca/english/information/fees/fees.asp')
+) as v(country, value, description, effective_from, source_url)
+where not exists (
+  select 1 from public.visa_rule r
+  where r.country = v.country::public.country_code and r.rule_type = 'government_fee'
+    and not r.is_demo and r.effective_from = v.effective_from::date
+);
+
 -- Palestinian Authority travel documents are in the full-suspension group. PS is matched against
 -- student_profile.travel_document, not nationality (docs/EXTRACTION.md section 6).
 update public.visa_rule set applies_to_travel_documents = '{PS}'

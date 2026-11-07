@@ -27,6 +27,10 @@ async function fetchCatalogue(demoMode: boolean): Promise<Catalogue> {
   const db = serviceClient()
   const withoutDemo = <Q extends { eq: (column: "is_demo", value: boolean) => Q }>(query: Q) =>
     demoMode ? query : query.eq("is_demo", false)
+  // Demo mode shows demo programmes only, so real records under review on Preview never reach Production.
+  // Reference data (visa rules, rates, costs) is shared: demo mode needs it too.
+  const onlyThisMode = <Q extends { eq: (column: "is_demo", value: boolean) => Q }>(query: Q) =>
+    query.eq("is_demo", demoMode)
 
   const [
     universities,
@@ -41,11 +45,11 @@ async function fetchCatalogue(demoMode: boolean): Promise<Catalogue> {
     fxRates,
     costEstimates,
   ] = await Promise.all([
-    withoutDemo(db.from("university").select("*")),
-    withoutDemo(db.from("programme").select("*")),
-    withoutDemo(db.from("requirement").select("*")),
-    withoutDemo(db.from("intake").select("*")),
-    withoutDemo(db.from("fee").select("*")),
+    onlyThisMode(db.from("university").select("*")),
+    onlyThisMode(db.from("programme").select("*")),
+    onlyThisMode(db.from("requirement").select("*")),
+    onlyThisMode(db.from("intake").select("*")),
+    onlyThisMode(db.from("fee").select("*")),
     withoutDemo(db.from("city_cost").select("*")),
     withoutDemo(db.from("scholarship").select("*")),
     withoutDemo(db.from("visa_rule").select("*")),

@@ -139,10 +139,11 @@ describe("presented results", () => {
     expect(typeof view.ranked[0]!.cost.total_ngn_market).toBe("string")
     expect(() => JSON.stringify(view)).not.toThrow()
   })
-  it("marks visa fee, health cover and flights as estimated on every ranked card", () => {
+  it("marks demo estimates on every ranked card, and not the official visa fees", () => {
     for (const card of view.ranked) {
       const estimated = card.cost.lines.filter((l) => l.estimated).map((l) => l.key)
-      expect(estimated).toEqual(expect.arrayContaining(["visa_fee", "health_cover", "flights"]))
+      expect(estimated).toContain("flights")
+      expect(estimated).not.toContain("visa_fee")
     }
   })
   it("includes every FX rate the currency toggle needs", () => {
