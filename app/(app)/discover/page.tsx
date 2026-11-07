@@ -12,6 +12,7 @@ import { Card } from "@/components/ui/card"
 import { hasSessionCookie } from "@/lib/auth/server"
 import { rank } from "@/lib/match"
 import { demoModeEnabled, loadCatalogue } from "@/lib/match/catalogue"
+import { inCountries } from "@/lib/match/countries"
 import { COMPLETENESS_COOKIE, matchConfidence, parseProfileCookie, PROFILE_COOKIE } from "@/lib/match/draft"
 import { BAND_LABEL } from "@/lib/match/labels"
 import { presentResult } from "@/lib/match/present"
@@ -46,6 +47,7 @@ async function Results() {
   const catalogue = await loadCatalogue(demoMode)
   const now = new Date()
   const view = presentResult(rank(profile, catalogue, { now, demoMode }), profile, catalogue, now)
+  const previewCards = inCountries(view.ranked, profile.preferred_countries)
   return (
     <ResultsView
       initialProfile={profile}
@@ -58,9 +60,9 @@ async function Results() {
         restricted: view.restricted.length,
       }}
       preview={
-        view.ranked.length > 0 ? (
+        previewCards.length > 0 ? (
           <div className="flex flex-col gap-4">
-            {view.ranked.slice(0, PREVIEW_CARDS).map((card) => (
+            {previewCards.slice(0, PREVIEW_CARDS).map((card) => (
               <PreviewCard key={card.id} card={card} />
             ))}
           </div>

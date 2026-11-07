@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { z } from "zod"
 
 import { demoModeEnabled, loadCatalogue } from "@/lib/match/catalogue"
+import { inCountries } from "@/lib/match/countries"
 import { matchProfile, rank } from "@/lib/match"
 import { presentResult } from "@/lib/match/present"
 import { failureResponse } from "@/lib/server-errors"
@@ -23,10 +24,12 @@ export async function POST(request: Request) {
   if (!parsed.data.quick_match) return NextResponse.json(view)
   // The landing page shows 3 results, and every byte counts on its first visit.
   const { ranked, near_misses } = view
+  const chosen = parsed.data.preferred_countries
   return NextResponse.json({
     ...view,
-    ranked: ranked.slice(0, QUICK_RESULTS),
-    near_misses: near_misses.slice(0, QUICK_RESULTS),
+    ranked: inCountries(ranked, chosen).slice(0, QUICK_RESULTS),
+    near_misses: inCountries(near_misses, chosen).slice(0, QUICK_RESULTS),
+    hidden_by_country: ranked.length - inCountries(ranked, chosen).length,
     more: [],
     restricted: [],
     needs_english: [],

@@ -9,14 +9,17 @@ import { track } from "@/lib/analytics/track"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { FitRing } from "@/components/ui/fit-ring"
+import type { CountryCode } from "@/lib/match/countries"
 import { draftStore } from "@/lib/match/profile-store"
 import { FIELDS, nextCycle } from "@/lib/match/labels"
 import type { MatchView } from "@/lib/match/present"
 import { formatShort } from "@/lib/money"
 
 import { BudgetChip } from "./card-parts"
+import { CountryChips } from "./country-chips"
 
 const RESULTS = 3
+const QUICK_NATIONALITY = "NG"
 const control = "h-11 w-full rounded-button border border-border bg-surface px-3 text-[0.9375rem]"
 
 export function QuickMatch() {
@@ -27,13 +30,18 @@ export function QuickMatch() {
   const [cgpa, setCgpa] = React.useState("3.8")
   const [scale, setScale] = React.useState("5")
   const [budget, setBudget] = React.useState("80")
-  const [view, setView] = React.useState<MatchView | null>(null)
+  const [countries, setCountries] = React.useState<CountryCode[]>([])
+  const [view, setView] = React.useState<(MatchView & { hidden_by_country?: number }) | null>(null)
   const [loading, setLoading] = React.useState(false)
   const [failed, setFailed] = React.useState(false)
 
   async function submit(event: React.FormEvent) {
-    track("landing_quick_match")
     event.preventDefault()
+    track("landing_quick_match")
+    await runMatch(countries)
+  }
+
+  async function runMatch(chosen: CountryCode[]) {
     setLoading(true)
     setFailed(false)
     try {
@@ -42,18 +50,26 @@ export function QuickMatch() {
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
           quick_match: true,
-          nationality: "NG",
+          nationality: QUICK_NATIONALITY,
           field,
           cgpa: Number(cgpa),
           cgpa_scale: Number(scale),
           budget_total_minor: Number(budget) * 100_000_000,
           target_cycle: nextCycle(new Date()),
           accommodation_pref: "university_halls", // same basis as the full results, so prices match
+          preferred_countries: chosen,
         }),
       })
       if (!res.ok) throw new Error("match failed")
       setView((await res.json()) as MatchView)
-      draftStore.set({ ...draftStore.get(), field, cgpa, cgpa_scale: scale, budget_millions: budget })
+      draftStore.set({
+        ...draftStore.get(),
+        field,
+        cgpa,
+        cgpa_scale: scale,
+        budget_millions: budget,
+        countries: chosen,
+      })
     } catch {
       setFailed(true)
     } finally {
@@ -107,6 +123,12 @@ export function QuickMatch() {
               onChange={(e) => setBudget(e.target.value)}
             />
           </label>
+          <CountryChips
+            legend="Where? (optional)"
+            selected={countries}
+            onChange={setCountries}
+            nationality={QUICK_NATIONALITY}
+          />
           <Button type="submit" variant="accent" size="lg" block loading={loading}>
             See my matches
           </Button>
@@ -120,6 +142,19 @@ export function QuickMatch() {
 
       {view && (
         <section aria-label="Your quick matches" className="flex flex-col gap-3">
+          {(view.hidden_by_country ?? 0) > 0 && (
+            <button
+              type="button"
+              data-testid="show-other-countries"
+              className="min-h-11 self-start text-sm font-medium underline underline-offset-4"
+              onClick={() => {
+                setCountries([])
+                void runMatch([])
+              }}
+            >
+              Show other countries
+            </button>
+          )}
           {top.map((c) => (
             <Card key={c.id} data-testid="quick-result" className="gap-2">
               <div className="flex items-start justify-between gap-2">

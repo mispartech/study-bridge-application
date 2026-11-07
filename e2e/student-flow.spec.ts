@@ -155,7 +155,7 @@ test.describe("results at ₦80m", () => {
 
   test("filters narrow the list", async ({ page }) => {
     await page.getByText("Filters").click()
-    await page.getByLabel("Canada").check()
+    await page.getByRole("button", { name: "UK", exact: true }).click()
     await expect(page.getByTestId("match-card").first()).toContainText("Canada")
     await expect(page.getByTestId("match-card").filter({ hasText: "Leeds" })).toHaveCount(0)
   })
@@ -225,4 +225,36 @@ test("explanations show a skeleton, then stream into the cards", async ({ page }
   await page.goto("/discover")
   await expect(page.getByTestId("explanation-skeleton").first()).toBeVisible()
   await expect(page.getByTestId("explanation").first()).toContainText("It fits your budget.")
+})
+
+test.describe("country selection", () => {
+  test("the filter rail narrows results and Show other countries brings them back", async ({ page }) => {
+    await withProfile(page, 80)
+    await page.goto("/discover")
+    await expect(page.locator('[data-loaded="true"]')).toBeVisible({ timeout: 20_000 })
+    await page.getByText("Filters").click()
+    await page.getByRole("button", { name: "UK", exact: true }).click()
+    await expect(page.getByTestId("match-card").filter({ hasText: "UK" })).toHaveCount(0)
+    await page.getByTestId("show-other-countries").click()
+    await expect(page.getByTestId("match-card").filter({ hasText: "UK" }).first()).toBeVisible()
+  })
+
+  test("a Nigerian sees the published visa note on the USA chip", async ({ page }) => {
+    await page.goto("/")
+    await expect(page.getByTestId("visa-note")).toContainText("USA:")
+    await expect(page.getByTestId("visa-note")).toContainText("10998")
+    await page.getByRole("button", { name: "USA", exact: true }).click()
+    await expect(page.getByTestId("visa-note")).toHaveCount(0)
+  })
+
+  test("quick match keeps to the chosen countries, with a way back", async ({ page }) => {
+    await page.goto("/")
+    await page.waitForLoadState("networkidle")
+    await page.getByRole("button", { name: "UK", exact: true }).click()
+    await page.getByRole("button", { name: "See my matches" }).click()
+    await expect(page.getByTestId("quick-result").first()).toBeVisible()
+    await expect(page.getByTestId("quick-result").filter({ hasText: "UK" })).toHaveCount(0)
+    await page.getByTestId("show-other-countries").click()
+    await expect(page.getByRole("button", { name: "UK", exact: true })).toHaveAttribute("aria-pressed", "true")
+  })
 })

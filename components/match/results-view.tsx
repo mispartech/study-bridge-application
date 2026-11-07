@@ -8,6 +8,8 @@ import * as React from "react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { track } from "@/lib/analytics/track"
+import { CountryChips } from "@/components/match/country-chips"
+import type { CountryCode } from "@/lib/match/countries"
 import { saveProfile, savedStore } from "@/lib/match/profile-store"
 import { BAND_LABEL, COUNTRY_LABEL, TERM_LABEL } from "@/lib/match/labels"
 import type { CardView, MatchView, NearMissView } from "@/lib/match/present"
@@ -129,10 +131,14 @@ function FilterRail({
   filters,
   onChange,
   cities,
+  nationality,
+  travelDocument,
 }: {
   filters: ViewFilters
   onChange: (next: ViewFilters) => void
   cities: string[]
+  nationality: string | null
+  travelDocument: string | null
 }) {
   const set = <K extends keyof ViewFilters>(key: K, value: ViewFilters[K]) => onChange({ ...filters, [key]: value })
   const toggles: [keyof ViewFilters, string][] = [
@@ -142,25 +148,13 @@ function FilterRail({
   ]
   return (
     <div className="flex flex-col gap-3 pt-2 text-sm">
-      <fieldset className="flex flex-wrap gap-x-4">
-        <legend className="mb-1 font-medium">Country</legend>
-        {Object.entries(COUNTRY_LABEL).map(([code, label]) => (
-          <label key={code} className="flex min-h-11 items-center gap-2">
-            <input
-              type="checkbox"
-              className={checkbox}
-              checked={filters.countries.includes(code)}
-              onChange={(e) =>
-                set(
-                  "countries",
-                  e.target.checked ? [...filters.countries, code] : filters.countries.filter((c) => c !== code)
-                )
-              }
-            />
-            {label}
-          </label>
-        ))}
-      </fieldset>
+      <CountryChips
+        legend="Country"
+        selected={filters.countries as CountryCode[]}
+        onChange={(countries) => onChange({ ...filters, countries })}
+        nationality={nationality}
+        travelDocument={travelDocument}
+      />
       <label className="flex flex-col gap-1 font-medium">
         City
         <select className={select} value={filters.city} onChange={(e) => set("city", e.target.value)}>
@@ -367,7 +361,10 @@ export function ResultsView({ initialProfile, confidence, grades, preview, count
   const [profile, setProfile] = React.useState(initialProfile)
   const [tab, setTab] = React.useState<Tab>("ranked")
   const [mode, setMode] = React.useState<"list" | "compare">("list")
-  const [filters, setFilters] = React.useState(NO_FILTERS)
+  const [filters, setFilters] = React.useState<ViewFilters>({
+    ...NO_FILTERS,
+    countries: initialProfile.preferred_countries,
+  })
   const [compare, setCompare] = React.useState<string[]>([])
   const browserSaved = React.useSyncExternalStore(savedStore.subscribe, savedStore.get, savedStore.getServer)
   const saved = shortlist ?? browserSaved
@@ -443,6 +440,9 @@ export function ResultsView({ initialProfile, confidence, grades, preview, count
 
   const all = React.useMemo(() => [...view.ranked, ...view.more], [view])
   const shown = applyViewFilters(view.ranked, filters)
+  const hiddenByCountry =
+    applyViewFilters([...view.ranked, ...view.more], { ...filters, countries: [] }).length -
+    applyViewFilters([...view.ranked, ...view.more], filters).length
   const more = applyViewFilters(view.more, filters)
   const cities = [...new Set(all.map((c) => c.city))].sort()
   const budgetMillions = Math.round((profile.budget_total_minor ?? 0) / MILLION_KOBO)
@@ -498,7 +498,13 @@ export function ResultsView({ initialProfile, confidence, grades, preview, count
             Show related fields
           </label>
           <Panel title="Filters">
-            <FilterRail filters={filters} onChange={setFilters} cities={cities} />
+            <FilterRail
+              filters={filters}
+              onChange={setFilters}
+              cities={cities}
+              nationality={profile.nationality}
+              travelDocument={profile.travel_document}
+            />
           </Panel>
           <Panel title="What matters most">
             <WeightSliders profile={profile} onChange={(weights) => update({ weights })} />
@@ -581,6 +587,16 @@ export function ResultsView({ initialProfile, confidence, grades, preview, count
               ) : (
                 <LazyMotion features={loadMotion}>
                   <MotionConfig reducedMotion="user">
+                    {hiddenByCountry > 0 && (
+                      <button
+                        type="button"
+                        data-testid="show-other-countries"
+                        className="min-h-11 self-start text-sm font-medium underline underline-offset-4"
+                        onClick={() => setFilters({ ...filters, countries: [] })}
+                      >
+                        Show other countries ({hiddenByCountry})
+                      </button>
+                    )}
                     {shown.length === 0 ? (
                       <Card>
                         <p className="text-sm">

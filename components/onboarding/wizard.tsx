@@ -4,6 +4,8 @@ import { useRouter } from "next/navigation"
 import * as React from "react"
 
 import { track } from "@/lib/analytics/track"
+import { CountryChips } from "@/components/match/country-chips"
+import type { CountryCode } from "@/lib/match/countries"
 
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
@@ -22,7 +24,7 @@ import {
   type TestKey,
   type TestState,
 } from "@/lib/match/draft"
-import { ACCOMMODATION_LABEL, BAND_LABEL, COUNTRY_LABEL, FIELDS, nextCycle, TERM_LABEL } from "@/lib/match/labels"
+import { ACCOMMODATION_LABEL, BAND_LABEL, FIELDS, nextCycle, TERM_LABEL } from "@/lib/match/labels"
 import { cn } from "@/lib/utils"
 
 const control = "h-11 w-full rounded-button border border-border bg-surface px-3 text-[0.9375rem]"
@@ -314,25 +316,12 @@ export function Wizard() {
       </Field>
     </>,
     <>
-      <fieldset className="flex flex-col gap-1">
-        <legend className="text-sm font-medium">Countries</legend>
-        <div className="grid grid-cols-3 gap-1">
-          {Object.entries(COUNTRY_LABEL).map(([code, label]) => {
-            const on = draft.countries.includes(code)
-            return (
-              <Choice
-                key={code}
-                active={on}
-                onClick={() =>
-                  update({ countries: on ? draft.countries.filter((c) => c !== code) : [...draft.countries, code] })
-                }
-              >
-                {label}
-              </Choice>
-            )
-          })}
-        </div>
-      </fieldset>
+      <CountryChips
+        selected={draft.countries as CountryCode[]}
+        onChange={(countries) => update({ countries })}
+        nationality={draft.nationality || null}
+        travelDocument={draft.travel_document || null}
+      />
       <Field label="Cities or regions you like (comma separated)">
         <input className={control} {...text("cities")} />
       </Field>
