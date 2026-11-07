@@ -1,6 +1,9 @@
 import "server-only"
 
+import { after } from "next/server"
+
 import { serviceClient } from "@/lib/db/service"
+import { REFRESH_MS, refreshReferenceRates } from "@/lib/fx/reference-rates"
 
 import type { Catalogue } from "./types"
 
@@ -12,12 +15,28 @@ const cache = new Map<boolean, { at: number; catalogue: Promise<Catalogue> }>()
 
 /** Everything matching reads, cached in memory. Demo rows are left out unless demo mode is on. */
 export function loadCatalogue(demoMode: boolean): Promise<Catalogue> {
+  scheduleRateRefresh()
   const hit = cache.get(demoMode)
   if (hit && Date.now() - hit.at < CACHE_MS) return hit.catalogue
   const catalogue = fetchCatalogue(demoMode)
   cache.set(demoMode, { at: Date.now(), catalogue })
   catalogue.catch(() => cache.delete(demoMode))
   return catalogue
+}
+
+let lastRefreshCheck = 0
+
+/** Keeps the reference rate under an hour old without a frequent cron: checked after the response is sent. */
+function scheduleRateRefresh() {
+  if (Date.now() - lastRefreshCheck < REFRESH_MS) return
+  lastRefreshCheck = Date.now()
+  try {
+    after(async () => {
+      if ((await refreshReferenceRates()) === "refreshed") invalidateCatalogue()
+    })
+  } catch {
+    // Outside a request (scripts, tests): the daily cron covers it.
+  }
 }
 
 /** After an admin publishes or edits a fact. Other server instances catch up within CACHE_MS. */

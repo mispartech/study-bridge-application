@@ -13,6 +13,8 @@ const LINKS = [
   ["/admin/review", "Review queue"],
   ["/admin/reports", "Error reports"],
   ["/admin/visa-rules", "Visa rules"],
+  ["/admin/fx", "Exchange rates"],
+  ["/admin/estimates", "Flights and health"],
   ["/admin/ai-usage", "AI usage"],
 ] as const
 
