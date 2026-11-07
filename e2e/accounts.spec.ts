@@ -324,16 +324,18 @@ test.describe("admin console", () => {
   })
 
   test("an admin approves a queued record, which goes live, and handles an error report", async ({ page }) => {
+    test.setTimeout(90_000) // two sign-ins and five pages
     const userId = await signIn(page, "/admin")
     await accept(page)
     await admin.auth.admin.updateUserById(userId, { app_metadata: { role: "admin" } })
+    const run = userId.slice(0, 8)
     // A fresh session picks up the role.
     await signInAs(page, userId)
     const { data: item } = await admin
       .from("review_queue")
       .insert({
         table_name: "programme",
-        proposed: queued(),
+        proposed: queued(run),
         reason: "e2e",
         source_text: "MSc E2E Analytics page text",
       })
@@ -351,8 +353,18 @@ test.describe("admin console", () => {
         .single()
       expect(published?.status).toBe("approved")
 
+      const { data: live } = await admin
+        .from("programme")
+        .select("title, is_demo, requirement(min_uk_class, ielts_min)")
+        .eq("id", published!.published_programme_id!)
+        .single()
+      expect(live).toMatchObject({ title: "MSc E2E Analytics", is_demo: false })
+      // Demo mode shows demo programmes only, so a real record approved here never reaches Production.
       await page.goto(`/programmes/${published!.published_programme_id}`)
-      await expect(page.getByRole("heading", { level: 1 })).toHaveText("MSc E2E Analytics")
+      await expect(page.getByRole("heading", { level: 1 })).toHaveText("404")
+
+      const { data: demoProgramme } = await admin.from("programme").select("id").eq("is_demo", true).limit(1).single()
+      await page.goto(`/programmes/${demoProgramme!.id}`)
       await page.getByRole("button", { name: "Report an error" }).click()
       const note = `The deadline looks out of date (${item!.id.slice(0, 8)}).`
       await page.getByLabel("What looks wrong?").fill(note)
@@ -368,7 +380,7 @@ test.describe("admin console", () => {
         .single()
       if (row?.published_programme_id) await admin.from("programme").delete().eq("id", row.published_programme_id)
       await admin.from("review_queue").delete().eq("id", item!.id)
-      await admin.from("university").delete().eq("name", "E2E Test University")
+      await admin.from("university").delete().eq("name", `E2E Test University ${run}`)
     }
   })
 })
@@ -383,16 +395,17 @@ async function signInAs(page: Page, userId: string) {
   await expect(page).toHaveURL(/\/admin/, { timeout: 20_000 })
 }
 
-function queued() {
+function queued(run: string) {
+  const domain = `e2e-${run}.ac.uk`
   return {
     university: {
-      name: "E2E Test University",
+      name: `E2E Test University ${run}`,
       country: "UK",
       city: "Leeds",
-      official_domain: "e2e-test.ac.uk",
+      official_domain: domain,
       region: "Yorkshire",
       is_public: true,
-      intl_office_url: "https://www.e2e-test.ac.uk/international",
+      intl_office_url: `https://www.${domain}/international`,
       register_url: "https://www.gov.uk/government/publications/register-of-licensed-sponsors-students",
     },
     programme: {
@@ -400,8 +413,8 @@ function queued() {
       degree_type: "MSc",
       field: "computer_data_science",
       duration_months: 12,
-      programme_url: "https://www.e2e-test.ac.uk/msc",
-      apply_url: "https://www.e2e-test.ac.uk/apply",
+      programme_url: `https://www.${domain}/msc`,
+      apply_url: `https://www.${domain}/apply`,
     },
     requirement: { min_uk_class: "upper_second", english_tests: [{ test: "IELTS", overall_min: 6.5 }] },
     intakes: [
@@ -413,6 +426,6 @@ function queued() {
       },
     ],
     fees: [{ fee_year: "2027/28", tuition_amount: 25000, currency: "GBP", basis: "per_year" }],
-    source_urls: ["https://www.e2e-test.ac.uk/msc"],
+    source_urls: [`https://www.${domain}/msc`],
   }
 }

@@ -212,6 +212,13 @@ export function Wizard() {
         />
         I have an HND plus PGD
       </label>
+      <Field label="Professional registration">
+        <Options
+          value={draft.professional_registration || "none"}
+          onChange={(professional_registration) => update({ professional_registration })}
+          options={{ none: "None", nurse: "Registered nurse", other: "Another health or care registration" }}
+        />
+      </Field>
       <Field label="Field you want to study">
         <Options
           value={draft.field}

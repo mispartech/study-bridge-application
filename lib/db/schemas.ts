@@ -91,6 +91,7 @@ export const studentProfileRow = z.object({
   weights: fitWeights,
   completeness: z.number().int().min(0).max(100),
   post_study_work: z.enum(["low", "medium", "high"]).nullable(),
+  professional_registration: z.enum(["none", "nurse", "other"]),
   campus_or_city: z.enum(["campus", "city", "either"]).nullable(),
   include_related_fields: z.boolean(),
   wizard_answers: json,
@@ -187,6 +188,11 @@ export const requirementRow = z.object({
   english_waiver_text: z.string().nullable(),
   waec_english_accepted: z.boolean(),
   waec_min_grade: z.enum(["A1", "B2", "B3", "C4", "C5", "C6", "D7", "E8", "F9"]).nullable(),
+  requires_professional_registration: z.enum(["none", "nurse", "other"]),
+  leads_to_registration: z.string().nullable(),
+  clinical_placement: z.boolean(),
+  open_to_international: z.enum(["yes", "limited", "no"]).nullable(),
+  checks_required: z.array(z.enum(["police", "health", "immunisation"])),
   pte_min: z.number().min(10).max(90).nullable(),
   gre_status: testStatus.nullable(),
   gmat_status: testStatus.nullable(),
@@ -292,6 +298,7 @@ export const fxRateRow = z.object({
   fetched_at: timestamp,
   source_url: z.string().nullable(),
   is_demo: z.boolean(),
+  entered_by: uuid.nullable(),
   ...timestamps,
 })
 
@@ -302,6 +309,10 @@ export const costEstimateRow = z.object({
   amount_minor: minor,
   currency: currencyCode,
   per_year: z.boolean(),
+  region: z.string().nullable(),
+  city: z.string().nullable(),
+  observed_on: date.nullable(),
+  evidence_path: z.string().nullable(),
   ...content,
   ...timestamps,
 })
@@ -334,6 +345,7 @@ export const reviewQueueRow = z.object({
   reviewed_by: uuid.nullable(),
   reviewed_at: timestamp.nullable(),
   published_programme_id: uuid.nullable(),
+  field_changes: z.array(z.string()).nullable(),
   ...timestamps,
 })
 

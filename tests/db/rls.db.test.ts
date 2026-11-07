@@ -549,7 +549,7 @@ describe("seed data through the public API (anon key, PostgREST)", () => {
              (select count(distinct field)::int from public.programme where is_demo) fields,
              (select count(*)::int from public.programme where is_demo and title not like '%Demo%') unlabelled`)
     expect(c[0]).toEqual({
-      visa: 22,
+      visa: 23,
       grades: 8,
       demo: 41,
       uk_london: 9,

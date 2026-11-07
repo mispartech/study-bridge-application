@@ -52,6 +52,11 @@ const record = z.object({
     gmat_required: z.string().nullish(),
     min_work_years: z.number().nullish(),
     documents: z.array(z.string()).nullish(),
+    requires_professional_registration: z.enum(["none", "nurse", "other"]).nullish(),
+    leads_to_registration: z.string().nullish(),
+    clinical_placement: z.boolean().nullish(),
+    open_to_international: z.enum(["yes", "limited", "no"]).nullish(),
+    checks_required: z.array(z.enum(["police", "health", "immunisation"])).nullish(),
   }),
   intakes: z
     .array(
@@ -149,6 +154,11 @@ export function toRows(input: unknown) {
       gmat_status: REQUIREDNESS[r.requirement.gmat_required ?? ""] ?? null,
       min_work_years: r.requirement.min_work_years ?? 0,
       documents: r.requirement.documents ?? [],
+      requires_professional_registration: r.requirement.requires_professional_registration ?? "none",
+      leads_to_registration: r.requirement.leads_to_registration ?? null,
+      clinical_placement: r.requirement.clinical_placement ?? false,
+      open_to_international: r.requirement.open_to_international ?? null,
+      checks_required: r.requirement.checks_required ?? [],
       ...stamp,
     },
     intakes: r.intakes.map((i) => ({

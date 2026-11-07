@@ -38,6 +38,9 @@ export type ProgrammeSummary = {
   has_coop: boolean
   stem: boolean
   no_gre: boolean
+  /** Null when the source doesn't say. "no" is shown with a warning, never hidden. */
+  open_to_international: "yes" | "limited" | "no" | null
+  leads_to_registration: string | null
   min_class: string | null
   ielts_min: number | null
   last_verified_at: string
@@ -85,6 +88,8 @@ export type MatchView = {
   restricted: RestrictedView[]
   needs_english: NeedsEnglishView[]
   excluded: Record<string, number>
+  /** Left out because they need a registration the student doesn't hold, with the reason to show. */
+  needs_registration: { programme_id: string; title: string; reason: string }[]
   fx: { market: FxRates; official: FxRates }
   now: string
 }
@@ -133,6 +138,8 @@ export function presentProgramme(bundle: Bundle, catalogue: Catalogue, now: Date
     has_coop: programme.has_coop_or_placement,
     stem: programme.stem_designated,
     no_gre: requirement?.gre_status !== "required" && requirement?.gre_status !== "one_of_required",
+    open_to_international: (requirement?.open_to_international as ProgrammeSummary["open_to_international"]) ?? null,
+    leads_to_registration: requirement?.leads_to_registration ?? null,
     min_class: requirement?.min_uk_class ?? null,
     ielts_min: requirement?.ielts_min ?? null,
     last_verified_at: programme.last_verified_at,
@@ -199,6 +206,9 @@ export function presentResult(result: MatchResult, profile: MatchProfile, catalo
       cost: n.cost ? presentCost(n.cost) : null,
     })),
     excluded,
+    needs_registration: result.excluded
+      .filter((e) => e.filter === "registration")
+      .map(({ programme_id, title, reason }) => ({ programme_id, title, reason })),
     fx: { market: latestRates(catalogue, "market"), official: latestRates(catalogue, "official") },
     now: now.toISOString(),
   }

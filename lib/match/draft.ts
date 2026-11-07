@@ -18,6 +18,8 @@ export function toMatchProfile(draft: Draft, now: Date): MatchProfile {
     cgpa,
     cgpa_scale: cgpa === null ? null : Number(draft.cgpa_scale),
     hnd_pgd: draft.hnd_pgd,
+    professional_registration:
+      (["nurse", "other"] as const).find((r) => r === draft.professional_registration) ?? "none",
     field: draft.field || null,
     work_years: number(draft.work_years) ?? 0,
     ielts: held("ielts"),

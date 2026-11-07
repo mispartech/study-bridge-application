@@ -176,6 +176,11 @@ function staleRecord(bundle: Bundle, intake: Intake, now: Date): string | null {
 }
 
 /** Stage 1. Visa restriction wins over every other outcome: the student must always be told. */
+const REGISTRATION_REASON: Record<string, string> = {
+  nurse: "Open only to registered nurses",
+  other: "Needs a professional registration you haven't told us you hold",
+}
+
 export function hardFilter(
   bundle: Bundle,
   profile: MatchProfile,
@@ -201,6 +206,10 @@ export function hardFilter(
 
   const { requirement } = bundle
   if (!requirement) return excluded("freshness", "No requirement record")
+  const needs = requirement.requires_professional_registration
+  if (needs !== "none" && needs !== profile.professional_registration) {
+    return excluded("registration", REGISTRATION_REASON[needs] ?? "Needs a professional registration")
+  }
   const academic = academicCheck(requirement, profile, academics)
   if (!academic.passes) return excluded("academic", `Needs ${requirement.min_uk_class} or above`)
 

@@ -73,6 +73,7 @@ export const matchProfile = z
       .default(null),
     dependants: z.number().int().min(0).default(0),
     post_study_work: z.enum(["low", "medium", "high"]).nullable().default(null),
+    professional_registration: z.enum(["none", "nurse", "other"]).default("none"),
     weights: weights.default(DEFAULT_WEIGHTS),
   })
   .refine((p) => p.toefl === null || p.toefl_scale !== null, "toefl_scale is required with a TOEFL score")
@@ -124,6 +125,8 @@ export type Cost = {
   proof_of_funds_minor: bigint | null
   accommodation: string
   accommodation_available: boolean
+  /** No city figures: rent and living come from the visa maintenance rule, as a minimum. */
+  minimum_living_estimate: boolean
   affordability: Affordability
 }
 

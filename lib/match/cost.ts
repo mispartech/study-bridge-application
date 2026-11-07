@@ -85,19 +85,55 @@ const num = (rule: VisaRule | undefined, key: string): number | undefined => {
 }
 const majorToMinor = (major: number) => BigInt(Math.round(major * 100))
 
+type Stay = { before_months?: number; after_months?: number; before_days?: number; after_days?: number }
+const DAYS_PER_MONTH = 30
+
+/**
+ * Months of UK permission for a course: the course plus the time before and after it in Appendix Student
+ * ST 25.3, which the length_of_stay rule holds.
+ */
+export function ukVisaMonths(rule: VisaRule | undefined, courseMonths: number): number | undefined {
+  const periods = rule?.value as Record<string, Stay> | null | undefined
+  const band =
+    courseMonths >= 12
+      ? periods?.course_12_months_plus
+      : courseMonths >= 6
+        ? periods?.course_6_to_12_months
+        : periods?.course_under_6_months
+  if (!band) return undefined
+  const before = (band.before_months ?? 0) + (band.before_days ?? 0) / DAYS_PER_MONTH
+  const after = (band.after_months ?? 0) + (band.after_days ?? 0) / DAYS_PER_MONTH
+  return before + courseMonths + after
+}
+
+/**
+ * GOV.UK charges the surcharge on the visa's length: nothing for 6 months or less from outside the UK,
+ * then the yearly cost per full year, plus half a year for a remainder of 6 months or less, or a full
+ * year for more.
+ */
+export function healthSurcharge(visaMonths: number, yearly: number): number {
+  const HALF_YEAR = 6
+  if (visaMonths <= HALF_YEAR) return 0
+  const fullYears = Math.floor(visaMonths / 12)
+  const rest = visaMonths - fullYears * 12
+  const part = rest === 0 ? 0 : rest <= HALF_YEAR ? yearly / 2 : yearly
+  return fullYears * yearly + part
+}
+
 /** Government fees for one country, in that country's currency. Field names are set by the seed. */
-function governmentFees(country: string, rule: VisaRule | undefined, years: number) {
+function governmentFees(country: string, rule: VisaRule | undefined, visaMonths: number | undefined) {
   const visa: Record<string, (number | undefined)[]> = {
     UK: [num(rule, "visa_fee_gbp")],
     CA: [num(rule, "study_permit_cad"), num(rule, "biometrics_cad")],
     US: [num(rule, "sevis_usd"), num(rule, "mrv_usd"), num(rule, "visa_integrity_usd")],
   }
   const parts = visa[country]
-  const surcharge = country === "UK" ? num(rule, "ihs_gbp_per_year") : 0
-  if (!parts || surcharge === undefined || parts.some((p) => p === undefined)) return undefined
+  const yearly = country === "UK" ? num(rule, "ihs_gbp_per_year") : 0
+  if (!parts || yearly === undefined || parts.some((p) => p === undefined)) return undefined
+  if (country === "UK" && visaMonths === undefined) return undefined
   return {
     visa: majorToMinor(parts.reduce<number>((a, b) => a + b!, 0)),
-    surcharge: majorToMinor(surcharge * years),
+    surcharge: majorToMinor(country === "UK" ? healthSurcharge(visaMonths!, yearly) : 0),
   }
 }
 
@@ -122,17 +158,28 @@ export function totalCost(
   const months = Math.min(programme.duration_months, MAX_LIVING_MONTHS)
 
   const costs = usable(catalogue.cityCosts, demoMode).filter((c) => c.country === country && c.city === city)
-  if (costs.length === 0) return { missing: `no city_cost for ${city}` }
   const wanted = costs.find((c) => c.accommodation_type === profile.accommodation_pref)
-  const home = wanted ?? [...costs].sort((a, b) => a.rent_monthly_low_minor - b.rent_monthly_low_minor)[0]!
-  const rentMonthly = (BigInt(home.rent_monthly_low_minor) + BigInt(home.rent_monthly_high_minor)) / 2n
+  const home = wanted ?? [...costs].sort((a, b) => a.rent_monthly_low_minor - b.rent_monthly_low_minor)[0]
+  // No city figures yet: the visa maintenance figure is the least a student must show, so it stands in,
+  // labelled as a minimum estimate, rather than dropping the programme.
+  const minimum = home ? undefined : minimumLiving(bundle, months, visaDate, catalogue, demoMode)
+  if (!home && !minimum) return { missing: `no city_cost or maintenance rule for ${city}` }
 
   const feesRule = ruleOn(catalogue.visaRules, { country, type: "government_fee", demoMode }, visaDate)
-  const government = governmentFees(country, feesRule, years)
-  if (government === undefined) return { missing: `no government_fee rule for ${country}` }
+  const stayRule = ruleOn(catalogue.visaRules, { country, type: "length_of_stay", demoMode }, visaDate)
+  const visaMonths = country === "UK" ? ukVisaMonths(stayRule, programme.duration_months) : undefined
+  const government = governmentFees(country, feesRule, visaMonths)
+  if (government === undefined) return { missing: `no government_fee or length_of_stay rule for ${country}` }
 
-  const estimate = (item: string) =>
-    usable(catalogue.costEstimates, demoMode).find((e) => e.country === country && e.item === item)
+  // The narrowest estimate wins: a destination city for flights, a province for health cover.
+  const estimate = (item: string) => {
+    const pool = usable(catalogue.costEstimates, demoMode).filter((e) => e.country === country && e.item === item)
+    return (
+      pool.find((e) => e.city === city) ??
+      pool.find((e) => !e.city && e.region === university.region) ??
+      pool.find((e) => !e.city && !e.region)
+    )
+  }
   const health = estimate("health_cover")
   const flights = estimate("flights")
   if (!flights) return { missing: `no flights estimate for ${country}` }
@@ -154,8 +201,19 @@ export function totalCost(
   })
   const lines: CostLine[] = [
     line("tuition", "First-year tuition", BigInt(fee.tuition_per_year_minor), fee),
-    line("rent", `Rent for ${months} months`, rentMonthly * BigInt(months), home),
-    line("living", `Living costs for ${months} months`, BigInt(home.living_monthly_minor) * BigInt(months), home),
+    ...(home
+      ? [
+          line("rent", `Rent for ${months} months`, rentMonthly(home) * BigInt(months), home),
+          line("living", `Living costs for ${months} months`, BigInt(home.living_monthly_minor) * BigInt(months), home),
+        ]
+      : [
+          line(
+            "living",
+            `Rent and living for ${months} months (minimum estimate from the visa funds rule)`,
+            minimum!.amount,
+            { source_url: minimum!.source_url, confidence: "estimated" }
+          ),
+        ]),
     line("visa_fee", "Visa fee", government.visa, feesRule!),
     health
       ? line("health_cover", "Health cover", healthMinor, health)
@@ -187,11 +245,41 @@ export function totalCost(
         catalogue,
         demoMode
       ),
-      accommodation: home.accommodation_type,
+      accommodation: home?.accommodation_type ?? profile.accommodation_pref ?? "university_halls",
       accommodation_available: wanted !== undefined,
+      minimum_living_estimate: !home,
       affordability: affordability(market, budget),
     },
   }
+}
+
+const rentMonthly = (home: { rent_monthly_low_minor: number; rent_monthly_high_minor: number }) =>
+  (BigInt(home.rent_monthly_low_minor) + BigInt(home.rent_monthly_high_minor)) / 2n
+
+/** Rent and living together, from the maintenance figure the visa rules require a student to hold. */
+function minimumLiving(
+  { university }: Bundle,
+  months: number,
+  date: string,
+  catalogue: Catalogue,
+  demoMode: boolean
+): { amount: bigint; source_url: string } | undefined {
+  const { country } = university
+  if (country === "UK") {
+    const region = university.city === "London" ? "London" : "Outside London"
+    const rule = ruleOn(catalogue.visaRules, { country, type: "proof_of_funds", region, demoMode }, date)
+    const monthly = num(rule, "monthly_gbp")
+    return monthly === undefined ? undefined : { amount: majorToMinor(monthly * months), source_url: rule!.source_url }
+  }
+  if (country === "CA") {
+    const region = university.region === "Quebec" ? "Quebec" : "Outside Quebec"
+    const rule = ruleOn(catalogue.visaRules, { country, type: "proof_of_funds", region, demoMode }, date)
+    const yearly = num(rule, "single_cad")
+    return yearly === undefined
+      ? undefined
+      : { amount: majorToMinor((yearly * months) / 12), source_url: rule!.source_url }
+  }
+  return undefined
 }
 
 function proofOfFunds(

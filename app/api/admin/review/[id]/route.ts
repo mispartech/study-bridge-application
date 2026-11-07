@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { z } from "zod"
 
+import { changedFields } from "@/lib/admin/field-changes"
 import { PublishError, toRows } from "@/lib/admin/publish"
 import { adminFromRequest } from "@/lib/auth/admin"
 import type { Json } from "@/lib/db/database.types"
@@ -30,6 +31,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       return NextResponse.json({ ok: true })
     }
     const rows = toRows(record)
+    const { data: item } = await db.from("review_queue").select("proposed").eq("id", id).maybeSingle()
     const { data, error } = await db.rpc("publish_review_item", {
       p_review_id: id,
       p_reviewer: user.id,
@@ -38,6 +40,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       p_requirement: rows.requirement as unknown as Json,
       p_intakes: rows.intakes as unknown as Json,
       p_fees: rows.fees as unknown as Json,
+      p_field_changes: changedFields(item?.proposed ?? null, record),
     })
     if (error) return NextResponse.json({ error: error.message }, { status: 422 })
     invalidateCatalogue()

@@ -62,6 +62,29 @@ describe("toRows", () => {
     expect(rows.university).toMatchObject({ official_domains: ["example.ac.uk"], confidence: "official" })
   })
 
+  it("carries the professional fields, defaulting to no registration needed", () => {
+    expect(toRows(record()).requirement).toMatchObject({
+      requires_professional_registration: "none",
+      checks_required: [],
+      open_to_international: null,
+    })
+    const nursing = record() as ReturnType<typeof record> & { requirement: Record<string, unknown> }
+    Object.assign(nursing.requirement, {
+      requires_professional_registration: "nurse",
+      leads_to_registration: "NMC",
+      clinical_placement: true,
+      open_to_international: "limited",
+      checks_required: ["police", "health"],
+    })
+    expect(toRows(nursing).requirement).toMatchObject({
+      requires_professional_registration: "nurse",
+      leads_to_registration: "NMC",
+      clinical_placement: true,
+      open_to_international: "limited",
+      checks_required: ["police", "health"],
+    })
+  })
+
   it("every row carries its source", () => {
     const rows = toRows(record())
     for (const row of [rows.programme, rows.requirement, ...rows.intakes, ...rows.fees, rows.university]) {

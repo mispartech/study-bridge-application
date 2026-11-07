@@ -13,6 +13,7 @@ import {
   bundles,
   englishCheck,
   groupFor,
+  healthSurcharge,
   hardFilter,
   matchProfile,
   nigeriaRuleMinimum,
@@ -20,12 +21,14 @@ import {
   rank,
   ruleOn,
   totalCost,
+  ukVisaMonths,
   visaApplicationDate,
   withinCeiling,
   type Catalogue,
   type MatchProfile,
   type RankedProgramme,
 } from "."
+import { presentResult } from "./present"
 
 const NOW = new Date("2026-11-04T12:00:00Z")
 const OPTIONS = { now: NOW, demoMode: true }
@@ -520,9 +523,10 @@ describe("cost engine", () => {
 
   it("adds up a UK programme by hand", () => {
     // Manchester halls: tuition 28,600 + rent 725 × 12 + living 380 × 12 + visa 558 + IHS 776 + flights 700
-    // (the visa fee and IHS are the official GOV.UK figures, verified 2026-11-07)
+    // The visa fee and IHS are GOV.UK's figures. A 12-month course gets a 17-month visa (ST 25.3),
+    // so the surcharge is a year plus half a year: £776 + £388 = £1,164.
     const cost = costOf(NORTHMOOR_AI)
-    expect(cost.total_minor).toBe((28_600n + 8_700n + 4_560n + 558n + 776n + 700n) * 100n)
+    expect(cost.total_minor).toBe((28_600n + 8_700n + 4_560n + 558n + 1_164n + 700n) * 100n)
     expect(cost.currency).toBe("GBP")
   })
   it("converts to NGN at both rate kinds", () => {
@@ -835,5 +839,87 @@ describe("post-study work priority in career fit", () => {
       careerFit(bundle, bundle.intakes[0]!, { ...base, post_study_work: priority }, noRule, options)
     expect(score("medium") - (bundle.programme.has_coop_or_placement ? 0.2 : 0)).toBeCloseTo(0.7)
     expect(score("high") - (bundle.programme.has_coop_or_placement ? 0.15 : 0)).toBeCloseTo(0.65)
+  })
+})
+
+describe("pilot rules", () => {
+  const options = { now: new Date("2026-11-05T12:00:00Z"), demoMode: true }
+  const cat = demo as unknown as Catalogue
+  const stay = cat.visaRules.find((r) => r.country === "UK" && r.rule_type === "length_of_stay")!
+
+  describe("UK health surcharge follows the visa's length", () => {
+    it("charges a 12-month course for 17 months: a year and a half", () => {
+      expect(ukVisaMonths(stay, 12)).toBe(17)
+      expect(healthSurcharge(17, 776)).toBe(1164)
+    })
+    it("charges a 24-month course for 29 months: two and a half years", () => {
+      expect(ukVisaMonths(stay, 24)).toBe(29)
+      expect(healthSurcharge(29, 776)).toBe(1940)
+    })
+    it("follows GOV.UK's part-year rules", () => {
+      expect(healthSurcharge(6, 776)).toBe(0)
+      expect(healthSurcharge(9, 776)).toBe(776)
+      expect(healthSurcharge(12, 776)).toBe(776)
+      expect(healthSurcharge(20, 776)).toBe(1552)
+    })
+  })
+
+  const ukProgramme = () => fresh()
+  it("never drops a programme for missing city costs: it uses the visa funds figure as a minimum", () => {
+    const c = ukProgramme()
+    c.cityCosts = c.cityCosts.filter((x) => x.city !== "Manchester")
+    const bundle = bundles(c, true).find((b) => b.programme.title === NORTHMOOR_AI)!
+    const result = totalCost(bundle, bundle.intakes[0]!, rich(), c, options)
+    if (!("cost" in result)) throw new Error(result.missing)
+    expect(result.cost.minimum_living_estimate).toBe(true)
+    const living = result.cost.lines.find((l) => l.key === "living")!
+    expect(living.label).toMatch(/minimum estimate/)
+    expect(living.estimated).toBe(true)
+    expect(result.cost.lines.find((l) => l.key === "rent")).toBeUndefined()
+  })
+
+  it("prefers a city flight estimate and a provincial health estimate over the country's", () => {
+    const c = fresh()
+    const toronto = bundles(c, true).find((b) => b.university.city === "Toronto")!
+    const base = (key: string) => {
+      const r = totalCost(toronto, toronto.intakes[0]!, rich(), c, options)
+      if (!("cost" in r)) throw new Error(r.missing)
+      return r.cost.lines.find((l) => l.key === key)!.amount_minor
+    }
+    const flightsBefore = base("flights")
+    const healthBefore = base("health_cover")
+    const template = c.costEstimates.find((e) => e.country === "CA" && e.item === "flights")!
+    c.costEstimates.push({ ...template, id: "city", city: "Toronto", amount_minor: 123_400 })
+    const health = c.costEstimates.find((e) => e.country === "CA" && e.item === "health_cover" && !e.region)!
+    c.costEstimates.push({ ...health, id: "province", region: "Ontario", amount_minor: 94_800, per_year: true })
+    expect(base("flights")).toBe(123_400n)
+    expect(base("flights")).not.toBe(flightsBefore)
+    expect(base("health_cover")).not.toBe(healthBefore)
+  })
+
+  it("leaves out a programme needing a registration the student lacks, and says why", () => {
+    const c = fresh()
+    const bundle = bundles(c, true).find((b) => b.programme.title === NORTHMOOR_AI)!
+    bundle.requirement!.requires_professional_registration = "nurse"
+    const academics = normaliseAcademics(rich(), c.gradeMappings)
+    const outcome = hardFilter(bundle, rich(), academics, c, options)
+    expect(outcome).toMatchObject({
+      status: "excluded",
+      filter: "registration",
+      reason: "Open only to registered nurses",
+    })
+    const nurse = hardFilter(bundle, rich({ professional_registration: "nurse" }), academics, c, options)
+    expect(nurse.status).not.toBe("excluded")
+    const view = presentResult(rank(rich(), c, options), rich(), c, options.now)
+    expect(view.needs_registration.map((n) => n.reason)).toContain("Open only to registered nurses")
+  })
+
+  it("shows a programme not open to international students, flagged, rather than hiding it", () => {
+    const c = fresh()
+    const bundle = bundles(c, true).find((b) => b.programme.title === NORTHMOOR_AI)!
+    bundle.requirement!.open_to_international = "no"
+    const view = presentResult(rank(rich(), c, options), rich(), c, options.now)
+    const card = [...view.ranked, ...view.more].find((x) => x.title === NORTHMOOR_AI)
+    expect(card?.open_to_international).toBe("no")
   })
 })

@@ -143,6 +143,31 @@ where not exists (
     and not r.is_demo and r.effective_from = v.effective_from::date
 );
 
+-- How long UK permission runs around a course: Immigration Rules, Appendix Student, ST 25.3.
+-- The surcharge is charged on this length, not the course length.
+insert into public.visa_rule
+  (country, rule_type, value, description, effective_from, source_url, last_verified_at, confidence)
+select 'UK', 'length_of_stay',
+  '{"course_12_months_plus":{"before_months":1,"after_months":4},"course_6_to_12_months":{"before_months":1,"after_months":2},"course_under_6_months":{"before_days":7,"after_days":7}}',
+  'Student permission covers the course plus 1 month before and 4 months after for courses of 12 months or longer, 1 month before and 2 months after for courses of 6 to 12 months, and 7 days either side for courses under 6 months.',
+  '2026-11-07', 'https://www.gov.uk/guidance/immigration-rules/appendix-student',
+  timestamptz '2026-11-07 00:00:00+00', 'official'
+where not exists (
+  select 1 from public.visa_rule r
+  where r.country = 'UK' and r.rule_type = 'length_of_stay' and not r.is_demo and r.effective_from = '2026-11-07'
+);
+
+-- Ontario: international students buy UHIP. These are the published 2026/27 rates (September start);
+-- the 2027/28 rates aren't out yet, so the figure is labelled estimated.
+insert into public.cost_estimate
+  (country, region, item, amount_minor, currency, per_year, source_url, last_verified_at, confidence, is_demo)
+select 'CA', 'Ontario', 'health_cover', 94800, 'CAD', true, 'https://uhip.ca/get-started/',
+       timestamptz '2026-11-07 00:00:00+00', 'estimated', false
+where not exists (
+  select 1 from public.cost_estimate e
+  where e.country = 'CA' and e.region = 'Ontario' and e.item = 'health_cover' and not e.is_demo
+);
+
 -- Palestinian Authority travel documents are in the full-suspension group. PS is matched against
 -- student_profile.travel_document, not nationality (docs/EXTRACTION.md section 6).
 update public.visa_rule set applies_to_travel_documents = '{PS}'

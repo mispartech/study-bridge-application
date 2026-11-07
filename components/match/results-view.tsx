@@ -336,6 +336,7 @@ const EMPTY_VIEW: MatchView = {
   restricted: [],
   needs_english: [],
   excluded: {},
+  needs_registration: [],
   fx: { market: {}, official: {} },
   now: "",
 }
@@ -551,6 +552,23 @@ export function ResultsView({ initialProfile, confidence, grades, preview, count
 
           {tab === "ranked" && (
             <div role="tabpanel" aria-label="Ranked" className="flex flex-col gap-4">
+              {view.needs_registration.length > 0 && (
+                <details
+                  data-testid="needs-registration"
+                  className="rounded-card border border-border bg-surface p-3 text-sm"
+                >
+                  <summary className="cursor-pointer font-medium">
+                    {view.needs_registration.length} left out: they need a professional registration
+                  </summary>
+                  <ul className="mt-2 flex flex-col gap-1">
+                    {view.needs_registration.map((p) => (
+                      <li key={p.programme_id}>
+                        {p.title}: {p.reason}
+                      </li>
+                    ))}
+                  </ul>
+                </details>
+              )}
               <div className="flex items-center justify-between gap-2">
                 <div role="group" aria-label="View" className="flex gap-1">
                   {(["list", "compare"] as const).map((m_) => (

@@ -124,7 +124,7 @@ test.describe("results at ₦80m", () => {
   test("the cost sheet labels estimates and toggles currency", async ({ page }) => {
     await page.getByTestId("cost-trigger").first().click()
     const sheet = page.getByRole("dialog")
-    await expect(sheet.getByTestId("estimated-tag")).toHaveCount(5) // rent, living, visa, health, flights
+    await expect(sheet.getByTestId("estimated-tag")).toHaveCount(4) // rent, living, health, flights; the visa fee is official
     await expect(sheet.getByText("Flights")).toBeVisible()
     await sheet.getByRole("button", { name: "CAD" }).click()
     await expect(sheet.getByText(/CA\$/).first()).toBeVisible()

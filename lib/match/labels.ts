@@ -5,6 +5,8 @@ export const FIELDS = [
   { value: "public_health", label: "Public health" },
   { value: "project_management", label: "Project management" },
   { value: "law", label: "Law" },
+  { value: "nursing", label: "Nursing" },
+  { value: "mental_health", label: "Mental health, counselling and psychology" },
 ] as const
 
 export const fieldLabel = (field: string) => FIELDS.find((f) => f.value === field)?.label ?? field

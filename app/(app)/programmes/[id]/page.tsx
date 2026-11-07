@@ -34,6 +34,12 @@ import { isOfficialUrl } from "@/lib/match/official-url"
 import { presentCost, presentResult } from "@/lib/match/present"
 import { formatShort, type Currency } from "@/lib/money"
 
+const CHECK_LABEL: Record<string, string> = {
+  police: "police (criminal record) check",
+  health: "health clearance",
+  immunisation: "immunisations",
+}
+
 export const metadata: Metadata = { title: "Programme", robots: { index: false } }
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
@@ -128,6 +134,32 @@ async function Programme({ params }: { params: Promise<{ id: string }> }) {
           <p>Minimum degree: {BAND_LABEL[requirement.min_uk_class] ?? requirement.min_uk_class}.</p>
           {requirement.nigeria_rule && <p>For Nigerian applicants: {requirement.nigeria_rule}</p>}
           {requirement.min_work_years > 0 && <p>Work experience: at least {requirement.min_work_years} years.</p>}
+          {requirement.open_to_international === "no" && (
+            <p
+              data-testid="not-international"
+              role="note"
+              className="rounded-button bg-danger-tint p-2 font-medium text-danger-strong"
+            >
+              The university says this course isn&apos;t open to international students. Check with them before you
+              apply.
+            </p>
+          )}
+          {requirement.open_to_international === "limited" && (
+            <p role="note" className="rounded-button bg-warning-tint p-2 text-warning-strong">
+              The university says places for international students are limited.
+            </p>
+          )}
+          {requirement.requires_professional_registration !== "none" && (
+            <p>
+              Open only to applicants who already hold a{" "}
+              {requirement.requires_professional_registration === "nurse" ? "nursing" : "professional"} registration.
+            </p>
+          )}
+          {requirement.leads_to_registration && <p>Leads to registration with: {requirement.leads_to_registration}.</p>}
+          {requirement.clinical_placement && <p>Includes a clinical placement.</p>}
+          {requirement.checks_required.length > 0 && (
+            <p>Checks before you start: {requirement.checks_required.map((c) => CHECK_LABEL[c] ?? c).join(", ")}.</p>
+          )}
         </Section>
       )}
 
