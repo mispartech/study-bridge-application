@@ -306,3 +306,113 @@ test.describe("demo banner", () => {
     })
   }
 })
+
+test("/api/visa-notes rejects a malformed nationality", async ({ request }) => {
+  expect((await request.get("/api/visa-notes?nationality=nigeria")).status()).toBe(400)
+})
+
+test.describe("admin console", () => {
+  test("is a 404 for a signed-in student, and its API refuses them", async ({ page }) => {
+    await signIn(page)
+    await accept(page)
+    await expect(page).toHaveURL(/\/discover/, { timeout: 20_000 })
+    await page.goto("/admin")
+    await expect(page.getByText(/could not be found|404/i).first()).toBeVisible()
+    expect((await page.request.post("/api/admin/review/x", { data: { action: "reject", record: {} } })).status()).toBe(
+      404
+    )
+  })
+
+  test("an admin approves a queued record, which goes live, and handles an error report", async ({ page }) => {
+    const userId = await signIn(page, "/admin")
+    await accept(page)
+    await admin.auth.admin.updateUserById(userId, { app_metadata: { role: "admin" } })
+    // A fresh session picks up the role.
+    await signInAs(page, userId)
+    const { data: item } = await admin
+      .from("review_queue")
+      .insert({
+        table_name: "programme",
+        proposed: queued(),
+        reason: "e2e",
+        source_text: "MSc E2E Analytics page text",
+      })
+      .select("id")
+      .single()
+    try {
+      await page.goto(`/admin/review/${item!.id}`)
+      await expect(page.getByTestId("source-text")).toContainText("MSc E2E Analytics page text")
+      await page.getByRole("button", { name: "Approve and publish" }).click()
+      await expect(page).toHaveURL(/\/admin\/review$/, { timeout: 20_000 })
+      const { data: published } = await admin
+        .from("review_queue")
+        .select("status, published_programme_id")
+        .eq("id", item!.id)
+        .single()
+      expect(published?.status).toBe("approved")
+
+      await page.goto(`/programmes/${published!.published_programme_id}`)
+      await expect(page.getByRole("heading", { level: 1 })).toHaveText("MSc E2E Analytics")
+      await page.getByRole("button", { name: "Report an error" }).click()
+      const note = `The deadline looks out of date (${item!.id.slice(0, 8)}).`
+      await page.getByLabel("What looks wrong?").fill(note)
+      await page.getByRole("button", { name: "Send report" }).click()
+      await expect(page.getByTestId("report-sent")).toBeVisible()
+      await page.goto("/admin/reports")
+      await expect(page.getByTestId("error-report").filter({ hasText: note })).toBeVisible()
+    } finally {
+      const { data: row } = await admin
+        .from("review_queue")
+        .select("published_programme_id")
+        .eq("id", item!.id)
+        .single()
+      if (row?.published_programme_id) await admin.from("programme").delete().eq("id", row.published_programme_id)
+      await admin.from("review_queue").delete().eq("id", item!.id)
+      await admin.from("university").delete().eq("name", "E2E Test University")
+    }
+  })
+})
+
+async function signInAs(page: Page, userId: string) {
+  const { data: user } = await admin.auth.admin.getUserById(userId)
+  const { data, error } = await admin.auth.admin.generateLink({ type: "magiclink", email: user.user!.email! })
+  if (error) throw error
+  const { hashed_token, verification_type } = data.properties
+  await page.context().clearCookies()
+  await page.goto(`/auth/callback?token_hash=${hashed_token}&type=${verification_type}&next=/admin`)
+  await expect(page).toHaveURL(/\/admin/, { timeout: 20_000 })
+}
+
+function queued() {
+  return {
+    university: {
+      name: "E2E Test University",
+      country: "UK",
+      city: "Leeds",
+      official_domain: "e2e-test.ac.uk",
+      region: "Yorkshire",
+      is_public: true,
+      intl_office_url: "https://www.e2e-test.ac.uk/international",
+      register_url: "https://www.gov.uk/government/publications/register-of-licensed-sponsors-students",
+    },
+    programme: {
+      title: "MSc E2E Analytics",
+      degree_type: "MSc",
+      field: "computer_data_science",
+      duration_months: 12,
+      programme_url: "https://www.e2e-test.ac.uk/msc",
+      apply_url: "https://www.e2e-test.ac.uk/apply",
+    },
+    requirement: { min_uk_class: "upper_second", english_tests: [{ test: "IELTS", overall_min: 6.5 }] },
+    intakes: [
+      {
+        cycle: "2027/28",
+        start_term: "fall",
+        start_month: "2027-09",
+        deadlines: [{ label: "international", date: "2027-06-30" }],
+      },
+    ],
+    fees: [{ fee_year: "2027/28", tuition_amount: 25000, currency: "GBP", basis: "per_year" }],
+    source_urls: ["https://www.e2e-test.ac.uk/msc"],
+  }
+}

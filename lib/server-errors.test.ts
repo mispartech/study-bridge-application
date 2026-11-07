@@ -43,7 +43,7 @@ describe("describeFailure", () => {
   })
 
   it("never passes a raw message on", () => {
-    const secret = "postgres://user:hunter2@db.example/x failed"
+    const secret = "connection refused for hunter2"
     const failure = describeFailure(new Error(secret))
     expect(failure).toEqual({ status: 500, body: { error: "Something went wrong", code: "SERVER_ERROR" } })
     expect(JSON.stringify(failure)).not.toContain("hunter2")

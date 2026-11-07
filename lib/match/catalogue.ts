@@ -20,6 +20,9 @@ export function loadCatalogue(demoMode: boolean): Promise<Catalogue> {
   return catalogue
 }
 
+/** After an admin publishes or edits a fact. Other server instances catch up within CACHE_MS. */
+export const invalidateCatalogue = () => cache.clear()
+
 async function fetchCatalogue(demoMode: boolean): Promise<Catalogue> {
   const db = serviceClient()
   const withoutDemo = <Q extends { eq: (column: "is_demo", value: boolean) => Q }>(query: Q) =>

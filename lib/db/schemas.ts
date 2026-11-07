@@ -330,6 +330,19 @@ export const reviewQueueRow = z.object({
   current: json.nullable(),
   reason: z.string().min(1),
   status: z.enum(["pending", "approved", "rejected"]),
+  source_text: z.string().nullable(),
+  reviewed_by: uuid.nullable(),
+  reviewed_at: timestamp.nullable(),
+  published_programme_id: uuid.nullable(),
+  ...timestamps,
+})
+
+export const errorReportRow = z.object({
+  id: uuid,
+  programme_id: uuid,
+  user_id: uuid.nullable(),
+  message: z.string().min(5).max(1000),
+  status: z.enum(["open", "resolved", "dismissed"]),
   ...timestamps,
 })
 
@@ -420,6 +433,7 @@ export const rowSchemas = {
   cost_estimate: costEstimateRow,
   source_audit: sourceAuditRow,
   review_queue: reviewQueueRow,
+  error_report: errorReportRow,
   ai_usage: aiUsageRow,
   subscription: subscriptionRow,
   advisor_daily_usage: advisorDailyUsageRow,

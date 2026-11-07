@@ -12,6 +12,7 @@
     "format:check": "prettier --check .",
     "test": "vitest run",
     "test:watch": "vitest",
+    "admin:grant": "node --env-file=.env.local scripts/admin-grant.mjs",
     "eval:advisor:retest": "node --env-file-if-exists=.env.local node_modules/vitest/vitest.mjs run --config vitest.eval.config.mts --mode retest",
     "eval:advisor": "node --env-file-if-exists=.env.local node_modules/vitest/vitest.mjs run --config vitest.eval.config.mts",
     "test:e2e": "playwright test",

@@ -245,6 +245,45 @@ export type Database = {
         }
         Relationships: []
       }
+      error_report: {
+        Row: {
+          created_at: string
+          id: string
+          message: string
+          programme_id: string
+          status: string
+          updated_at: string
+          user_id: string | null
+        }
+        ComputedFields: never
+        Insert: {
+          created_at?: string
+          id?: string
+          message: string
+          programme_id: string
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message?: string
+          programme_id?: string
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "error_report_programme_id_fkey"
+            columns: ["programme_id"]
+            isOneToOne: false
+            referencedRelation: "programme"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       explanation_cache: {
         Row: {
           content: string
@@ -746,8 +785,12 @@ export type Database = {
           current: Json | null
           id: string
           proposed: NonNullable<Json>
+          published_programme_id: string | null
           reason: string
           record_id: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          source_text: string | null
           status: string
           table_name: string
           updated_at: string
@@ -758,8 +801,12 @@ export type Database = {
           current?: Json | null
           id?: string
           proposed: NonNullable<Json>
+          published_programme_id?: string | null
           reason: string
           record_id?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          source_text?: string | null
           status?: string
           table_name: string
           updated_at?: string
@@ -769,13 +816,25 @@ export type Database = {
           current?: Json | null
           id?: string
           proposed?: NonNullable<Json>
+          published_programme_id?: string | null
           reason?: string
           record_id?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          source_text?: string | null
           status?: string
           table_name?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "review_queue_published_programme_id_fkey"
+            columns: ["published_programme_id"]
+            isOneToOne: false
+            referencedRelation: "programme"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       scholarship: {
         Row: {
@@ -1252,6 +1311,18 @@ export type Database = {
       }
       current_student_id: { Args: Record<PropertyKey, never>; Returns: string }
       host_matches_domains: { Args: { domains: string[]; host: string }; Returns: boolean }
+      publish_review_item: {
+        Args: {
+          p_fees: Json
+          p_intakes: Json
+          p_programme: Json
+          p_requirement: Json
+          p_review_id: string
+          p_reviewer: string
+          p_university: Json
+        }
+        Returns: string
+      }
       refund_advisor_message: { Args: { p_user_id: string }; Returns: number }
       url_host: { Args: { url: string }; Returns: string }
     }

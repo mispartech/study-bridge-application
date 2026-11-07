@@ -33,12 +33,13 @@ Add variables in **Vercel → Project → Settings → Environment Variables**. 
 | `SENTRY_DSN` | Optional | Optional | No | Sentry (free Developer plan) → create a Next.js project → Project Settings → Client Keys (DSN). Without it, the server reports nothing. |
 | `NEXT_PUBLIC_SENTRY_DSN` | Optional | Optional | No | The same DSN. Without it, the browser reports nothing. |
 
-## Admin pages
+## Admin console
 
-| Variable | Preview | Production | Secret | Where to get it |
-| --- | --- | --- | --- | --- |
-| `ADMIN_USER` | Optional | Optional | **Yes** | Choose a username. Without both admin values, `/admin` returns 404. |
-| `ADMIN_PASSWORD` | Optional | Optional | **Yes** | Choose a long random password. |
+`/admin` is open only to accounts with the admin role. Everyone else gets a 404. To make yourself an admin:
+
+1. Sign in on the site once, so your account exists.
+2. Run `npm run admin:grant -- you@example.com` on your machine.
+3. Sign out and back in.
 
 ## Not needed on Vercel
 

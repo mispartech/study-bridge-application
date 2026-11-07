@@ -5,6 +5,7 @@ import { connection } from "next/server"
 import { Suspense } from "react"
 
 import { ApplyLink } from "@/components/analytics/apply-link"
+import { ReportError } from "@/components/match/report-error"
 import { CostSheet } from "@/components/match/cost-sheet"
 import { IncludesEstimates } from "@/components/match/estimated-tag"
 import { Button } from "@/components/ui/button"
@@ -219,6 +220,7 @@ async function Programme({ params }: { params: Promise<{ id: string }> }) {
           <ApplyLink href={programme.apply_url}>Apply on university site</ApplyLink>
         </Button>
       )}
+      <ReportError programmeId={programme.id} />
     </article>
   )
 }
