@@ -1,0 +1,61 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "record_city_costs",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["found", "currency", "academic_year", "accommodation", "living", "confidence", "missing_fields"],
+  "properties": {
+    "found": { "type": "boolean" },
+    "currency": { "enum": ["GBP", "CAD", "USD", null] },
+    "academic_year": { "type": ["string", "null"] },
+    "accommodation": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["accommodation_type", "label", "price_low", "price_high", "period"],
+        "properties": {
+          "accommodation_type": {
+            "enum": ["university_halls", "private_studio", "shared_flat", "homestay", "off_campus_shared"]
+          },
+          "label": { "type": "string" },
+          "price_low": { "type": "number", "minimum": 0 },
+          "price_high": { "type": "number", "minimum": 0 },
+          "period": { "enum": ["per_week", "per_month", "per_term", "per_year", "per_academic_year"] },
+          "contract_weeks": { "type": ["number", "null"] },
+          "contract_months": { "type": ["number", "null"] },
+          "meals_included": { "type": ["boolean", "null"] }
+        }
+      }
+    },
+    "living": {
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "required": ["amount", "period", "covers"],
+      "properties": {
+        "amount": { "type": "number", "minimum": 0 },
+        "period": { "enum": ["per_week", "per_month", "per_term", "per_year", "per_academic_year"] },
+        "covers": { "type": ["string", "null"] }
+      }
+    },
+    "total_living_including_rent": {
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "required": ["amount", "period"],
+      "properties": {
+        "amount": { "type": "number", "minimum": 0 },
+        "period": { "enum": ["per_week", "per_month", "per_term", "per_year", "per_academic_year"] }
+      }
+    },
+    "confidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["accommodation", "living"],
+      "properties": {
+        "accommodation": { "type": "number", "minimum": 0, "maximum": 1 },
+        "living": { "type": "number", "minimum": 0, "maximum": 1 }
+      }
+    },
+    "missing_fields": { "type": "array", "items": { "type": "string" } }
+  }
+}

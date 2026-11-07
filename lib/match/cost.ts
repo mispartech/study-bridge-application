@@ -157,7 +157,9 @@ export function totalCost(
   const years = Math.ceil(programme.duration_months / 12)
   const months = Math.min(programme.duration_months, MAX_LIVING_MONTHS)
 
-  const costs = usable(catalogue.cityCosts, demoMode).filter((c) => c.country === country && c.city === city)
+  const inCity = usable(catalogue.cityCosts, demoMode).filter((c) => c.country === country && c.city === city)
+  const own = inCity.filter((c) => c.university_id === university.id)
+  const costs = own.length > 0 ? own : inCity.filter((c) => !c.university_id)
   const wanted = costs.find((c) => c.accommodation_type === profile.accommodation_pref)
   const home = wanted ?? [...costs].sort((a, b) => a.rent_monthly_low_minor - b.rent_monthly_low_minor)[0]
   // No city figures yet: the visa maintenance figure is the least a student must show, so it stands in,

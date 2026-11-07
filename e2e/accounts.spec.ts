@@ -380,6 +380,7 @@ test.describe("admin console", () => {
         .single()
       if (row?.published_programme_id) await admin.from("programme").delete().eq("id", row.published_programme_id)
       await admin.from("review_queue").delete().eq("id", item!.id)
+      await admin.from("error_report").delete().like("message", `%(${item!.id.slice(0, 8)})%`)
       await admin.from("university").delete().eq("name", `E2E Test University ${run}`)
     }
   })

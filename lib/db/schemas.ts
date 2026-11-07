@@ -233,6 +233,7 @@ export const feeRow = z.object({
 
 export const cityCostRow = z.object({
   id: uuid,
+  university_id: uuid.nullable(),
   country: countryCode,
   city: z.string().min(1),
   accommodation_type: accommodationType,

@@ -162,6 +162,7 @@ export type Database = {
           rent_monthly_high_minor: number
           rent_monthly_low_minor: number
           source_url: string
+          university_id: string | null
           updated_at: string
         }
         ComputedFields: never
@@ -179,6 +180,7 @@ export type Database = {
           rent_monthly_high_minor: number
           rent_monthly_low_minor: number
           source_url: string
+          university_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -195,9 +197,18 @@ export type Database = {
           rent_monthly_high_minor?: number
           rent_monthly_low_minor?: number
           source_url?: string
+          university_id?: string | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "city_cost_university_id_fkey"
+            columns: ["university_id"]
+            isOneToOne: false
+            referencedRelation: "university"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       cost_estimate: {
         Row: {
