@@ -9,6 +9,7 @@ type Proposed = {
   university?: { name?: string } | null
   programme?: { title?: string } | null
   city?: string
+  plan_name?: string
 }
 
 export default async function Page() {
@@ -53,7 +54,9 @@ export default async function Page() {
                 <Card data-testid="review-row" className="gap-1">
                   <h1 className="font-heading text-base font-bold">
                     <Link href={`/admin/review/${item.id}`} className="underline">
-                      {proposed.programme?.title ?? (proposed.city ? `Costs in ${proposed.city}` : "Untitled record")}
+                      {proposed.programme?.title ??
+                        proposed.plan_name ??
+                        (proposed.city ? `Costs in ${proposed.city}` : "Untitled record")}
                     </Link>
                   </h1>
                   <p className="text-sm text-muted-foreground">{proposed.university?.name ?? "Unknown university"}</p>

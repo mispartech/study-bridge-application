@@ -16,6 +16,7 @@ const LINKS = [
   ["/admin/fx", "Exchange rates"],
   ["/admin/estimates", "Flights and health"],
   ["/admin/ai-usage", "AI usage"],
+  ["/admin/diagnostics", "Diagnostics"],
 ] as const
 
 /** Every admin page sits behind this role check, and children only render if it passes. */

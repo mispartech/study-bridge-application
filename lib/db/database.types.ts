@@ -227,6 +227,7 @@ export type Database = {
           per_year: boolean
           region: string | null
           source_url: string
+          university_id: string | null
           updated_at: string
         }
         ComputedFields: never
@@ -246,6 +247,7 @@ export type Database = {
           per_year?: boolean
           region?: string | null
           source_url: string
+          university_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -264,9 +266,18 @@ export type Database = {
           per_year?: boolean
           region?: string | null
           source_url?: string
+          university_id?: string | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "cost_estimate_university_id_fkey"
+            columns: ["university_id"]
+            isOneToOne: false
+            referencedRelation: "university"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       error_report: {
         Row: {

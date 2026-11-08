@@ -173,13 +173,16 @@ export function totalCost(
   const government = governmentFees(country, feesRule, visaMonths)
   if (government === undefined) return { missing: `no government_fee or length_of_stay rule for ${country}` }
 
-  // The narrowest estimate wins: a destination city for flights, a province for health cover.
+  // The narrowest estimate wins: the university's own plan, then the destination city (flights), then the
+  // province (health cover), then the country.
   const estimate = (item: string) => {
     const pool = usable(catalogue.costEstimates, demoMode).filter((e) => e.country === country && e.item === item)
+    const general = pool.filter((e) => !e.university_id)
     return (
-      pool.find((e) => e.city === city) ??
-      pool.find((e) => !e.city && e.region === university.region) ??
-      pool.find((e) => !e.city && !e.region)
+      pool.find((e) => e.university_id === university.id) ??
+      general.find((e) => e.city === city) ??
+      general.find((e) => !e.city && e.region === university.region) ??
+      general.find((e) => !e.city && !e.region)
     )
   }
   const health = estimate("health_cover")

@@ -8,6 +8,8 @@ import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { supabaseBrowser } from "@/lib/auth/client"
 
+import { useTurnstile } from "./turnstile"
+
 const REASONS: Record<string, { title: string; body: string }> = {
   save: { title: "Save this programme", body: "Create a free account to keep your shortlist on any device." },
   advisor: { title: "Talk to the advisor", body: "Create a free account to ask about programmes, costs and visas." },
@@ -25,14 +27,17 @@ export function SignInForm() {
   const [email, setEmail] = React.useState("")
   const [state, setState] = React.useState<"idle" | "sending" | "sent" | "failed">("idle")
   const callback = () => `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`
+  const captcha = useTurnstile()
 
   async function sendLink(event: React.FormEvent) {
     event.preventDefault()
     setState("sending")
     const { error } = await supabaseBrowser().auth.signInWithOtp({
       email,
-      options: { emailRedirectTo: callback() },
+      options: { emailRedirectTo: callback(), ...(captcha.token && { captchaToken: captcha.token }) },
     })
+    // A token works once, so a failed attempt needs a fresh one.
+    if (error) captcha.reset()
     setState(error ? "failed" : "sent")
   }
 
@@ -79,7 +84,13 @@ export function SignInForm() {
               className="h-11 w-full rounded-button border border-border bg-surface px-3 text-[0.9375rem]"
             />
           </label>
-          <Button type="submit" block loading={state === "sending"}>
+          {captcha.enabled && <div ref={captcha.box} data-testid="turnstile" className="min-h-16" />}
+          {captcha.failed && (
+            <p role="alert" className="text-sm text-danger-strong">
+              The security check didn&apos;t load. Refresh the page, or use Google below.
+            </p>
+          )}
+          <Button type="submit" block loading={state === "sending"} disabled={captcha.enabled && !captcha.token}>
             Email me a sign-in link
           </Button>
         </form>

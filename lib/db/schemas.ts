@@ -314,6 +314,7 @@ export const costEstimateRow = z.object({
   city: z.string().nullable(),
   observed_on: date.nullable(),
   evidence_path: z.string().nullable(),
+  university_id: uuid.nullable(),
   ...content,
   ...timestamps,
 })

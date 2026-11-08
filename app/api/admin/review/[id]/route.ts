@@ -3,6 +3,7 @@ import { z } from "zod"
 
 import { changedFields } from "@/lib/admin/field-changes"
 import { toCityCostRows } from "@/lib/admin/city-costs"
+import { toHealthCoverRow } from "@/lib/admin/health-cover"
 import { PublishError, toRows } from "@/lib/admin/publish"
 import { adminFromRequest } from "@/lib/auth/admin"
 import type { Json } from "@/lib/db/database.types"
@@ -11,6 +12,53 @@ import { invalidateCatalogue } from "@/lib/match/catalogue"
 import { failureResponse } from "@/lib/server-errors"
 
 const body = z.object({ action: z.enum(["approve", "reject"]), record: z.json() })
+
+async function universityByDomain(domain: string) {
+  const { data } = await serviceClient()
+    .from("university")
+    .select("id")
+    .eq("is_demo", false)
+    .contains("official_domains", [domain])
+    .maybeSingle()
+  return data
+}
+
+async function markApproved(id: string, reviewer: string, proposed: unknown, record: unknown) {
+  const { error } = await serviceClient()
+    .from("review_queue")
+    .update({
+      status: "approved",
+      reviewed_by: reviewer,
+      reviewed_at: new Date().toISOString(),
+      field_changes: changedFields(proposed, record),
+    })
+    .eq("id", id)
+    .eq("status", "pending")
+  if (error) throw error
+}
+
+/** A university's compulsory health plan replaces its previous one, and takes priority over the province. */
+async function publishHealthCover(id: string, reviewer: string, proposed: unknown, record: unknown) {
+  const { domain, row } = toHealthCoverRow(record)
+  const university = await universityByDomain(domain)
+  if (!university) {
+    return NextResponse.json({ error: "Approve a programme from this university first" }, { status: 422 })
+  }
+  const db = serviceClient()
+  const { error: removeError } = await db
+    .from("cost_estimate")
+    .delete()
+    .eq("university_id", university.id)
+    .eq("item", "health_cover")
+  if (removeError) throw removeError
+  const { error } = await db
+    .from("cost_estimate")
+    .insert({ ...row, university_id: university.id, last_verified_at: new Date().toISOString() })
+  if (error) return NextResponse.json({ error: error.message }, { status: 422 })
+  await markApproved(id, reviewer, proposed, record)
+  invalidateCatalogue()
+  return NextResponse.json({ ok: true })
+}
 
 /** A university's own costs replace its previous ones. The university must already be published. */
 async function publishCityCosts(id: string, reviewer: string, proposed: unknown, record: unknown) {
@@ -69,6 +117,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     const { data: item } = await db.from("review_queue").select("proposed, table_name").eq("id", id).maybeSingle()
     if (!item) return NextResponse.json({ error: "Not found" }, { status: 404 })
     if (item.table_name === "city_cost") return publishCityCosts(id, user.id, item.proposed, record)
+    if (item.table_name === "health_cover") return publishHealthCover(id, user.id, item.proposed, record)
     const rows = toRows(record)
     const { data, error } = await db.rpc("publish_review_item", {
       p_review_id: id,

@@ -59,9 +59,18 @@ test.describe("asking for an account only when it's needed", () => {
     await page.route("**/auth/v1/otp*", (route) => route.fulfill({ status: 200, json: {} }))
     await page.goto("/advisor")
     await expect(page).toHaveURL(/\/sign-in\?reason=advisor/)
+    let captchaToken: string | undefined
+    await page.unroute("**/auth/v1/otp*")
+    await page.route("**/auth/v1/otp*", async (route) => {
+      captchaToken = (route.request().postDataJSON() as { gotrue_meta_security?: { captcha_token?: string } })
+        .gotrue_meta_security?.captcha_token
+      await route.fulfill({ status: 200, json: {} })
+    })
     await page.getByLabel("Email").fill("student@example.com")
+    await expect(page.getByRole("button", { name: /email/i })).toBeEnabled({ timeout: 20_000 })
     await page.getByRole("button", { name: /email/i }).click()
     await expect(page.getByTestId("link-sent")).toBeVisible()
+    expect(captchaToken).toBeTruthy()
   })
 
   test("the advisor API refuses visitors with no session", async ({ request }) => {
@@ -380,7 +389,10 @@ test.describe("admin console", () => {
         .single()
       if (row?.published_programme_id) await admin.from("programme").delete().eq("id", row.published_programme_id)
       await admin.from("review_queue").delete().eq("id", item!.id)
-      await admin.from("error_report").delete().like("message", `%(${item!.id.slice(0, 8)})%`)
+      await admin
+        .from("error_report")
+        .delete()
+        .like("message", `%(${item!.id.slice(0, 8)})%`)
       await admin.from("university").delete().eq("name", `E2E Test University ${run}`)
     }
   })
