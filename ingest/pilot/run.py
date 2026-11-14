@@ -67,6 +67,17 @@ def run_city_costs(config: dict, fetcher: PoliteFetcher) -> list[dict]:
     return summary
 
 
+def already_queued() -> set[str]:
+    """Source URLs of programmes waiting for review or approved, so a rerun only does what is missing."""
+    with connect() as conn:
+        rows = conn.execute(
+            """select jsonb_array_elements_text(proposed -> 'source_urls') from public.review_queue
+               where table_name = 'programme' and status in ('pending', 'approved')
+                 and jsonb_typeof(proposed -> 'source_urls') = 'array'"""
+        ).fetchall()
+    return {r[0] for r in rows}
+
+
 def main() -> None:
     load_env()
     logging.basicConfig(level=logging.INFO, format="%(message)s")
@@ -80,9 +91,19 @@ def main() -> None:
         if part == "costs":
             return
     summary = []
+    done = already_queued()
     for item in config["programmes"]:
+        if set(item["urls"]) & done:
+            log.info("skipped | %s | already in the review queue", item["target_title"])
+            continue
         source = Source(urls=item["urls"], target_title=item["target_title"], target_cycle=config["cycle"])
-        result = run_source(source, fetcher, model=PILOT_MODEL, always_review=True)
+        try:
+            result = run_source(source, fetcher, model=PILOT_MODEL, always_review=True)
+        except Exception as err:  # noqa: BLE001 - one bad page must not stop the run
+            log.info("failed | %s | %s", item["target_title"], str(err)[:160])
+            summary.append({"target_title": item["target_title"], "domain": item["domain"], "field": item["field"],
+                            "status": "failed", "review_id": None, "reasons": [str(err)[:300]]})
+            continue
         if result.review_id:
             attach_facts(result.review_id, university_facts(config, item["domain"]), item["field"])
         log.info("%s | %s | %s", result.status, item["target_title"], "; ".join(result.reasons)[:160])
