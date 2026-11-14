@@ -2,7 +2,19 @@ import { z } from "zod"
 
 import type { Tables } from "@/lib/db/database.types"
 
-export const BANDS = ["pass", "third", "lower_second", "upper_second", "first"] as const
+/** Every course a student can pick. Must match the field_code enum in the database. */
+export const FIELD_CODES = [
+  "computer_data_science",
+  "public_health",
+  "business_finance",
+  "engineering",
+  "project_management",
+  "law",
+  "nursing",
+  "mental_health",
+] as const
+
+export const BANDS =["pass", "third", "lower_second", "upper_second", "first"] as const
 export type Band = (typeof BANDS)[number]
 
 export const TERM_FIRST_MONTH = { fall: 8, winter: 1, spring: 3, summer: 6 } as const
@@ -47,7 +59,7 @@ export const matchProfile = z
     /** Landing page: only field, CGPA and budget are known, so English and admission tests are checked later. */
     quick_match: z.boolean().default(false),
     field: z
-      .enum(["computer_data_science", "public_health", "business_finance", "engineering", "project_management", "law"])
+      .enum(FIELD_CODES)
       .nullable()
       .default(null),
     work_years: z.number().min(0).default(0),
