@@ -398,6 +398,35 @@ test.describe("admin console", () => {
   })
 })
 
+test("an admin sees users, AI spend and settings, and can switch a model", async ({ page }) => {
+  test.setTimeout(90_000)
+  const userId = await signIn(page, "/admin")
+  await accept(page)
+  await admin.auth.admin.updateUserById(userId, { app_metadata: { role: "admin" } })
+  await signInAs(page, userId)
+  const { data: before } = await admin.from("app_setting").select("value").eq("key", "ai_models").maybeSingle()
+  try {
+    await page.goto("/admin/users")
+    await expect(page.getByTestId("user-row").first()).toBeVisible()
+    await page.goto(`/admin/users/${userId}`)
+    await expect(page.getByRole("button", { name: "Remove admin" })).toBeVisible()
+
+    await page.goto("/admin/ai-usage")
+    await expect(page.getByRole("heading", { name: "Spend by user" })).toBeVisible()
+
+    await page.goto("/admin/settings")
+    await expect(page.getByText("NEXT_PUBLIC_SUPABASE_URL")).toBeVisible()
+    await page.getByLabel("advisor").selectOption("google:gemini-3.6-flash")
+    await page.getByRole("button", { name: "Save models" }).click()
+    await expect(page.getByRole("status")).toContainText("Saved")
+    const { data: saved } = await admin.from("app_setting").select("value").eq("key", "ai_models").single()
+    expect(saved?.value).toMatchObject({ advisor: { provider: "google", model: "gemini-3.6-flash" } })
+  } finally {
+    if (before) await admin.from("app_setting").update({ value: before.value }).eq("key", "ai_models")
+    else await admin.from("app_setting").delete().eq("key", "ai_models")
+  }
+})
+
 async function signInAs(page: Page, userId: string) {
   const { data: user } = await admin.auth.admin.getUserById(userId)
   const { data, error } = await admin.auth.admin.generateLink({ type: "magiclink", email: user.user!.email! })

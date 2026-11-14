@@ -13,6 +13,7 @@ import type { CardView } from "@/lib/match/present"
 import { formatShort, type FxRates } from "@/lib/money"
 
 import { BudgetChip, dateLabel, ProgrammeHeading } from "./card-parts"
+import { DataConfidence } from "./confidence"
 import { CostSheet } from "./cost-sheet"
 import { IncludesEstimates } from "./estimated-tag"
 
@@ -85,6 +86,7 @@ export function MatchCard({
           />
         )}
         <FreshnessBadge lastVerifiedAt={card.last_verified_at} now={now} sourceUrl={card.source_url} size="sm" />
+        <DataConfidence score={card.data_confidence} />
       </div>
 
       {explanation ? (

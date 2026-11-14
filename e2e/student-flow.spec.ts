@@ -114,6 +114,15 @@ test.describe("results at ₦80m", () => {
     await noViolations(page)
   })
 
+  test("shows a match confidence score and a data confidence label per result", async ({ page }) => {
+    await expect(page.getByTestId("search-confidence")).toContainText(/Match confidence: (High|Medium|Low) \(\d+%\)/)
+    await expect(page.getByTestId("match-card").first().getByTestId("data-confidence")).toContainText(
+      /Data confidence: (High|Medium|Low)/
+    )
+    // Students never see which model answered.
+    await expect(page.locator("body")).not.toContainText(/gemini|claude|haiku/i)
+  })
+
   test("the Restricted tab gives the reason", async ({ page }) => {
     await page.getByRole("tab", { name: /Restricted for your nationality/ }).click()
     await expect(page.getByTestId("restricted").first()).toContainText("Proclamation 10998")

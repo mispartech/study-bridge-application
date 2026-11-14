@@ -95,6 +95,28 @@ export type Database = {
         }
         Relationships: []
       }
+      app_setting: {
+        Row: {
+          key: string
+          updated_at: string
+          updated_by: string | null
+          value: NonNullable<Json>
+        }
+        ComputedFields: never
+        Insert: {
+          key: string
+          updated_at?: string
+          updated_by?: string | null
+          value: NonNullable<Json>
+        }
+        Update: {
+          key?: string
+          updated_at?: string
+          updated_by?: string | null
+          value?: NonNullable<Json>
+        }
+        Relationships: []
+      }
       application_tracker: {
         Row: {
           checklist: NonNullable<Json>
@@ -952,6 +974,43 @@ export type Database = {
           source_url?: string
           updated_at?: string
           url?: string
+        }
+        Relationships: []
+      }
+      search_log: {
+        Row: {
+          budget_ngn_minor: number | null
+          countries: string[]
+          created_at: string
+          data_confidence: number | null
+          fields: string[]
+          id: string
+          near_misses: number
+          ranked: number
+          user_id: string | null
+        }
+        ComputedFields: never
+        Insert: {
+          budget_ngn_minor?: number | null
+          countries?: string[]
+          created_at?: string
+          data_confidence?: number | null
+          fields?: string[]
+          id?: string
+          near_misses?: number
+          ranked?: number
+          user_id?: string | null
+        }
+        Update: {
+          budget_ngn_minor?: number | null
+          countries?: string[]
+          created_at?: string
+          data_confidence?: number | null
+          fields?: string[]
+          id?: string
+          near_misses?: number
+          ranked?: number
+          user_id?: string | null
         }
         Relationships: []
       }

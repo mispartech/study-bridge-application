@@ -430,6 +430,25 @@ export const explanationCacheRow = z.object({
   ...timestamps,
 })
 
+export const appSettingRow = z.object({
+  key: z.string().min(1),
+  value: z.json(),
+  updated_by: uuid.nullable(),
+  updated_at: timestamp,
+})
+
+export const searchLogRow = z.object({
+  id: uuid,
+  user_id: uuid.nullable(),
+  created_at: timestamp,
+  fields: z.array(z.string()),
+  countries: z.array(z.string()),
+  budget_ngn_minor: z.number().int().nonnegative().nullable(),
+  ranked: z.number().int().nonnegative(),
+  near_misses: z.number().int().nonnegative(),
+  data_confidence: z.number().int().min(0).max(100).nullable(),
+})
+
 export const rowSchemas = {
   student_profile: studentProfileRow,
   shortlist: shortlistRow,
@@ -455,6 +474,8 @@ export const rowSchemas = {
   reminder_log: reminderLogRow,
   payment: paymentRow,
   explanation_cache: explanationCacheRow,
+  app_setting: appSettingRow,
+  search_log: searchLogRow,
 } as const
 
 export type TableName = keyof Database["public"]["Tables"]

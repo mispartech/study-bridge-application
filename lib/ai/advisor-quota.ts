@@ -1,9 +1,15 @@
 import "server-only"
 
 import { serviceClient } from "@/lib/db/service"
+import { getSettings } from "@/lib/settings"
 
 /** Advisor messages per Lagos day on the free plan. Plus is unlimited. */
 export const FREE_ADVISOR_MESSAGES_PER_DAY = 5
+
+/** The free limit an admin set in Settings, or the default. */
+async function freeLimit(): Promise<number> {
+  return (await getSettings()).advisor_free_limit ?? FREE_ADVISOR_MESSAGES_PER_DAY
+}
 
 export type AdvisorQuota = {
   allowed: boolean
@@ -22,13 +28,14 @@ export type AdvisorQuota = {
 export async function advisorQuotaStatus(userId: string): Promise<Pick<AdvisorQuota, "used" | "limit">> {
   const db = serviceClient()
   const day = new Date().toLocaleDateString("en-CA", { timeZone: "Africa/Lagos" })
-  const [{ data: usage }, { data: subscription }] = await Promise.all([
+  const [{ data: usage }, { data: subscription }, limit] = await Promise.all([
     db.from("advisor_daily_usage").select("messages").eq("user_id", userId).eq("day", day).maybeSingle(),
     db.from("subscription").select("plan, current_period_end").eq("user_id", userId).maybeSingle(),
+    freeLimit(),
   ])
   const end = subscription?.current_period_end
   const plus = subscription?.plan === "plus" && (!end || new Date(end) > new Date())
-  return { used: usage?.messages ?? 0, limit: plus ? null : FREE_ADVISOR_MESSAGES_PER_DAY }
+  return { used: usage?.messages ?? 0, limit: plus ? null : limit }
 }
 
 /** Gives back a message the model failed to answer. Returns today's new count. */
@@ -40,7 +47,7 @@ export async function refundAdvisorMessage(userId: string): Promise<number> {
 
 export async function consumeAdvisorMessage(userId: string): Promise<AdvisorQuota> {
   const { data, error } = await serviceClient()
-    .rpc("consume_advisor_message", { p_user_id: userId, p_free_limit: FREE_ADVISOR_MESSAGES_PER_DAY })
+    .rpc("consume_advisor_message", { p_user_id: userId, p_free_limit: await freeLimit() })
     .single()
   if (error || !data) throw new Error(`Advisor quota check failed: ${error?.message ?? "no result"}`)
   return { allowed: data.allowed, used: data.used, limit: data.daily_limit, plan: data.plan }

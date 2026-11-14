@@ -1,5 +1,6 @@
 import type { Currency, FxRates } from "@/lib/money"
 
+import { averageConfidence, dataConfidence } from "./data-confidence"
 import { fieldLabel } from "./labels"
 import { isOfficialUrl } from "./official-url"
 import type { Bundle, Catalogue, Cost, MatchProfile, MatchResult, RankedProgramme } from "./types"
@@ -59,6 +60,8 @@ export type CardView = ProgrammeSummary & {
   next_deadline: { label: string; date: string }
   days_to_deadline: number
   scholarships: number
+  /** 0-100: how far the facts behind this result can be relied on. */
+  data_confidence: number
 }
 
 export type NearMissView = ProgrammeSummary & {
@@ -92,6 +95,8 @@ export type MatchView = {
   needs_registration: { programme_id: string; title: string; reason: string }[]
   fx: { market: FxRates; official: FxRates }
   now: string
+  /** Average data confidence of the top results, or null when nothing matched. */
+  data_confidence: number | null
 }
 
 export function presentCost(cost: Cost): CostView {
@@ -151,9 +156,10 @@ export function presentProgramme(bundle: Bundle, catalogue: Catalogue, now: Date
 }
 
 function presentCard(r: RankedProgramme, catalogue: Catalogue, now: Date, scholarships: number): CardView {
+  const cost = presentCost(r.cost)
   return {
     ...presentProgramme(r.bundle, catalogue, now),
-    cost: presentCost(r.cost),
+    cost,
     fit: r.scores.fit,
     group: r.group,
     flags: r.flags,
@@ -162,6 +168,12 @@ function presentCard(r: RankedProgramme, catalogue: Catalogue, now: Date, schola
     next_deadline: r.next_deadline,
     days_to_deadline: Math.ceil((new Date(r.next_deadline.date).getTime() - now.getTime()) / DAY_MS),
     scholarships,
+    data_confidence: dataConfidence({
+      source: r.bundle.programme.confidence,
+      lastVerifiedAt: r.bundle.programme.last_verified_at,
+      costLines: cost.lines,
+      now,
+    }),
   }
 }
 
@@ -177,11 +189,12 @@ export function presentResult(result: MatchResult, profile: MatchProfile, catalo
   const excluded: Record<string, number> = {}
   for (const e of result.excluded) excluded[e.filter] = (excluded[e.filter] ?? 0) + 1
   const card = (r: RankedProgramme) => presentCard(r, catalogue, now, Math.round(r.scores.S * 100) > 0 ? 1 : 0)
+  const ranked = result.ranked.map(card)
   return {
     band: result.academics.band,
     grades_source: result.academics.source,
     budget_minor: profile.budget_total_minor?.toString() ?? null,
-    ranked: result.ranked.map(card),
+    ranked,
     more: result.more.map(card),
     near_misses: result.near_misses.map((n) => ({
       ...presentProgramme(n.bundle, catalogue, now),
@@ -211,5 +224,6 @@ export function presentResult(result: MatchResult, profile: MatchProfile, catalo
       .map(({ programme_id, title, reason }) => ({ programme_id, title, reason })),
     fx: { market: latestRates(catalogue, "market"), official: latestRates(catalogue, "official") },
     now: now.toISOString(),
+    data_confidence: averageConfidence(ranked.map((c) => c.data_confidence)),
   }
 }

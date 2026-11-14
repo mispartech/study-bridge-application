@@ -13,7 +13,7 @@ import { hasSessionCookie } from "@/lib/auth/server"
 import { rank } from "@/lib/match"
 import { demoModeEnabled, loadCatalogue } from "@/lib/match/catalogue"
 import { inCountries } from "@/lib/match/countries"
-import { COMPLETENESS_COOKIE, matchConfidence, parseProfileCookie, PROFILE_COOKIE } from "@/lib/match/draft"
+import { COMPLETENESS_COOKIE, parseProfileCookie, PROFILE_COOKIE } from "@/lib/match/draft"
 import { BAND_LABEL } from "@/lib/match/labels"
 import { presentResult } from "@/lib/match/present"
 
@@ -52,7 +52,8 @@ async function Results() {
     <ResultsView
       initialProfile={profile}
       accountSaved={account?.saved ?? null}
-      confidence={matchConfidence(score === undefined ? null : Number(score))}
+      profileScore={score === undefined || Number.isNaN(Number(score)) ? null : Number(score)}
+      dataScore={view.data_confidence}
       grades={view.band ? `${BAND_LABEL[view.band]} (${view.grades_source})` : null}
       counts={{
         ranked: view.ranked.length + view.more.length,

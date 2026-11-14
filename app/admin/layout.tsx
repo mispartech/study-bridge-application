@@ -10,12 +10,14 @@ import { isAdmin } from "@/lib/auth/roles"
 export const metadata: Metadata = { title: "Admin", robots: { index: false, follow: false } }
 
 const LINKS = [
+  ["/admin/users", "Users"],
   ["/admin/review", "Review queue"],
   ["/admin/reports", "Error reports"],
   ["/admin/visa-rules", "Visa rules"],
   ["/admin/fx", "Exchange rates"],
   ["/admin/estimates", "Flights and health"],
   ["/admin/ai-usage", "AI usage"],
+  ["/admin/settings", "Settings"],
   ["/admin/diagnostics", "Diagnostics"],
 ] as const
 

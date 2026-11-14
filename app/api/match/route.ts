@@ -1,10 +1,13 @@
-import { NextResponse } from "next/server"
+import { cookies } from "next/headers"
+import { after, NextResponse } from "next/server"
 import { z } from "zod"
 
 import { demoModeEnabled, loadCatalogue } from "@/lib/match/catalogue"
 import { inCountries } from "@/lib/match/countries"
 import { matchProfile, rank } from "@/lib/match"
+import { currentUser, hasSessionCookie } from "@/lib/auth/server"
 import { presentResult } from "@/lib/match/present"
+import { logSearch, searchLogRow } from "@/lib/match/search-log"
 import { failureResponse } from "@/lib/server-errors"
 
 const QUICK_RESULTS = 3
@@ -21,6 +24,12 @@ export async function POST(request: Request) {
   const now = new Date()
   const result = rank(parsed.data, catalogue, { now, demoMode })
   const view = presentResult(result, parsed.data, catalogue, now)
+  const signedIn = hasSessionCookie((await cookies()).getAll())
+  // Logged after the response is sent, so it never slows results down.
+  after(async () => {
+    const user = signedIn ? await currentUser().catch(() => null) : null
+    await logSearch(searchLogRow(parsed.data, view, user?.id ?? null))
+  })
   if (!parsed.data.quick_match) return NextResponse.json(view)
   // The landing page shows 3 results, and every byte counts on its first visit.
   const { ranked, near_misses } = view

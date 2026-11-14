@@ -18,6 +18,19 @@ import { modelFor, type AiTask, type ModelRef } from "./config"
 import { deterministicSettings, languageModel, structuredProviderOptions, supportsForcedTool } from "./providers"
 import { logUsage } from "./usage"
 
+/**
+ * The model for a task: the admin's choice in Settings if there is one, otherwise config/ai.json.
+ * A failed settings read never blocks a call.
+ */
+export async function modelForTask(task: AiTask): Promise<ModelRef> {
+  try {
+    const { getSettings } = await import("@/lib/settings")
+    return (await getSettings()).ai_models[task] ?? modelFor(task)
+  } catch {
+    return modelFor(task)
+  }
+}
+
 export { modelFor, parseModelRef, type AiTask, type ModelRef } from "./config"
 export { loadPrompt, renderPrompt } from "./prompts"
 
@@ -118,7 +131,7 @@ async function generateStructuredOnce<T>(
   schema: JsonSchemaObject,
   { toolName = "record", ...opts }: StructuredOptions
 ): Promise<StructuredResult<T>> {
-  const ref = opts.model ?? modelFor(task)
+  const ref = opts.model ?? (await modelForTask(task))
   const model = opts.languageModelOverride ?? languageModel(ref)
   const forced = supportsForcedTool(ref)
   const started = performance.now()

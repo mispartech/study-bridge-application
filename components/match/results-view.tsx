@@ -12,6 +12,7 @@ import { CountryChips } from "@/components/match/country-chips"
 import type { CountryCode } from "@/lib/match/countries"
 import { saveProfile, savedStore } from "@/lib/match/profile-store"
 import { BAND_LABEL, TERM_LABEL } from "@/lib/match/labels"
+import { searchConfidence } from "@/lib/match/data-confidence"
 import type { CardView, MatchView, NearMissView } from "@/lib/match/present"
 import type { MatchProfile } from "@/lib/match/types"
 import { applyViewFilters, NO_FILTERS, type FeeBand, type SortKey, type ViewFilters } from "@/lib/match/view-filters"
@@ -19,6 +20,7 @@ import { rebalance, WEIGHT_LABELS, type WeightKey } from "@/lib/match/weights"
 import { formatShort } from "@/lib/money"
 import { cn } from "@/lib/utils"
 
+import { SearchConfidence } from "./confidence"
 import { CostSheet } from "./cost-sheet"
 import { BudgetChip, ProgrammeHeading } from "./card-parts"
 import { MatchCard, type Explanation } from "./match-card"
@@ -339,11 +341,15 @@ const EMPTY_VIEW: MatchView = {
   needs_registration: [],
   fx: { market: {}, official: {} },
   now: "",
+  data_confidence: null,
 }
 
 type ResultsViewProps = {
   initialProfile: MatchProfile
-  confidence: string | null
+  /** Profile completeness, 0-100, or null when unknown. */
+  profileScore: number | null
+  /** Data confidence of the server-rendered results, until the interactive list loads. */
+  dataScore: number | null
   grades: string | null
   /** Server-rendered cards, shown until the interactive list loads. */
   preview: React.ReactNode
@@ -352,7 +358,15 @@ type ResultsViewProps = {
   accountSaved: string[] | null
 }
 
-export function ResultsView({ initialProfile, confidence, grades, preview, counts, accountSaved }: ResultsViewProps) {
+export function ResultsView({
+  initialProfile,
+  profileScore,
+  dataScore,
+  grades,
+  preview,
+  counts,
+  accountSaved,
+}: ResultsViewProps) {
   const router = useRouter()
   const [shortlist, setShortlist] = React.useState(accountSaved)
   const [loaded, setLoaded] = React.useState<MatchView | null>(null)
@@ -478,8 +492,8 @@ export function ResultsView({ initialProfile, confidence, grades, preview, count
         <h1 className="text-2xl font-extrabold">Your matches</h1>
         <p className="text-sm text-muted-foreground">
           {profile.target_cycle} entry{grades ? `, ${grades}` : ""}
-          {confidence ? `. Match confidence: ${confidence}` : ""}
         </p>
+        <SearchConfidence score={searchConfidence(profileScore, loaded ? loaded.data_confidence : dataScore)} />
       </header>
 
       <div className="grid gap-4 lg:grid-cols-[18rem_minmax(0,1fr)] lg:items-start">
