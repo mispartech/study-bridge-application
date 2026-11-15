@@ -131,7 +131,10 @@ async function Programme({ params }: { params: Promise<{ id: string }> }) {
 
       {requirement && (
         <Section title="Entry rules">
-          <p>Minimum degree: {BAND_LABEL[requirement.min_uk_class] ?? requirement.min_uk_class}.</p>
+          {requirement.min_uk_class && (
+            <p>Minimum degree: {BAND_LABEL[requirement.min_uk_class] ?? requirement.min_uk_class}.</p>
+          )}
+          {requirement.min_gpa4 !== null && <p>Minimum GPA: {requirement.min_gpa4} out of 4.</p>}
           {requirement.nigeria_rule && <p>For Nigerian applicants: {requirement.nigeria_rule}</p>}
           {requirement.min_work_years > 0 && <p>Work experience: at least {requirement.min_work_years} years.</p>}
           {requirement.open_to_international === "no" && (

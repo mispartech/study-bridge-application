@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest"
 
 import { isAdmin } from "@/lib/auth/roles"
 
-import { PublishError, toRows } from "./publish"
+import { cycleFor, PublishError, toRows } from "./publish"
 
 const record = () => ({
   university: {
@@ -104,11 +104,44 @@ describe("toRows", () => {
   })
 
   it("says what's missing instead of publishing a gap", () => {
-    const bad = record() as unknown as { programme: { apply_url: string | null }; fees: unknown[] }
-    bad.programme.apply_url = null
+    const bad = record() as unknown as { fees: unknown[] }
     bad.fees = []
     expect(() => toRows(bad)).toThrow(PublishError)
-    expect(() => toRows(bad)).toThrow(/programme\.apply_url.*fees: At least one fee/)
+    expect(() => toRows(bad)).toThrow(/fees: At least one fee/)
+  })
+
+  it("publishes a Canadian programme with only a GPA minimum, no cycle, apply link or office link", () => {
+    const ca = record() as unknown as Record<string, Record<string, unknown>> & { intakes: Record<string, unknown>[] }
+    ca.university!.intl_office_url = null
+    ca.programme!.apply_url = null
+    ca.requirement!.min_uk_class = null
+    ca.requirement!.min_gpa4 = 3
+    ca.intakes = [
+      { start_term: "fall", start_month: "2027-09", deadlines: [] },
+      { start_term: "winter", start_month: "2028-01", deadlines: [] },
+    ]
+    const rows = toRows(ca)
+    expect(rows.programme.apply_url).toBe("https://www.example.ac.uk/msc")
+    expect(rows.university.intl_office_url).toBeNull()
+    expect(rows.requirement).toMatchObject({ min_uk_class: null, min_gpa4: 3 })
+    expect(rows.intakes.map((i) => i.cycle)).toEqual(["2027/28", "2027/28"])
+  })
+
+  it("needs a degree class or a GPA minimum", () => {
+    const none = record() as unknown as { requirement: Record<string, unknown> }
+    none.requirement.min_uk_class = null
+    expect(() => toRows(none)).toThrow(/minimum degree class \(UK\) or a minimum GPA/)
+  })
+
+  it("works out the cycle from the start month", () => {
+    expect([cycleFor("2027-09"), cycleFor("2028-01"), cycleFor("2028-05"), cycleFor("2027-08")]).toEqual([
+      "2027/28",
+      "2027/28",
+      "2027/28",
+      "2027/28",
+    ])
+    expect(cycleFor("2099-12")).toBe("2099/00")
+    expect(cycleFor(null)).toBeNull()
   })
 })
 

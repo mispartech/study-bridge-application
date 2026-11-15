@@ -141,7 +141,7 @@ export const universityRow = z.object({
   sponsor_licence: z.boolean(),
   sevp_certified: z.boolean(),
   ranking_band: z.string().nullable(),
-  intl_office_url: z.string(),
+  intl_office_url: z.string().nullable(),
   official_domains: z.array(z.string().min(1)).min(1),
   ...content,
   ...timestamps,
@@ -170,7 +170,7 @@ const testStatus = z.enum(["required", "one_of_required", "optional", "not_requi
 
 export const requirementRow = z.object({
   programme_id: uuid,
-  min_uk_class: ukClassBand,
+  min_uk_class: ukClassBand.nullable(),
   min_gpa4: z.number().min(0).max(4).nullable(),
   nigeria_rule: z.string().nullable(),
   considers_lower_with_experience: z.boolean(),

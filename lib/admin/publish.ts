@@ -12,7 +12,7 @@ const university = z.object({
   official_domain: z.string().min(3),
   region: z.string().min(1, "University region is missing"),
   is_public: z.boolean("Say whether the university is public"),
-  intl_office_url: z.url("International office link is missing"),
+  intl_office_url: z.url().nullish(),
   register_url: z.url("Register link is missing"),
   dli_number: z.string().nullish(),
   sponsor_licence: z.boolean().nullish(),
@@ -25,63 +25,70 @@ const englishTest = z.object({
   overall_min: z.number(),
 })
 
-const record = z.object({
-  university,
-  programme: z.object({
-    title: z.string().min(3),
-    degree_type: z.string(),
-    field: z.string(),
-    duration_months: z.number("Duration is missing").int().min(6).max(36),
-    study_mode: z.string().nullish(),
-    stem_designated: z.boolean().nullish(),
-    has_coop_or_placement: z.boolean().nullish(),
-    description: z.string().nullish(),
-    programme_url: z.url(),
-    apply_url: z.url("Apply link is missing"),
-  }),
-  requirement: z.object({
-    min_uk_class: z.string("Minimum degree class is missing"),
-    min_gpa4: z.number().nullish(),
-    nigeria_rule: z.string().nullish(),
-    considers_lower_with_experience: z.boolean().nullish(),
-    english_tests: z.array(englishTest),
-    english_waiver_text: z.string().nullish(),
-    waec_english_accepted: z.boolean().nullish(),
-    waec_min_grade: z.string().nullish(),
-    gre_required: z.string().nullish(),
-    gmat_required: z.string().nullish(),
-    min_work_years: z.number().nullish(),
-    documents: z.array(z.string()).nullish(),
-    requires_professional_registration: z.enum(["none", "nurse", "other"]).nullish(),
-    leads_to_registration: z.string().nullish(),
-    clinical_placement: z.boolean().nullish(),
-    open_to_international: z.enum(["yes", "limited", "no"]).nullish(),
-    checks_required: z.array(z.enum(["police", "health", "immunisation"])).nullish(),
-  }),
-  intakes: z
-    .array(
-      z.object({
-        cycle: z.string(),
-        start_term: z.string(),
-        start_month: z.string().nullish(),
-        application_opens: z.string().nullish(),
-        deadlines: z.array(z.object({ label: z.string(), date: z.string() }).loose()),
-      })
-    )
-    .min(1, "At least one intake is needed"),
-  fees: z
-    .array(
-      z.object({
-        fee_year: z.string("A fee year is missing"),
-        tuition_amount: z.number(),
-        currency: z.enum(["GBP", "CAD", "USD"]),
-        basis: z.string(),
-        application_fee: z.number().nullish(),
-      })
-    )
-    .min(1, "At least one fee is needed"),
-  source_urls: z.array(z.url()).min(1),
-})
+const record = z
+  .object({
+    university,
+    programme: z.object({
+      title: z.string().min(3),
+      degree_type: z.string(),
+      field: z.string(),
+      duration_months: z.number("Duration is missing").int().min(6).max(36),
+      study_mode: z.string().nullish(),
+      stem_designated: z.boolean().nullish(),
+      has_coop_or_placement: z.boolean().nullish(),
+      description: z.string().nullish(),
+      programme_url: z.url(),
+      /** When the page's Apply button link is lost, students get the official programme page instead. */
+      apply_url: z.url().nullish(),
+    }),
+    requirement: z.object({
+      min_uk_class: z.string().nullish(),
+      min_gpa4: z.number().nullish(),
+      nigeria_rule: z.string().nullish(),
+      considers_lower_with_experience: z.boolean().nullish(),
+      english_tests: z.array(englishTest),
+      english_waiver_text: z.string().nullish(),
+      waec_english_accepted: z.boolean().nullish(),
+      waec_min_grade: z.string().nullish(),
+      gre_required: z.string().nullish(),
+      gmat_required: z.string().nullish(),
+      min_work_years: z.number().nullish(),
+      documents: z.array(z.string()).nullish(),
+      requires_professional_registration: z.enum(["none", "nurse", "other"]).nullish(),
+      leads_to_registration: z.string().nullish(),
+      clinical_placement: z.boolean().nullish(),
+      open_to_international: z.enum(["yes", "limited", "no"]).nullish(),
+      checks_required: z.array(z.enum(["police", "health", "immunisation"])).nullish(),
+    }),
+    intakes: z
+      .array(
+        z.object({
+          /** Worked out from start_month when the page doesn't name a cycle. */
+          cycle: z.string().nullish(),
+          start_term: z.string(),
+          start_month: z.string().nullish(),
+          application_opens: z.string().nullish(),
+          deadlines: z.array(z.object({ label: z.string(), date: z.string() }).loose()),
+        })
+      )
+      .min(1, "At least one intake is needed"),
+    fees: z
+      .array(
+        z.object({
+          fee_year: z.string("A fee year is missing"),
+          tuition_amount: z.number(),
+          currency: z.enum(["GBP", "CAD", "USD"]),
+          basis: z.string(),
+          application_fee: z.number().nullish(),
+        })
+      )
+      .min(1, "At least one fee is needed"),
+    source_urls: z.array(z.url()).min(1),
+  })
+  .refine((r) => r.requirement.min_uk_class || r.requirement.min_gpa4 != null, {
+    message: "Give a minimum degree class (UK) or a minimum GPA out of 4 (Canada)",
+    path: ["requirement", "min_uk_class"],
+  })
 
 export type ProposedRecord = z.infer<typeof record>
 
@@ -102,6 +109,21 @@ function yearlyTuition(fee: ProposedRecord["fees"][number], months: number) {
 }
 
 export class PublishError extends Error {}
+
+/** Cycles run from autumn: September 2027, January 2028 and May 2028 all belong to 2027/28. */
+export function cycleFor(startMonth: string | null | undefined): string | null {
+  const m = /^(\d{4})-(\d{2})/.exec(startMonth ?? "")
+  if (!m) return null
+  const year = Number(m[1])
+  const first = Number(m[2]) >= 8 ? year : year - 1
+  return `${first}/${String((first + 1) % 100).padStart(2, "0")}`
+}
+
+function cycleOrStop(cycle: string | null | undefined, startMonth: string | null | undefined): string {
+  const found = cycle ?? cycleFor(startMonth)
+  if (!found) throw new PublishError("An intake has no cycle or start month: add start_month (YYYY-MM)")
+  return found
+}
 
 /** Turns a reviewed record into database rows, or says exactly what still needs fixing. */
 export function toRows(input: unknown) {
@@ -124,20 +146,21 @@ export function toRows(input: unknown) {
       dli_number: r.university.dli_number ?? null,
       sponsor_licence: r.university.sponsor_licence ?? false,
       sevp_certified: r.university.sevp_certified ?? false,
-      intl_office_url: r.university.intl_office_url,
+      intl_office_url: r.university.intl_office_url ?? null,
       official_domains: [r.university.official_domain],
       source_url: r.university.register_url,
       confidence: "official",
     },
     programme: {
       ...r.programme,
+      apply_url: r.programme.apply_url ?? r.programme.programme_url,
       study_mode: r.programme.study_mode ?? "full_time",
       stem_designated: r.programme.stem_designated ?? false,
       has_coop_or_placement: r.programme.has_coop_or_placement ?? false,
       ...stamp,
     },
     requirement: {
-      min_uk_class: r.requirement.min_uk_class,
+      min_uk_class: r.requirement.min_uk_class ?? null,
       min_gpa4: r.requirement.min_gpa4 ?? null,
       nigeria_rule: r.requirement.nigeria_rule ?? null,
       considers_lower_with_experience: r.requirement.considers_lower_with_experience ?? false,
@@ -162,7 +185,7 @@ export function toRows(input: unknown) {
       ...stamp,
     },
     intakes: r.intakes.map((i) => ({
-      cycle: i.cycle,
+      cycle: cycleOrStop(i.cycle, i.start_month),
       start_term: i.start_term,
       start_month: i.start_month ? `${i.start_month}-01` : null,
       application_opens: i.application_opens ?? null,

@@ -57,7 +57,9 @@ export function academicCheck(
   const fail = { passes: false, reach: false, headroom: 0 }
   if (academics.band === null) return fail
   const student = bandIndex(academics.band)
-  const minimum = bandIndex(requirement.min_uk_class as Band)
+  // Canadian programmes may state only a GPA minimum; then the GPA decides.
+  const minimum = requirement.min_uk_class === null ? null : bandIndex(requirement.min_uk_class as Band)
+  const gpaMeets = academics.gpa4 !== null && requirement.min_gpa4 !== null && academics.gpa4 >= requirement.min_gpa4
 
   // A university's own Nigeria rule replaces the estimate, except for HND + PGD, which it doesn't address.
   const official =
@@ -67,9 +69,9 @@ export function academicCheck(
   const meets =
     official !== null && profile.cgpa !== null
       ? profile.cgpa >= official
-      : student >= minimum ||
-        (academics.gpa4 !== null && requirement.min_gpa4 !== null && academics.gpa4 >= requirement.min_gpa4)
-  if (meets) return { passes: true, reach: false, headroom: Math.max(0, student - minimum) }
+      : (minimum !== null && student >= minimum) || gpaMeets
+  if (meets) return { passes: true, reach: false, headroom: minimum === null ? 0 : Math.max(0, student - minimum) }
+  if (minimum === null) return fail
 
   const oneBelow = student >= minimum - 1
   if (requirement.considers_lower_with_experience && oneBelow && profile.work_years >= REACH_MIN_WORK_YEARS) {
@@ -211,7 +213,14 @@ export function hardFilter(
     return excluded("registration", REGISTRATION_REASON[needs] ?? "Needs a professional registration")
   }
   const academic = academicCheck(requirement, profile, academics)
-  if (!academic.passes) return excluded("academic", `Needs ${requirement.min_uk_class} or above`)
+  if (!academic.passes) {
+    return excluded(
+      "academic",
+      requirement.min_uk_class
+        ? `Needs ${requirement.min_uk_class} or above`
+        : `Needs a GPA of ${requirement.min_gpa4} out of 4 or above`
+    )
+  }
 
   const english: ReturnType<typeof englishCheck> = profile.quick_match
     ? { result: "pass", unknown: true, planned: [] }

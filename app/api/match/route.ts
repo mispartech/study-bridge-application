@@ -1,4 +1,3 @@
-import { cookies } from "next/headers"
 import { after, NextResponse } from "next/server"
 import { z } from "zod"
 
@@ -24,7 +23,8 @@ export async function POST(request: Request) {
   const now = new Date()
   const result = rank(parsed.data, catalogue, { now, demoMode })
   const view = presentResult(result, parsed.data, catalogue, now)
-  const signedIn = hasSessionCookie((await cookies()).getAll())
+  const cookieNames = (request.headers.get("cookie") ?? "").split(";").map((c) => ({ name: c.split("=")[0]!.trim() }))
+  const signedIn = hasSessionCookie(cookieNames)
   // Logged after the response is sent, so it never slows results down.
   after(async () => {
     const user = signedIn ? await currentUser().catch(() => null) : null

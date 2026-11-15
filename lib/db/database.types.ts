@@ -766,7 +766,7 @@ export type Database = {
           last_verified_at: string
           leads_to_registration: string | null
           min_gpa4: number | null
-          min_uk_class: Database["public"]["Enums"]["uk_class_band"]
+          min_uk_class: Database["public"]["Enums"]["uk_class_band"] | null
           min_work_years: number
           nigeria_rule: string | null
           open_to_international: string | null
@@ -798,7 +798,7 @@ export type Database = {
           last_verified_at: string
           leads_to_registration?: string | null
           min_gpa4?: number | null
-          min_uk_class: Database["public"]["Enums"]["uk_class_band"]
+          min_uk_class?: Database["public"]["Enums"]["uk_class_band"] | null
           min_work_years?: number
           nigeria_rule?: string | null
           open_to_international?: string | null
@@ -829,7 +829,7 @@ export type Database = {
           last_verified_at?: string
           leads_to_registration?: string | null
           min_gpa4?: number | null
-          min_uk_class?: Database["public"]["Enums"]["uk_class_band"]
+          min_uk_class?: Database["public"]["Enums"]["uk_class_band"] | null
           min_work_years?: number
           nigeria_rule?: string | null
           open_to_international?: string | null
@@ -1281,7 +1281,7 @@ export type Database = {
           created_at: string
           dli_number: string | null
           id: string
-          intl_office_url: string
+          intl_office_url: string | null
           is_demo: boolean
           is_public: boolean
           last_verified_at: string
@@ -1302,7 +1302,7 @@ export type Database = {
           created_at?: string
           dli_number?: string | null
           id?: string
-          intl_office_url: string
+          intl_office_url?: string | null
           is_demo?: boolean
           is_public: boolean
           last_verified_at: string
@@ -1322,7 +1322,7 @@ export type Database = {
           created_at?: string
           dli_number?: string | null
           id?: string
-          intl_office_url?: string
+          intl_office_url?: string | null
           is_demo?: boolean
           is_public?: boolean
           last_verified_at?: string
