@@ -12,13 +12,33 @@ type Proposed = {
   plan_name?: string
 }
 
+/** Programmes come first: costs and health plans attach to a university that a programme approval creates. */
+const GROUPS = [
+  {
+    tables: ["programme"],
+    heading: "Programmes",
+    note: "Open one, check it against the source, then Approve and publish at the bottom. This also adds the university.",
+  },
+  {
+    tables: ["city_cost"],
+    heading: "City costs",
+    note: "Approve after at least one programme from the same university.",
+  },
+  {
+    tables: ["health_cover"],
+    heading: "Health plans",
+    note: "Approve after at least one programme from the same university.",
+  },
+]
+
 export default async function Page() {
   await connection()
   const { data } = await serviceClient()
     .from("review_queue")
-    .select("id, proposed, reason, created_at")
+    .select("id, proposed, reason, created_at, table_name")
     .eq("status", "pending")
     .order("created_at")
+    .order("id")
   const { data: reviewed } = await serviceClient().from("review_queue").select("field_changes").eq("status", "approved")
   const stats = fieldChangeStats(reviewed ?? [])
   return (
@@ -46,26 +66,40 @@ export default async function Page() {
       {!data?.length ? (
         <p className="text-sm text-muted-foreground">Nothing is waiting for review.</p>
       ) : (
-        <ul className="flex flex-col gap-2">
-          {data.map((item) => {
-            const proposed = item.proposed as Proposed
-            return (
-              <li key={item.id}>
-                <Card data-testid="review-row" className="gap-1">
-                  <h1 className="font-heading text-base font-bold">
-                    <Link href={`/admin/review/${item.id}`} className="underline">
-                      {proposed.programme?.title ??
-                        proposed.plan_name ??
-                        (proposed.city ? `Costs in ${proposed.city}` : "Untitled record")}
-                    </Link>
-                  </h1>
-                  <p className="text-sm text-muted-foreground">{proposed.university?.name ?? "Unknown university"}</p>
-                  <p className="text-xs text-muted-foreground">{item.reason}</p>
-                </Card>
-              </li>
-            )
-          })}
-        </ul>
+        GROUPS.map(({ tables, heading, note }) => {
+          const items = data.filter((i) => tables.includes(i.table_name))
+          if (!items.length) return null
+          return (
+            <section key={heading} className="flex flex-col gap-2">
+              <h2 className="font-heading text-lg font-bold">
+                {heading} ({items.length})
+              </h2>
+              <p className="text-xs text-muted-foreground">{note}</p>
+              <ul className="flex flex-col gap-2">
+                {items.map((item) => {
+                  const proposed = item.proposed as Proposed
+                  return (
+                    <li key={item.id}>
+                      <Card data-testid="review-row" className="gap-1">
+                        <h3 className="font-heading text-base font-bold">
+                          <Link href={`/admin/review/${item.id}`} className="underline">
+                            {proposed.programme?.title ??
+                              proposed.plan_name ??
+                              (proposed.city ? `Costs in ${proposed.city}` : "Untitled record")}
+                          </Link>
+                        </h3>
+                        <p className="text-sm text-muted-foreground">
+                          {proposed.university?.name ?? "Unknown university"}
+                        </p>
+                        <p className="text-xs text-muted-foreground">{item.reason}</p>
+                      </Card>
+                    </li>
+                  )
+                })}
+              </ul>
+            </section>
+          )
+        })
       )}
     </div>
   )
