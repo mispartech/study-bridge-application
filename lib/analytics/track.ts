@@ -22,6 +22,7 @@ export type FunnelEvent =
   | "programme_saved"
   | "apply_clicked"
   | "plus_checkout_started"
+  | "report_emailed"
 
 export function track(event: FunnelEvent, properties: Record<string, string | number> = {}) {
   const key = process.env.NEXT_PUBLIC_POSTHOG_KEY

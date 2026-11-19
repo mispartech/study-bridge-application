@@ -770,6 +770,61 @@ export type Database = {
           },
         ]
       }
+      report: {
+        Row: {
+          claimed_at: string | null
+          claimed_user_id: string | null
+          consent_text_version: string
+          created_at: string
+          delivery_status: string
+          email: string
+          email_hash: string
+          expires_at: string
+          id: string
+          marketing_consent: boolean
+          opened_at: string | null
+          profile_snapshot: NonNullable<Json>
+          reminders_consent: boolean
+          results_snapshot: NonNullable<Json>
+          sent_at: string | null
+        }
+        ComputedFields: never
+        Insert: {
+          claimed_at?: string | null
+          claimed_user_id?: string | null
+          consent_text_version: string
+          created_at?: string
+          delivery_status?: string
+          email: string
+          email_hash: string
+          expires_at?: string
+          id?: string
+          marketing_consent?: boolean
+          opened_at?: string | null
+          profile_snapshot: NonNullable<Json>
+          reminders_consent?: boolean
+          results_snapshot: NonNullable<Json>
+          sent_at?: string | null
+        }
+        Update: {
+          claimed_at?: string | null
+          claimed_user_id?: string | null
+          consent_text_version?: string
+          created_at?: string
+          delivery_status?: string
+          email?: string
+          email_hash?: string
+          expires_at?: string
+          id?: string
+          marketing_consent?: boolean
+          opened_at?: string | null
+          profile_snapshot?: NonNullable<Json>
+          reminders_consent?: boolean
+          results_snapshot?: NonNullable<Json>
+          sent_at?: string | null
+        }
+        Relationships: []
+      }
       requirement: {
         Row: {
           checks_required: string[]

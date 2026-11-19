@@ -23,7 +23,20 @@ export const LIMITS = {
     device: { bucket: "advisor_anon:device", windowSeconds: DAY, limit: 2, offsetSeconds: LAGOS_OFFSET },
     ip: { bucket: "advisor_anon:ip", windowSeconds: DAY, limit: 20, offsetSeconds: LAGOS_OFFSET },
   },
+  /** Spec: 3 a day per IP. Applied per device, with a higher IP ceiling because mobile networks share IPs. */
+  report: {
+    device: { bucket: "report:device", windowSeconds: DAY, limit: 3, offsetSeconds: LAGOS_OFFSET },
+    ip: { bucket: "report:ip", windowSeconds: DAY, limit: 30, offsetSeconds: LAGOS_OFFSET },
+  },
 } satisfies Record<string, { device: Limit; ip: Limit }>
+
+/** Spec: at most 2 reports a day to one email address. */
+export const REPORT_PER_EMAIL: Limit = {
+  bucket: "report:email",
+  windowSeconds: DAY,
+  limit: 2,
+  offsetSeconds: LAGOS_OFFSET,
+}
 
 export const DEVICE_COOKIE = "sb-device"
 const DEVICE_ID = /^[0-9a-f-]{36}$/

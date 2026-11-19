@@ -1,0 +1,116 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`report email > renders the same way every time 1`] = `
+"<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Your Master&#39;s options from StudyBridge</title></head>
+<body style="margin:0;padding:0;background:#F8F7FC">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#F8F7FC"><tr><td align="center" style="padding:16px">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;background:#FFFFFF;border-radius:16px"><tr><td style="padding:24px">
+<p style="font:800 20px/1.2 Inter, Arial, Helvetica, sans-serif;color:#5B4CF5;margin:0 0 12px">StudyBridge</p>
+<h1 style="font:800 24px/1.25 Inter, Arial, Helvetica, sans-serif;color:#15132B;margin:0 0 8px">Your Master's options, prepared on 5 November 2026</h1>
+<p style="font:400 13px/1.5 Inter, Arial, Helvetica, sans-serif;color:#6E6A85;margin:0 0 6px">Prices and rules as of 5 November 2026. Always confirm on the university's site.</p>
+<table role="presentation" cellpadding="0" cellspacing="0" style="margin:16px 0"><tr><td style="background:#5B4CF5;border-radius:12px">
+<a href="https://studybridge.example/report/open?r=abc&amp;t=def" style="display:inline-block;padding:12px 20px;font:700 15px Inter, Arial, Helvetica, sans-serif;color:#FFFFFF;text-decoration:none">View and update your results</a>
+</td></tr></table>
+<h2 style="font:700 18px/1.3 Inter, Arial, Helvetica, sans-serif;color:#15132B;margin:28px 0 8px">Your profile</h2>
+<p style="font:400 15px/1.5 Inter, Arial, Helvetica, sans-serif;color:#15132B;margin:0 0 8px"><strong>Course:</strong> Computer &amp; data science</p><p style="font:400 15px/1.5 Inter, Arial, Helvetica, sans-serif;color:#15132B;margin:0 0 8px"><strong>Grade:</strong> 2:1</p><p style="font:400 15px/1.5 Inter, Arial, Helvetica, sans-serif;color:#15132B;margin:0 0 8px"><strong>English test:</strong> IELTS 7</p><p style="font:400 15px/1.5 Inter, Arial, Helvetica, sans-serif;color:#15132B;margin:0 0 8px"><strong>Budget:</strong> ₦80m</p><p style="font:400 15px/1.5 Inter, Arial, Helvetica, sans-serif;color:#15132B;margin:0 0 8px"><strong>Countries:</strong> UK, Canada</p><p style="font:400 15px/1.5 Inter, Arial, Helvetica, sans-serif;color:#15132B;margin:0 0 8px"><strong>Intake:</strong> Fall 2027/28</p>
+<h2 style="font:700 18px/1.3 Inter, Arial, Helvetica, sans-serif;color:#15132B;margin:28px 0 8px">Summary</h2>
+<p style="font:400 15px/1.5 Inter, Arial, Helvetica, sans-serif;color:#15132B;margin:0 0 8px">5 programmes fit your budget. The strongest is MSc Demo Computer Science at Demo — Atlantic Harbour University, at ₦47.2m for the first year.</p>
+<h2 style="font:700 18px/1.3 Inter, Arial, Helvetica, sans-serif;color:#15132B;margin:28px 0 8px">Your top matches</h2><table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+<tr><td style="padding:14px 0;border-top:1px solid #E4E2EE">
+<p style="font:400 15px/1.5 Inter, Arial, Helvetica, sans-serif;color:#15132B;margin:0 0 8px"><strong>1. MSc Demo Computer Science</strong></p>
+<p style="font:400 13px/1.5 Inter, Arial, Helvetica, sans-serif;color:#6E6A85;margin:0 0 6px">Demo — Atlantic Harbour University, Halifax, Canada · Strong match · fit 84.1</p>
+<p style="font:400 15px/1.5 Inter, Arial, Helvetica, sans-serif;color:#15132B;margin:0 0 8px">First year: <strong>₦47.2m</strong> (CA$41.7k) · Within your budget</p>
+<p style="font:400 15px/1.5 Inter, Arial, Helvetica, sans-serif;color:#15132B;margin:0 0 8px">Next deadline: international: 31 January 2027</p>
+<p style="font:400 15px/1.5 Inter, Arial, Helvetica, sans-serif;color:#15132B;margin:0 0 8px">Why it fits: Fits your &lt;budget&gt; &amp; grades.</p>
+<p style="font:400 15px/1.5 Inter, Arial, Helvetica, sans-serif;color:#C2183C;margin:0 0 8px">Watch out: Deadline is soon.</p>
+<p style="font:400 15px/1.5 Inter, Arial, Helvetica, sans-serif;color:#15132B;margin:0 0 8px"><a href="https://apply.atlanticharbour-demo.example/computer-science" style="color:#5B4CF5;text-decoration:underline">Official apply page</a> · <a href="https://www.atlanticharbour-demo.example/courses/computer-science" style="color:#5B4CF5;text-decoration:underline">Programme page</a> · verified 18 days ago</p>
+</td></tr>
+<tr><td style="padding:14px 0;border-top:1px solid #E4E2EE">
+<p style="font:400 15px/1.5 Inter, Arial, Helvetica, sans-serif;color:#15132B;margin:0 0 8px"><strong>2. MSc Demo Data Science</strong></p>
+<p style="font:400 13px/1.5 Inter, Arial, Helvetica, sans-serif;color:#6E6A85;margin:0 0 6px">Demo — Foothills University, Calgary, Canada · Strong match · fit 76.5</p>
+<p style="font:400 15px/1.5 Inter, Arial, Helvetica, sans-serif;color:#15132B;margin:0 0 8px">First year: <strong>₦53.7m</strong> (CA$47.6k) · Within your budget</p>
+<p style="font:400 15px/1.5 Inter, Arial, Helvetica, sans-serif;color:#15132B;margin:0 0 8px">Next deadline: international: 31 January 2027</p>
+
+
+<p style="font:400 15px/1.5 Inter, Arial, Helvetica, sans-serif;color:#15132B;margin:0 0 8px"><a href="https://apply.foothills-demo.example/data-science" style="color:#5B4CF5;text-decoration:underline">Official apply page</a> · <a href="https://www.foothills-demo.example/courses/data-science" style="color:#5B4CF5;text-decoration:underline">Programme page</a> · verified 28 days ago</p>
+</td></tr>
+<tr><td style="padding:14px 0;border-top:1px solid #E4E2EE">
+<p style="font:400 15px/1.5 Inter, Arial, Helvetica, sans-serif;color:#15132B;margin:0 0 8px"><strong>3. MSc Demo Applied AI</strong></p>
+<p style="font:400 13px/1.5 Inter, Arial, Helvetica, sans-serif;color:#6E6A85;margin:0 0 6px">Demo — Pennine Institute of Technology, Leeds, UK · Good match · fit 70.5</p>
+<p style="font:400 15px/1.5 Inter, Arial, Helvetica, sans-serif;color:#15132B;margin:0 0 8px">First year: <strong>₦69.2m</strong> (£34.4k) · Within your budget</p>
+<p style="font:400 15px/1.5 Inter, Arial, Helvetica, sans-serif;color:#15132B;margin:0 0 8px">Next deadline: international: 30 June 2027</p>
+
+
+<p style="font:400 15px/1.5 Inter, Arial, Helvetica, sans-serif;color:#15132B;margin:0 0 8px"><a href="https://apply.pennine-demo.example/applied-ai" style="color:#5B4CF5;text-decoration:underline">Official apply page</a> · <a href="https://www.pennine-demo.example/courses/applied-ai" style="color:#5B4CF5;text-decoration:underline">Programme page</a> · verified 16 days ago</p>
+</td></tr>
+<tr><td style="padding:14px 0;border-top:1px solid #E4E2EE">
+<p style="font:400 15px/1.5 Inter, Arial, Helvetica, sans-serif;color:#15132B;margin:0 0 8px"><strong>4. MSc Demo Computing</strong></p>
+<p style="font:400 13px/1.5 Inter, Arial, Helvetica, sans-serif;color:#6E6A85;margin:0 0 6px">Demo — Clydeside University, Glasgow, UK · Good match · fit 70.3</p>
+<p style="font:400 15px/1.5 Inter, Arial, Helvetica, sans-serif;color:#15132B;margin:0 0 8px">First year: <strong>₦65.8m</strong> (£32.6k) · Within your budget</p>
+<p style="font:400 15px/1.5 Inter, Arial, Helvetica, sans-serif;color:#15132B;margin:0 0 8px">Next deadline: international: 30 June 2027</p>
+
+
+<p style="font:400 15px/1.5 Inter, Arial, Helvetica, sans-serif;color:#15132B;margin:0 0 8px"><a href="https://apply.clydeside-demo.example/computing" style="color:#5B4CF5;text-decoration:underline">Official apply page</a> · <a href="https://www.clydeside-demo.example/courses/computing" style="color:#5B4CF5;text-decoration:underline">Programme page</a> · verified 10 days ago</p>
+</td></tr>
+<tr><td style="padding:14px 0;border-top:1px solid #E4E2EE">
+<p style="font:400 15px/1.5 Inter, Arial, Helvetica, sans-serif;color:#15132B;margin:0 0 8px"><strong>5. MSc Demo Applied Data Science</strong></p>
+<p style="font:400 13px/1.5 Inter, Arial, Helvetica, sans-serif;color:#6E6A85;margin:0 0 6px">Demo — Université du Mont-Royal, Montreal, Canada · Good match · fit 70</p>
+<p style="font:400 15px/1.5 Inter, Arial, Helvetica, sans-serif;color:#15132B;margin:0 0 8px">First year: <strong>₦59.4m</strong> (CA$52.6k) · Within your budget</p>
+<p style="font:400 15px/1.5 Inter, Arial, Helvetica, sans-serif;color:#15132B;margin:0 0 8px">Next deadline: international: 31 January 2027</p>
+
+
+<p style="font:400 15px/1.5 Inter, Arial, Helvetica, sans-serif;color:#15132B;margin:0 0 8px"><a href="https://apply.montroyal-demo.example/applied-data-science" style="color:#5B4CF5;text-decoration:underline">Official apply page</a> · <a href="https://www.montroyal-demo.example/courses/applied-data-science" style="color:#5B4CF5;text-decoration:underline">Programme page</a> · verified 54 days ago</p>
+</td></tr>
+<tr><td style="padding:14px 0;border-top:1px solid #E4E2EE">
+<p style="font:400 15px/1.5 Inter, Arial, Helvetica, sans-serif;color:#15132B;margin:0 0 8px"><strong>6. MSc Demo Cyber Security</strong></p>
+<p style="font:400 13px/1.5 Inter, Arial, Helvetica, sans-serif;color:#6E6A85;margin:0 0 6px">Demo — Riverside Metropolitan University, London, UK · Good match · fit 59.3</p>
+<p style="font:400 15px/1.5 Inter, Arial, Helvetica, sans-serif;color:#15132B;margin:0 0 8px">First year: <strong>₦84.7m</strong> (£42k) · A stretch on your budget</p>
+<p style="font:400 15px/1.5 Inter, Arial, Helvetica, sans-serif;color:#15132B;margin:0 0 8px">Next deadline: international: 30 June 2027</p>
+
+
+<p style="font:400 15px/1.5 Inter, Arial, Helvetica, sans-serif;color:#15132B;margin:0 0 8px"><a href="https://apply.riverside-demo.example/cyber-security" style="color:#5B4CF5;text-decoration:underline">Official apply page</a> · <a href="https://www.riverside-demo.example/courses/cyber-security" style="color:#5B4CF5;text-decoration:underline">Programme page</a> · verified 13 days ago</p>
+</td></tr>
+<tr><td style="padding:14px 0;border-top:1px solid #E4E2EE">
+<p style="font:400 15px/1.5 Inter, Arial, Helvetica, sans-serif;color:#15132B;margin:0 0 8px"><strong>7. MSc Demo Data Analytics</strong></p>
+<p style="font:400 13px/1.5 Inter, Arial, Helvetica, sans-serif;color:#6E6A85;margin:0 0 6px">Demo — Northmoor University, Manchester, UK · Reach · fit 52.2</p>
+<p style="font:400 15px/1.5 Inter, Arial, Helvetica, sans-serif;color:#15132B;margin:0 0 8px">First year: <strong>₦81m</strong> (£40.2k) · A stretch on your budget</p>
+<p style="font:400 15px/1.5 Inter, Arial, Helvetica, sans-serif;color:#15132B;margin:0 0 8px">Next deadline: international: 30 June 2027</p>
+
+
+<p style="font:400 15px/1.5 Inter, Arial, Helvetica, sans-serif;color:#15132B;margin:0 0 8px"><a href="https://apply.northmoor-demo.example/data-analytics" style="color:#5B4CF5;text-decoration:underline">Official apply page</a> · <a href="https://www.northmoor-demo.example/courses/data-analytics" style="color:#5B4CF5;text-decoration:underline">Programme page</a> · verified 22 days ago</p>
+</td></tr>
+<tr><td style="padding:14px 0;border-top:1px solid #E4E2EE">
+<p style="font:400 15px/1.5 Inter, Arial, Helvetica, sans-serif;color:#15132B;margin:0 0 8px"><strong>8. MSc Demo Machine Learning</strong></p>
+<p style="font:400 13px/1.5 Inter, Arial, Helvetica, sans-serif;color:#6E6A85;margin:0 0 6px">Demo — Lakeshore University, Toronto, Canada · Reach · fit 52.1</p>
+<p style="font:400 15px/1.5 Inter, Arial, Helvetica, sans-serif;color:#15132B;margin:0 0 8px">First year: <strong>₦86.5m</strong> (CA$76.6k) · A stretch on your budget</p>
+<p style="font:400 15px/1.5 Inter, Arial, Helvetica, sans-serif;color:#15132B;margin:0 0 8px">Next deadline: international: 31 January 2027</p>
+
+
+<p style="font:400 15px/1.5 Inter, Arial, Helvetica, sans-serif;color:#15132B;margin:0 0 8px"><a href="https://apply.lakeshore-demo.example/machine-learning" style="color:#5B4CF5;text-decoration:underline">Official apply page</a> · <a href="https://www.lakeshore-demo.example/courses/machine-learning" style="color:#5B4CF5;text-decoration:underline">Programme page</a> · verified 20 days ago</p>
+</td></tr>
+<tr><td style="padding:14px 0;border-top:1px solid #E4E2EE">
+<p style="font:400 15px/1.5 Inter, Arial, Helvetica, sans-serif;color:#15132B;margin:0 0 8px"><strong>9. MSc Demo Artificial Intelligence</strong></p>
+<p style="font:400 13px/1.5 Inter, Arial, Helvetica, sans-serif;color:#6E6A85;margin:0 0 6px">Demo — Northmoor University, Manchester, UK · Reach · fit 45.9</p>
+<p style="font:400 15px/1.5 Inter, Arial, Helvetica, sans-serif;color:#15132B;margin:0 0 8px">First year: <strong>₦89.2m</strong> (£44.3k) · A stretch on your budget</p>
+<p style="font:400 15px/1.5 Inter, Arial, Helvetica, sans-serif;color:#15132B;margin:0 0 8px">Next deadline: international: 30 June 2027</p>
+
+
+<p style="font:400 15px/1.5 Inter, Arial, Helvetica, sans-serif;color:#15132B;margin:0 0 8px"><a href="https://apply.northmoor-demo.example/artificial-intelligence" style="color:#5B4CF5;text-decoration:underline">Official apply page</a> · <a href="https://www.northmoor-demo.example/courses/artificial-intelligence" style="color:#5B4CF5;text-decoration:underline">Programme page</a> · verified 19 days ago</p>
+</td></tr></table>
+
+
+<h2 style="font:700 18px/1.3 Inter, Arial, Helvetica, sans-serif;color:#15132B;margin:28px 0 8px">Restricted for your nationality</h2><ul style="margin:0 0 8px;padding-left:20px"><li style="font:400 15px/1.5 Inter, Arial, Helvetica, sans-serif;color:#15132B;margin:0 0 4px">MS Demo Business Intelligence, Demo — Peachtree University: Proclamation 10998 partial suspension: F, M and J student visas are suspended (visas issued before 2026-01-01 and nationals inside the US on that date are exempt).</li><li style="font:400 15px/1.5 Inter, Arial, Helvetica, sans-serif;color:#15132B;margin:0 0 4px">MS Demo Computer Science, Demo — Lone Prairie State University: Proclamation 10998 partial suspension: F, M and J student visas are suspended (visas issued before 2026-01-01 and nationals inside the US on that date are exempt).</li><li style="font:400 15px/1.5 Inter, Arial, Helvetica, sans-serif;color:#15132B;margin:0 0 4px">MS Demo Computer Science, Demo — Lakefront University: Proclamation 10998 partial suspension: F, M and J student visas are suspended (visas issued before 2026-01-01 and nationals inside the US on that date are exempt).</li><li style="font:400 15px/1.5 Inter, Arial, Helvetica, sans-serif;color:#15132B;margin:0 0 4px">MS Demo Data Science, Demo — Bayview Institute of Technology: Proclamation 10998 partial suspension: F, M and J student visas are suspended (visas issued before 2026-01-01 and nationals inside the US on that date are exempt).</li></ul>
+<h2 style="font:700 18px/1.3 Inter, Arial, Helvetica, sans-serif;color:#15132B;margin:28px 0 8px">Money you&#39;ll need to show for the visa</h2><ul style="margin:0 0 8px;padding-left:20px"><li style="font:400 15px/1.5 Inter, Arial, Helvetica, sans-serif;color:#15132B;margin:0 0 4px">Canada: CA$45k for MSc Demo Computer Science (<a href="https://www.canada.ca/en/immigration-refugees-citizenship/services/study-canada/study-permit/get-documents/financial-support.html" style="color:#5B4CF5;text-decoration:underline">official source</a>)</li><li style="font:400 15px/1.5 Inter, Arial, Helvetica, sans-serif;color:#15132B;margin:0 0 4px">UK: £30.2k for MSc Demo Applied AI (<a href="https://www.gov.uk/student-visa/money" style="color:#5B4CF5;text-decoration:underline">official source</a>)</li></ul>
+<h2 style="font:700 18px/1.3 Inter, Arial, Helvetica, sans-serif;color:#15132B;margin:28px 0 8px">Your deadline timeline</h2><ul style="margin:0 0 8px;padding-left:20px"><li style="font:400 15px/1.5 Inter, Arial, Helvetica, sans-serif;color:#15132B;margin:0 0 4px"><strong>31 January 2027</strong>: MSc Demo Computer Science, Demo — Atlantic Harbour University (international)</li><li style="font:400 15px/1.5 Inter, Arial, Helvetica, sans-serif;color:#15132B;margin:0 0 4px"><strong>31 January 2027</strong>: MSc Demo Data Science, Demo — Foothills University (international)</li><li style="font:400 15px/1.5 Inter, Arial, Helvetica, sans-serif;color:#15132B;margin:0 0 4px"><strong>31 January 2027</strong>: MSc Demo Applied Data Science, Demo — Université du Mont-Royal (international)</li><li style="font:400 15px/1.5 Inter, Arial, Helvetica, sans-serif;color:#15132B;margin:0 0 4px"><strong>31 January 2027</strong>: MSc Demo Machine Learning, Demo — Lakeshore University (international)</li><li style="font:400 15px/1.5 Inter, Arial, Helvetica, sans-serif;color:#15132B;margin:0 0 4px"><strong>30 June 2027</strong>: MSc Demo Applied AI, Demo — Pennine Institute of Technology (international)</li><li style="font:400 15px/1.5 Inter, Arial, Helvetica, sans-serif;color:#15132B;margin:0 0 4px"><strong>30 June 2027</strong>: MSc Demo Computing, Demo — Clydeside University (international)</li></ul>
+<h2 style="font:700 18px/1.3 Inter, Arial, Helvetica, sans-serif;color:#15132B;margin:28px 0 8px">Scholarships you may qualify for</h2><ul style="margin:0 0 8px;padding-left:20px"><li style="font:400 15px/1.5 Inter, Arial, Helvetica, sans-serif;color:#15132B;margin:0 0 4px"><a href="https://www.scholarship-demo.example/africa-leaders" style="color:#5B4CF5;text-decoration:underline">Demo — Africa Leaders Fund</a> (Demo Foundation): tuition, deadline 31 January 2027</li><li style="font:400 15px/1.5 Inter, Arial, Helvetica, sans-serif;color:#15132B;margin:0 0 4px"><a href="https://www.scholarship-demo.example/global-futures" style="color:#5B4CF5;text-decoration:underline">Demo — Global Futures Scholarship</a> (Demo Foundation): partial, deadline 31 March 2027</li><li style="font:400 15px/1.5 Inter, Arial, Helvetica, sans-serif;color:#15132B;margin:0 0 4px"><a href="https://www.scholarship-demo.example/maple" style="color:#5B4CF5;text-decoration:underline">Demo — Maple Graduate Award</a> (Demo Foundation): partial, deadline 28 February 2027</li></ul>
+<h2 style="font:700 18px/1.3 Inter, Arial, Helvetica, sans-serif;color:#15132B;margin:28px 0 8px">Next steps</h2><ul style="margin:0 0 8px;padding-left:20px"><li style="font:400 15px/1.5 Inter, Arial, Helvetica, sans-serif;color:#15132B;margin:0 0 4px">Prepare your documents: sop, references, cv.</li><li style="font:400 15px/1.5 Inter, Arial, Helvetica, sans-serif;color:#15132B;margin:0 0 4px">Your first deadline is 31 January 2027: MSc Demo Computer Science, Demo — Atlantic Harbour University (international).</li><li style="font:400 15px/1.5 Inter, Arial, Helvetica, sans-serif;color:#15132B;margin:0 0 4px">Plan to show CA$45k for a Canada visa.</li><li style="font:400 15px/1.5 Inter, Arial, Helvetica, sans-serif;color:#15132B;margin:0 0 4px">Plan to show £30.2k for a UK visa.</li></ul>
+<div style="margin-top:28px;border-top:1px solid #E4E2EE;padding-top:16px">
+<p style="font:400 13px/1.5 Inter, Arial, Helvetica, sans-serif;color:#6E6A85;margin:0 0 6px">"Estimated" means we used an official minimum or a typical figure because the university doesn't publish its own. Naira figures use the market rate (CAD ₦1,130, GBP ₦2,015, USD ₦1,490).</p>
+<p style="font:400 13px/1.5 Inter, Arial, Helvetica, sans-serif;color:#6E6A85;margin:0 0 6px">Something wrong? <a href="https://studybridge.example/discover" style="color:#5B4CF5;text-decoration:underline">Report an error</a> from any programme page.</p>
+<p style="font:400 13px/1.5 Inter, Arial, Helvetica, sans-serif;color:#6E6A85;margin:0 0 6px"><a href="https://studybridge.example/report/unsubscribe?r=abc&amp;t=ghi" style="color:#5B4CF5;text-decoration:underline">Unsubscribe and delete this report</a> · <a href="https://studybridge.example/privacy" style="color:#5B4CF5;text-decoration:underline">Privacy notice</a></p>
+<p style="font:400 13px/1.5 Inter, Arial, Helvetica, sans-serif;color:#6E6A85;margin:0 0 6px">StudyBridge by Mispar Technologies</p>
+</div>
+</td></tr></table>
+</td></tr></table>
+</body></html>"
+`;

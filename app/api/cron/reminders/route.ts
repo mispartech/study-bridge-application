@@ -24,6 +24,14 @@ export async function GET(request: Request) {
   const db = serviceClient()
   const now = new Date()
 
+  // Retention: an emailed report nobody opened is deleted after 12 months (docs/SPEC_ACCESS_ADMIN.md, s2).
+  const { count: expiredReports, error: expiryError } = await db
+    .from("report")
+    .delete({ count: "exact" })
+    .is("claimed_user_id", null)
+    .lt("expires_at", now.toISOString())
+  if (expiryError) console.error("report expiry failed:", expiryError.message)
+
   const [{ data: saved, error }, { data: intakes }, { data: trackers }] = await Promise.all([
     db
       .from("shortlist")
@@ -77,5 +85,5 @@ export async function GET(request: Request) {
       .select("id")
     if (claimed?.length && (await sendEmail({ subject, text }))) sent++
   }
-  return NextResponse.json({ due: reminders.length, sent })
+  return NextResponse.json({ due: reminders.length, sent, expired_reports: expiredReports ?? 0 })
 }

@@ -463,6 +463,87 @@ test("an admin sees users, AI spend and settings, and can switch a model", async
   }
 })
 
+const reportToken = (id: string, purpose: "claim" | "unsubscribe") =>
+  createHmac("sha256", process.env.REPORT_LINK_SECRET || process.env.SUPABASE_SERVICE_ROLE_KEY!)
+    .update(`${purpose}:${id}`)
+    .digest("base64url")
+    .slice(0, 43)
+
+test.describe("emailed report", () => {
+  test("a visitor emails their report, and its link signs them in with their results", async ({ page }) => {
+    test.setTimeout(90_000)
+    const email = `e2e-report-${crypto.randomUUID().slice(0, 8)}@example.com`
+    await page
+      .context()
+      .addCookies([{ name: "sb-profile", value: encodeURIComponent(JSON.stringify(worked)), url: BASE }])
+    await page.goto("/discover")
+    await expect(page.locator('[data-loaded="true"]')).toBeVisible({ timeout: 20_000 })
+    await page.getByRole("button", { name: "Email me this report" }).click()
+    // The open form must fit a 360px screen: nothing pushed off the side.
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
+    await page.getByLabel("Email address").fill(email)
+    // Both consents start unticked.
+    await expect(page.getByLabel("Send me deadline reminders for these programmes")).not.toBeChecked()
+    await expect(page.getByLabel("Send me occasional scholarship and study-abroad updates")).not.toBeChecked()
+    await page.getByLabel("Send me deadline reminders for these programmes").check()
+    await page.getByRole("button", { name: "Send my report" }).click()
+    await expect(page.getByTestId("email-report")).toContainText(`Sent to ${email}`, { timeout: 20_000 })
+
+    const { data: report } = await admin
+      .from("report")
+      .select("id, reminders_consent, marketing_consent, claimed_user_id, results_snapshot")
+      .eq("email", email)
+      .single()
+    try {
+      expect(report).toMatchObject({ reminders_consent: true, marketing_consent: false, claimed_user_id: null })
+      // Nothing else exists until the link is used.
+      const before = await admin.auth.admin.listUsers({ perPage: 1000 })
+      expect(before.data.users.some((u) => u.email === email)).toBe(false)
+
+      await page.context().clearCookies()
+      await page.goto(`/report/open?r=${report!.id}&t=${reportToken(report!.id, "claim")}`)
+      await page.getByRole("button", { name: "Open my results" }).click()
+      await accept(page)
+      await expect(page).toHaveURL(/\/discover/, { timeout: 20_000 })
+      await expect(page.getByTestId("match-card").first()).toBeVisible({ timeout: 20_000 })
+      const { data: claimed } = await admin.from("report").select("claimed_user_id").eq("id", report!.id).single()
+      expect(claimed?.claimed_user_id).toBeTruthy()
+      created.push(claimed!.claimed_user_id!)
+
+      // A tampered link is refused.
+      await page.context().clearCookies()
+      await page.goto(`/report/open?r=${report!.id}&t=${"x".repeat(43)}`)
+      await page.getByRole("button", { name: "Open my results" }).click()
+      await expect(page).toHaveURL(/\/sign-in\?error=link/)
+    } finally {
+      await admin.from("report").delete().eq("email", email)
+    }
+  })
+
+  test("unsubscribing deletes the report", async ({ page }) => {
+    const { data: report } = await admin
+      .from("report")
+      .insert({
+        email: `e2e-unsub-${crypto.randomUUID().slice(0, 8)}@example.com`,
+        email_hash: "e2e",
+        profile_snapshot: worked,
+        results_snapshot: {},
+        consent_text_version: "e2e",
+      })
+      .select("id")
+      .single()
+    try {
+      await page.goto(`/report/unsubscribe?r=${report!.id}&t=${reportToken(report!.id, "unsubscribe")}`)
+      await page.getByRole("button", { name: "Unsubscribe and delete" }).click()
+      await expect(page.getByTestId("unsubscribed")).toBeVisible()
+      const { data } = await admin.from("report").select("id").eq("id", report!.id).maybeSingle()
+      expect(data).toBeNull()
+    } finally {
+      await admin.from("report").delete().eq("id", report!.id)
+    }
+  })
+})
+
 async function signInAs(page: Page, userId: string) {
   const { data: user } = await admin.auth.admin.getUserById(userId)
   const { data, error } = await admin.auth.admin.generateLink({ type: "magiclink", email: user.user!.email! })

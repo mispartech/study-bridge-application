@@ -22,6 +22,7 @@ import { cn } from "@/lib/utils"
 
 import { SearchConfidence } from "./confidence"
 import { CostSheet } from "./cost-sheet"
+import { EmailReport } from "./email-report"
 import { BudgetChip, ProgrammeHeading } from "./card-parts"
 import { MatchCard, type Explanation } from "./match-card"
 
@@ -710,6 +711,7 @@ export function ResultsView({
           )}
         </section>
       </div>
+      {loaded && <EmailReport profile={profile} signedIn={shortlist !== null} />}
     </div>
   )
 }

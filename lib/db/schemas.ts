@@ -456,6 +456,24 @@ export const rateLimitRow = z.object({
   hits: z.number().int().nonnegative(),
 })
 
+export const reportRow = z.object({
+  id: uuid,
+  email: z.string().min(3),
+  email_hash: z.string().min(1),
+  profile_snapshot: json,
+  results_snapshot: json,
+  reminders_consent: z.boolean(),
+  marketing_consent: z.boolean(),
+  consent_text_version: z.string().min(1),
+  created_at: timestamp,
+  sent_at: timestamp.nullable(),
+  delivery_status: z.enum(["queued", "sent", "failed"]),
+  opened_at: timestamp.nullable(),
+  claimed_user_id: uuid.nullable(),
+  claimed_at: timestamp.nullable(),
+  expires_at: timestamp,
+})
+
 export const rowSchemas = {
   student_profile: studentProfileRow,
   shortlist: shortlistRow,
@@ -484,6 +502,7 @@ export const rowSchemas = {
   app_setting: appSettingRow,
   search_log: searchLogRow,
   rate_limit: rateLimitRow,
+  report: reportRow,
 } as const
 
 export type TableName = keyof Database["public"]["Tables"]
