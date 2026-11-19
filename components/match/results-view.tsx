@@ -8,8 +8,11 @@ import * as React from "react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { track } from "@/lib/analytics/track"
+import { CountryChips } from "@/components/match/country-chips"
+import type { CountryCode } from "@/lib/match/countries"
 import { saveProfile, savedStore } from "@/lib/match/profile-store"
-import { BAND_LABEL, COUNTRY_LABEL, TERM_LABEL } from "@/lib/match/labels"
+import { BAND_LABEL, TERM_LABEL } from "@/lib/match/labels"
+import { searchConfidence } from "@/lib/match/data-confidence"
 import type { CardView, MatchView, NearMissView } from "@/lib/match/present"
 import type { MatchProfile } from "@/lib/match/types"
 import { applyViewFilters, NO_FILTERS, type FeeBand, type SortKey, type ViewFilters } from "@/lib/match/view-filters"
@@ -17,6 +20,7 @@ import { rebalance, WEIGHT_LABELS, type WeightKey } from "@/lib/match/weights"
 import { formatShort } from "@/lib/money"
 import { cn } from "@/lib/utils"
 
+import { SearchConfidence } from "./confidence"
 import { CostSheet } from "./cost-sheet"
 import { BudgetChip, ProgrammeHeading } from "./card-parts"
 import { MatchCard, type Explanation } from "./match-card"
@@ -129,10 +133,14 @@ function FilterRail({
   filters,
   onChange,
   cities,
+  nationality,
+  travelDocument,
 }: {
   filters: ViewFilters
   onChange: (next: ViewFilters) => void
   cities: string[]
+  nationality: string | null
+  travelDocument: string | null
 }) {
   const set = <K extends keyof ViewFilters>(key: K, value: ViewFilters[K]) => onChange({ ...filters, [key]: value })
   const toggles: [keyof ViewFilters, string][] = [
@@ -142,25 +150,13 @@ function FilterRail({
   ]
   return (
     <div className="flex flex-col gap-3 pt-2 text-sm">
-      <fieldset className="flex flex-wrap gap-x-4">
-        <legend className="mb-1 font-medium">Country</legend>
-        {Object.entries(COUNTRY_LABEL).map(([code, label]) => (
-          <label key={code} className="flex min-h-11 items-center gap-2">
-            <input
-              type="checkbox"
-              className={checkbox}
-              checked={filters.countries.includes(code)}
-              onChange={(e) =>
-                set(
-                  "countries",
-                  e.target.checked ? [...filters.countries, code] : filters.countries.filter((c) => c !== code)
-                )
-              }
-            />
-            {label}
-          </label>
-        ))}
-      </fieldset>
+      <CountryChips
+        legend="Country"
+        selected={filters.countries as CountryCode[]}
+        onChange={(countries) => onChange({ ...filters, countries })}
+        nationality={nationality}
+        travelDocument={travelDocument}
+      />
       <label className="flex flex-col gap-1 font-medium">
         City
         <select className={select} value={filters.city} onChange={(e) => set("city", e.target.value)}>
@@ -342,13 +338,18 @@ const EMPTY_VIEW: MatchView = {
   restricted: [],
   needs_english: [],
   excluded: {},
+  needs_registration: [],
   fx: { market: {}, official: {} },
   now: "",
+  data_confidence: null,
 }
 
 type ResultsViewProps = {
   initialProfile: MatchProfile
-  confidence: string | null
+  /** Profile completeness, 0-100, or null when unknown. */
+  profileScore: number | null
+  /** Data confidence of the server-rendered results, until the interactive list loads. */
+  dataScore: number | null
   grades: string | null
   /** Server-rendered cards, shown until the interactive list loads. */
   preview: React.ReactNode
@@ -357,7 +358,15 @@ type ResultsViewProps = {
   accountSaved: string[] | null
 }
 
-export function ResultsView({ initialProfile, confidence, grades, preview, counts, accountSaved }: ResultsViewProps) {
+export function ResultsView({
+  initialProfile,
+  profileScore,
+  dataScore,
+  grades,
+  preview,
+  counts,
+  accountSaved,
+}: ResultsViewProps) {
   const router = useRouter()
   const [shortlist, setShortlist] = React.useState(accountSaved)
   const [loaded, setLoaded] = React.useState<MatchView | null>(null)
@@ -367,7 +376,10 @@ export function ResultsView({ initialProfile, confidence, grades, preview, count
   const [profile, setProfile] = React.useState(initialProfile)
   const [tab, setTab] = React.useState<Tab>("ranked")
   const [mode, setMode] = React.useState<"list" | "compare">("list")
-  const [filters, setFilters] = React.useState(NO_FILTERS)
+  const [filters, setFilters] = React.useState<ViewFilters>({
+    ...NO_FILTERS,
+    countries: initialProfile.preferred_countries,
+  })
   const [compare, setCompare] = React.useState<string[]>([])
   const browserSaved = React.useSyncExternalStore(savedStore.subscribe, savedStore.get, savedStore.getServer)
   const saved = shortlist ?? browserSaved
@@ -443,6 +455,9 @@ export function ResultsView({ initialProfile, confidence, grades, preview, count
 
   const all = React.useMemo(() => [...view.ranked, ...view.more], [view])
   const shown = applyViewFilters(view.ranked, filters)
+  const hiddenByCountry =
+    applyViewFilters([...view.ranked, ...view.more], { ...filters, countries: [] }).length -
+    applyViewFilters([...view.ranked, ...view.more], filters).length
   const more = applyViewFilters(view.more, filters)
   const cities = [...new Set(all.map((c) => c.city))].sort()
   const budgetMillions = Math.round((profile.budget_total_minor ?? 0) / MILLION_KOBO)
@@ -477,8 +492,8 @@ export function ResultsView({ initialProfile, confidence, grades, preview, count
         <h1 className="text-2xl font-extrabold">Your matches</h1>
         <p className="text-sm text-muted-foreground">
           {profile.target_cycle} entry{grades ? `, ${grades}` : ""}
-          {confidence ? `. Match confidence: ${confidence}` : ""}
         </p>
+        <SearchConfidence score={searchConfidence(profileScore, loaded ? loaded.data_confidence : dataScore)} />
       </header>
 
       <div className="grid gap-4 lg:grid-cols-[18rem_minmax(0,1fr)] lg:items-start">
@@ -498,7 +513,13 @@ export function ResultsView({ initialProfile, confidence, grades, preview, count
             Show related fields
           </label>
           <Panel title="Filters">
-            <FilterRail filters={filters} onChange={setFilters} cities={cities} />
+            <FilterRail
+              filters={filters}
+              onChange={setFilters}
+              cities={cities}
+              nationality={profile.nationality}
+              travelDocument={profile.travel_document}
+            />
           </Panel>
           <Panel title="What matters most">
             <WeightSliders profile={profile} onChange={(weights) => update({ weights })} />
@@ -545,6 +566,23 @@ export function ResultsView({ initialProfile, confidence, grades, preview, count
 
           {tab === "ranked" && (
             <div role="tabpanel" aria-label="Ranked" className="flex flex-col gap-4">
+              {view.needs_registration.length > 0 && (
+                <details
+                  data-testid="needs-registration"
+                  className="rounded-card border border-border bg-surface p-3 text-sm"
+                >
+                  <summary className="cursor-pointer font-medium">
+                    {view.needs_registration.length} left out: they need a professional registration
+                  </summary>
+                  <ul className="mt-2 flex flex-col gap-1">
+                    {view.needs_registration.map((p) => (
+                      <li key={p.programme_id}>
+                        {p.title}: {p.reason}
+                      </li>
+                    ))}
+                  </ul>
+                </details>
+              )}
               <div className="flex items-center justify-between gap-2">
                 <div role="group" aria-label="View" className="flex gap-1">
                   {(["list", "compare"] as const).map((m_) => (
@@ -581,6 +619,16 @@ export function ResultsView({ initialProfile, confidence, grades, preview, count
               ) : (
                 <LazyMotion features={loadMotion}>
                   <MotionConfig reducedMotion="user">
+                    {hiddenByCountry > 0 && (
+                      <button
+                        type="button"
+                        data-testid="show-other-countries"
+                        className="min-h-11 self-start text-sm font-medium underline underline-offset-4"
+                        onClick={() => setFilters({ ...filters, countries: [] })}
+                      >
+                        Show other countries ({hiddenByCountry})
+                      </button>
+                    )}
                     {shown.length === 0 ? (
                       <Card>
                         <p className="text-sm">

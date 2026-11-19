@@ -5,6 +5,10 @@ import demo from "@/tests/fixtures/demo-catalogue.json"
 
 import { POST } from "./route"
 
+// Search logging runs after the response in a real request; here it is a no-op.
+vi.mock("next/server", async (original) => ({ ...(await original<typeof import("next/server")>()), after: vi.fn() }))
+vi.mock("@/lib/match/search-log", () => ({ logSearch: vi.fn(), searchLogRow: vi.fn() }))
+
 vi.mock("@/lib/match/catalogue", () => ({
   demoModeEnabled: () => true,
   loadCatalogue: async () => demo,

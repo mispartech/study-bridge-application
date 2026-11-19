@@ -69,7 +69,7 @@ class Programme(_M):
     title: str
     degree_type: Literal["MSc", "MA", "MEng", "MBA", "MRes", "MPH", "LLM", "MPS", "Other"]
     field: Literal["computer_data_science", "public_health", "business_finance", "engineering", "project_management",
-                   "law", "other"]
+                   "law", "nursing", "mental_health", "other"]
     duration_months: int | None = Field(ge=6, le=36)
     study_mode: Literal["full_time", "part_time", "online", "blended"] | None
     stem_designated: bool | None = None
@@ -104,6 +104,11 @@ class Requirement(_M):
     gmat_required: Requiredness
     min_work_years: float | None = Field(ge=0)
     documents: list[Literal["sop", "references", "cv", "transcript", "portfolio", "writing_sample", "interview", "other"]]
+    requires_professional_registration: Literal["none", "nurse", "other"] | None = None
+    leads_to_registration: str | None = None
+    clinical_placement: bool | None = None
+    open_to_international: Literal["yes", "limited", "no"] | None = None
+    checks_required: list[Literal["police", "health", "immunisation"]] = []
 
 
 class Deadline(_M):

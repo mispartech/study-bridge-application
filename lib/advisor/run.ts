@@ -2,7 +2,7 @@ import "server-only"
 
 import type { LanguageModel } from "ai"
 
-import { generateText, loadPrompt } from "@/lib/ai"
+import { generateText, loadPrompt, modelForTask } from "@/lib/ai"
 
 import { uncheckedFigures } from "./figures"
 import { scrubLinks, urlsIn } from "./link-guard"
@@ -58,6 +58,8 @@ export async function* advisorTurn(
 ): AsyncGenerator<AdvisorEvent> {
   const system = await advisorSystem(ctx, shortlist)
   const tools = advisorTools(ctx)
+  // An override (evals, tests) brings its own model; otherwise the admin setting or config/ai.json.
+  const ref = model ? undefined : await modelForTask("advisor")
   // Earlier advisor replies passed this guard when they were shown, so what they said can be repeated.
   const evidence = [ctx.options.now.toISOString().slice(0, 10), ...messages.map((m) => m.content)]
   const links = new Set<string>()
@@ -71,6 +73,7 @@ export async function* advisorTurn(
       tools,
       maxSteps: MAX_TOOL_STEPS,
       userId,
+      model: ref,
       languageModelOverride: model,
     })
     let draft = ""

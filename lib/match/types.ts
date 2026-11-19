@@ -2,6 +2,18 @@ import { z } from "zod"
 
 import type { Tables } from "@/lib/db/database.types"
 
+/** Every course a student can pick. Must match the field_code enum in the database. */
+export const FIELD_CODES = [
+  "computer_data_science",
+  "public_health",
+  "business_finance",
+  "engineering",
+  "project_management",
+  "law",
+  "nursing",
+  "mental_health",
+] as const
+
 export const BANDS = ["pass", "third", "lower_second", "upper_second", "first"] as const
 export type Band = (typeof BANDS)[number]
 
@@ -46,10 +58,7 @@ export const matchProfile = z
     include_related_fields: z.boolean().default(false),
     /** Landing page: only field, CGPA and budget are known, so English and admission tests are checked later. */
     quick_match: z.boolean().default(false),
-    field: z
-      .enum(["computer_data_science", "public_health", "business_finance", "engineering", "project_management", "law"])
-      .nullable()
-      .default(null),
+    field: z.enum(FIELD_CODES).nullable().default(null),
     work_years: z.number().min(0).default(0),
     ielts: score(0, 9),
     toefl: score(0, 120),
@@ -73,6 +82,7 @@ export const matchProfile = z
       .default(null),
     dependants: z.number().int().min(0).default(0),
     post_study_work: z.enum(["low", "medium", "high"]).nullable().default(null),
+    professional_registration: z.enum(["none", "nurse", "other"]).default("none"),
     weights: weights.default(DEFAULT_WEIGHTS),
   })
   .refine((p) => p.toefl === null || p.toefl_scale !== null, "toefl_scale is required with a TOEFL score")
@@ -124,6 +134,8 @@ export type Cost = {
   proof_of_funds_minor: bigint | null
   accommodation: string
   accommodation_available: boolean
+  /** No city figures: rent and living come from the visa maintenance rule, as a minimum. */
+  minimum_living_estimate: boolean
   affordability: Affordability
 }
 

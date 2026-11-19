@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { FX_CLOSE_PERCENT, fxBuffer, fxClose } from "@/lib/match/fx-display"
 
 import { BottomSheet } from "@/components/ui/bottom-sheet"
 import { ACCOMMODATION_LABEL } from "@/lib/match/labels"
@@ -94,14 +95,23 @@ export function CostSheet({ title, cost, fx, children }: CostSheetProps) {
             <dt>Total first year</dt>
             <dd className="money">{show(cost.total_minor, cost.currency)}</dd>
           </div>
-          <div className="flex justify-between gap-3 text-muted-foreground">
-            <dt>At the market rate</dt>
-            <dd className="money">{formatShort(BigInt(cost.total_ngn_market), "NGN")}</dd>
-          </div>
-          <div className="flex justify-between gap-3 text-muted-foreground">
-            <dt>At the official rate</dt>
-            <dd className="money">{formatShort(BigInt(cost.total_ngn_official), "NGN")}</dd>
-          </div>
+          {fxClose(cost) ? (
+            <div data-testid="fx-buffer" className="flex justify-between gap-3 text-muted-foreground">
+              <dt>Mid-market and market rates are within {FX_CLOSE_PERCENT}%. Allow a buffer of</dt>
+              <dd className="money">{formatShort(fxBuffer(cost), "NGN")}</dd>
+            </div>
+          ) : (
+            <>
+              <div className="flex justify-between gap-3 text-muted-foreground">
+                <dt>At the market rate</dt>
+                <dd className="money">{formatShort(BigInt(cost.total_ngn_market), "NGN")}</dd>
+              </div>
+              <div className="flex justify-between gap-3 text-muted-foreground">
+                <dt>At the mid-market rate</dt>
+                <dd className="money">{formatShort(BigInt(cost.total_ngn_official), "NGN")}</dd>
+              </div>
+            </>
+          )}
           {cost.proof_of_funds_minor && (
             <div className="flex justify-between gap-3 text-muted-foreground">
               <dt>Visa proof of funds</dt>

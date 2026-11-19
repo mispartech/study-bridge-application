@@ -91,6 +91,7 @@ export const studentProfileRow = z.object({
   weights: fitWeights,
   completeness: z.number().int().min(0).max(100),
   post_study_work: z.enum(["low", "medium", "high"]).nullable(),
+  professional_registration: z.enum(["none", "nurse", "other"]),
   campus_or_city: z.enum(["campus", "city", "either"]).nullable(),
   include_related_fields: z.boolean(),
   wizard_answers: json,
@@ -140,7 +141,7 @@ export const universityRow = z.object({
   sponsor_licence: z.boolean(),
   sevp_certified: z.boolean(),
   ranking_band: z.string().nullable(),
-  intl_office_url: z.string(),
+  intl_office_url: z.string().nullable(),
   official_domains: z.array(z.string().min(1)).min(1),
   ...content,
   ...timestamps,
@@ -169,7 +170,7 @@ const testStatus = z.enum(["required", "one_of_required", "optional", "not_requi
 
 export const requirementRow = z.object({
   programme_id: uuid,
-  min_uk_class: ukClassBand,
+  min_uk_class: ukClassBand.nullable(),
   min_gpa4: z.number().min(0).max(4).nullable(),
   nigeria_rule: z.string().nullable(),
   considers_lower_with_experience: z.boolean(),
@@ -187,6 +188,11 @@ export const requirementRow = z.object({
   english_waiver_text: z.string().nullable(),
   waec_english_accepted: z.boolean(),
   waec_min_grade: z.enum(["A1", "B2", "B3", "C4", "C5", "C6", "D7", "E8", "F9"]).nullable(),
+  requires_professional_registration: z.enum(["none", "nurse", "other"]),
+  leads_to_registration: z.string().nullable(),
+  clinical_placement: z.boolean(),
+  open_to_international: z.enum(["yes", "limited", "no"]).nullable(),
+  checks_required: z.array(z.enum(["police", "health", "immunisation"])),
   pte_min: z.number().min(10).max(90).nullable(),
   gre_status: testStatus.nullable(),
   gmat_status: testStatus.nullable(),
@@ -227,6 +233,7 @@ export const feeRow = z.object({
 
 export const cityCostRow = z.object({
   id: uuid,
+  university_id: uuid.nullable(),
   country: countryCode,
   city: z.string().min(1),
   accommodation_type: accommodationType,
@@ -292,6 +299,7 @@ export const fxRateRow = z.object({
   fetched_at: timestamp,
   source_url: z.string().nullable(),
   is_demo: z.boolean(),
+  entered_by: uuid.nullable(),
   ...timestamps,
 })
 
@@ -302,6 +310,11 @@ export const costEstimateRow = z.object({
   amount_minor: minor,
   currency: currencyCode,
   per_year: z.boolean(),
+  region: z.string().nullable(),
+  city: z.string().nullable(),
+  observed_on: date.nullable(),
+  evidence_path: z.string().nullable(),
+  university_id: uuid.nullable(),
   ...content,
   ...timestamps,
 })
@@ -330,6 +343,20 @@ export const reviewQueueRow = z.object({
   current: json.nullable(),
   reason: z.string().min(1),
   status: z.enum(["pending", "approved", "rejected"]),
+  source_text: z.string().nullable(),
+  reviewed_by: uuid.nullable(),
+  reviewed_at: timestamp.nullable(),
+  published_programme_id: uuid.nullable(),
+  field_changes: z.array(z.string()).nullable(),
+  ...timestamps,
+})
+
+export const errorReportRow = z.object({
+  id: uuid,
+  programme_id: uuid,
+  user_id: uuid.nullable(),
+  message: z.string().min(5).max(1000),
+  status: z.enum(["open", "resolved", "dismissed"]),
   ...timestamps,
 })
 
@@ -403,6 +430,25 @@ export const explanationCacheRow = z.object({
   ...timestamps,
 })
 
+export const appSettingRow = z.object({
+  key: z.string().min(1),
+  value: z.json(),
+  updated_by: uuid.nullable(),
+  updated_at: timestamp,
+})
+
+export const searchLogRow = z.object({
+  id: uuid,
+  user_id: uuid.nullable(),
+  created_at: timestamp,
+  fields: z.array(z.string()),
+  countries: z.array(z.string()),
+  budget_ngn_minor: z.number().int().nonnegative().nullable(),
+  ranked: z.number().int().nonnegative(),
+  near_misses: z.number().int().nonnegative(),
+  data_confidence: z.number().int().min(0).max(100).nullable(),
+})
+
 export const rowSchemas = {
   student_profile: studentProfileRow,
   shortlist: shortlistRow,
@@ -420,6 +466,7 @@ export const rowSchemas = {
   cost_estimate: costEstimateRow,
   source_audit: sourceAuditRow,
   review_queue: reviewQueueRow,
+  error_report: errorReportRow,
   ai_usage: aiUsageRow,
   subscription: subscriptionRow,
   advisor_daily_usage: advisorDailyUsageRow,
@@ -427,6 +474,8 @@ export const rowSchemas = {
   reminder_log: reminderLogRow,
   payment: paymentRow,
   explanation_cache: explanationCacheRow,
+  app_setting: appSettingRow,
+  search_log: searchLogRow,
 } as const
 
 export type TableName = keyof Database["public"]["Tables"]

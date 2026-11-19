@@ -114,6 +114,15 @@ test.describe("results at ₦80m", () => {
     await noViolations(page)
   })
 
+  test("shows a match confidence score and a data confidence label per result", async ({ page }) => {
+    await expect(page.getByTestId("search-confidence")).toContainText(/Match confidence: (High|Medium|Low) \(\d+%\)/)
+    await expect(page.getByTestId("match-card").first().getByTestId("data-confidence")).toContainText(
+      /Data confidence: (High|Medium|Low)/
+    )
+    // Students never see which model answered.
+    await expect(page.locator("body")).not.toContainText(/gemini|claude|haiku/i)
+  })
+
   test("the Restricted tab gives the reason", async ({ page }) => {
     await page.getByRole("tab", { name: /Restricted for your nationality/ }).click()
     await expect(page.getByTestId("restricted").first()).toContainText("Proclamation 10998")
@@ -124,7 +133,7 @@ test.describe("results at ₦80m", () => {
   test("the cost sheet labels estimates and toggles currency", async ({ page }) => {
     await page.getByTestId("cost-trigger").first().click()
     const sheet = page.getByRole("dialog")
-    await expect(sheet.getByTestId("estimated-tag")).toHaveCount(5) // rent, living, visa, health, flights
+    await expect(sheet.getByTestId("estimated-tag")).toHaveCount(4) // rent, living, health, flights; the visa fee is official
     await expect(sheet.getByText("Flights")).toBeVisible()
     await sheet.getByRole("button", { name: "CAD" }).click()
     await expect(sheet.getByText(/CA\$/).first()).toBeVisible()
@@ -155,7 +164,7 @@ test.describe("results at ₦80m", () => {
 
   test("filters narrow the list", async ({ page }) => {
     await page.getByText("Filters").click()
-    await page.getByLabel("Canada").check()
+    await page.getByRole("button", { name: "UK", exact: true }).click()
     await expect(page.getByTestId("match-card").first()).toContainText("Canada")
     await expect(page.getByTestId("match-card").filter({ hasText: "Leeds" })).toHaveCount(0)
   })
@@ -225,4 +234,36 @@ test("explanations show a skeleton, then stream into the cards", async ({ page }
   await page.goto("/discover")
   await expect(page.getByTestId("explanation-skeleton").first()).toBeVisible()
   await expect(page.getByTestId("explanation").first()).toContainText("It fits your budget.")
+})
+
+test.describe("country selection", () => {
+  test("the filter rail narrows results and Show other countries brings them back", async ({ page }) => {
+    await withProfile(page, 80)
+    await page.goto("/discover")
+    await expect(page.locator('[data-loaded="true"]')).toBeVisible({ timeout: 20_000 })
+    await page.getByText("Filters").click()
+    await page.getByRole("button", { name: "UK", exact: true }).click()
+    await expect(page.getByTestId("match-card").filter({ hasText: "UK" })).toHaveCount(0)
+    await page.getByTestId("show-other-countries").click()
+    await expect(page.getByTestId("match-card").filter({ hasText: "UK" }).first()).toBeVisible()
+  })
+
+  test("a Nigerian sees the published visa note on the USA chip", async ({ page }) => {
+    await page.goto("/")
+    await expect(page.getByTestId("visa-note")).toContainText("USA:")
+    await expect(page.getByTestId("visa-note")).toContainText("10998")
+    await page.getByRole("button", { name: "USA", exact: true }).click()
+    await expect(page.getByTestId("visa-note")).toHaveCount(0)
+  })
+
+  test("quick match keeps to the chosen countries, with a way back", async ({ page }) => {
+    await page.goto("/")
+    await page.waitForLoadState("networkidle")
+    await page.getByRole("button", { name: "UK", exact: true }).click()
+    await page.getByRole("button", { name: "See my matches" }).click()
+    await expect(page.getByTestId("quick-result").first()).toBeVisible()
+    await expect(page.getByTestId("quick-result").filter({ hasText: "UK" })).toHaveCount(0)
+    await page.getByTestId("show-other-countries").click()
+    await expect(page.getByRole("button", { name: "UK", exact: true })).toHaveAttribute("aria-pressed", "true")
+  })
 })

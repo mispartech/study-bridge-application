@@ -415,3 +415,10 @@ def test_db_url_password_with_at_sign_is_encoded_for_libpq():
     assert libpq_url(url) == "postgresql://postgres.abc:p%40ss%3Aw%2Frd@aws-0-eu.pooler.supabase.com:5432/postgres"
     assert libpq_url(libpq_url(url)) == libpq_url(url)  # already-encoded URLs are left as they are
     assert libpq_url("postgresql://localhost/db") == "postgresql://localhost/db"
+
+
+def test_clean_html_keeps_page_when_wrapper_has_nav_like_class():
+    from ingest.clean import clean_html
+
+    html = '<html class="has-nav"><body class="navbar-open"><main><p>Tuition fee: £30,000</p></main></body></html>'
+    assert "Tuition fee: £30,000" in clean_html(html)

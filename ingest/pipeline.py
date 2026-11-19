@@ -44,10 +44,12 @@ class RunResult:
     status: Status
     reasons: list[str] = field(default_factory=list)
     changes: dict[str, Any] = field(default_factory=dict)
+    review_id: str | None = None
 
 
 def run_source(source: Source, fetcher: PoliteFetcher, *, model: ModelRef | None = None,
-               today: dt.date | None = None) -> RunResult:
+               today: dt.date | None = None, always_review: bool = False) -> RunResult:
+    """`always_review` sends every record to the review queue whatever its confidence (pilot runs)."""
     today = today or dt.date.today()
     fetched_at = dt.datetime.now(dt.timezone.utc)
 
@@ -62,7 +64,8 @@ def run_source(source: Source, fetcher: PoliteFetcher, *, model: ModelRef | None
         log.error("ALERT broken source %s: %s", source.urls[0], err)
         return RunResult(source, "broken", [str(err)])
 
-    content_hash = hashlib.sha256(pages_to_text(pages)[0].encode()).hexdigest()
+    page_text = pages_to_text(pages)[0]
+    content_hash = hashlib.sha256(page_text.encode()).hexdigest()
     try:
         extraction = extract_programme(pages, target_title=source.target_title,
                                        target_cycle=source.target_cycle, model=model)
@@ -99,9 +102,11 @@ def run_source(source: Source, fetcher: PoliteFetcher, *, model: ModelRef | None
         reasons += [f"changed: {k}" for k in changes]
 
     _audit(source, fetched_at, content_hash, change=bool(changes), diff_=changes or None)
+    if always_review and not reasons:
+        reasons.append("pilot: every record is reviewed")
     if reasons:
-        _queue(source, proposed, stored["snapshot"] if stored else None, "; ".join(reasons))
-        return RunResult(source, "queued_for_review", reasons, changes)
+        review_id = _queue(source, proposed, stored["snapshot"] if stored else None, "; ".join(reasons), page_text)
+        return RunResult(source, "queued_for_review", reasons, changes, review_id)
 
     _mark_verified(source.programme_id, fetched_at)
     return RunResult(source, "verified")
@@ -153,15 +158,21 @@ def _audit(source: Source, fetched_at: dt.datetime, content_hash: str | None, *,
         )
 
 
-def _queue(source: Source, proposed: dict | None, current: dict | None, reason: str) -> None:
+SOURCE_TEXT_LIMIT = 60_000
+
+
+def _queue(source: Source, proposed: dict | None, current: dict | None, reason: str,
+           source_text: str | None = None) -> str:
     with connect() as conn:
-        conn.execute(
-            """insert into public.review_queue (table_name, record_id, proposed, current, reason)
-               values ('programme', %s, %s, %s, %s)""",
+        row = conn.execute(
+            """insert into public.review_queue (table_name, record_id, proposed, current, reason, source_text)
+               values ('programme', %s, %s, %s, %s, %s) returning id""",
             (source.programme_id,
              Jsonb(proposed or {"source_urls": source.urls, "target_title": source.target_title}),
-             Jsonb(current) if current is not None else None, reason[:2000]),
-        )
+             Jsonb(current) if current is not None else None, reason[:2000],
+             source_text[:SOURCE_TEXT_LIMIT] if source_text else None),
+        ).fetchone()
+    return str(row[0])
 
 
 def _mark_verified(programme_id: str | None, at: dt.datetime) -> None:

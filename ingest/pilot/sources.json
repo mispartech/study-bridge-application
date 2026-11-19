@@ -1,0 +1,503 @@
+{
+  "cycle": "2027/28",
+  "note": "Pilot: 10 UK + 10 Canada computer_data_science, 5 + 5 nursing, 5 + 5 mental_health. University facts come from official registers; intl_office_url is left for the reviewer.",
+  "registers": {
+    "UK": "https://www.gov.uk/government/publications/register-of-licensed-sponsors-students",
+    "CA": "https://www.canada.ca/en/immigration-refugees-citizenship/services/study-canada/study-permit/prepare/designated-learning-institutions-list.html"
+  },
+  "universities": {
+    "kcl.ac.uk": {
+      "name": "King's College London",
+      "country": "UK",
+      "city": "London",
+      "region": "London",
+      "is_public": true,
+      "sponsor_licence": true
+    },
+    "qmul.ac.uk": {
+      "name": "Queen Mary University of London",
+      "country": "UK",
+      "city": "London",
+      "region": "London",
+      "is_public": true,
+      "sponsor_licence": true
+    },
+    "citystgeorges.ac.uk": {
+      "name": "City St George's, University of London",
+      "country": "UK",
+      "city": "London",
+      "region": "London",
+      "is_public": true,
+      "sponsor_licence": true
+    },
+    "brunel.ac.uk": {
+      "name": "Brunel University of London",
+      "country": "UK",
+      "city": "London",
+      "region": "London",
+      "is_public": true,
+      "sponsor_licence": true
+    },
+    "manchester.ac.uk": {
+      "name": "The University of Manchester",
+      "country": "UK",
+      "city": "Manchester",
+      "region": "North West",
+      "is_public": true,
+      "sponsor_licence": true
+    },
+    "mmu.ac.uk": {
+      "name": "Manchester Metropolitan University",
+      "country": "UK",
+      "city": "Manchester",
+      "region": "North West",
+      "is_public": true,
+      "sponsor_licence": true
+    },
+    "utoronto.ca": {
+      "name": "University of Toronto",
+      "country": "CA",
+      "city": "Toronto",
+      "region": "Ontario",
+      "is_public": true
+    },
+    "torontomu.ca": {
+      "name": "Toronto Metropolitan University",
+      "country": "CA",
+      "city": "Toronto",
+      "region": "Ontario",
+      "is_public": true
+    },
+    "yorku.ca": {
+      "name": "York University",
+      "country": "CA",
+      "city": "Toronto",
+      "region": "Ontario",
+      "is_public": true
+    },
+    "mcgill.ca": {
+      "name": "McGill University",
+      "country": "CA",
+      "city": "Montreal",
+      "region": "Quebec",
+      "is_public": true
+    },
+    "concordia.ca": {
+      "name": "Concordia University",
+      "country": "CA",
+      "city": "Montreal",
+      "region": "Quebec",
+      "is_public": true
+    },
+    "dal.ca": {
+      "name": "Dalhousie University",
+      "country": "CA",
+      "city": "Halifax",
+      "region": "Nova Scotia",
+      "is_public": true
+    },
+    "smu.ca": {
+      "name": "Saint Mary's University",
+      "country": "CA",
+      "city": "Halifax",
+      "region": "Nova Scotia",
+      "is_public": true
+    },
+    "msvu.ca": {
+      "name": "Mount Saint Vincent University",
+      "country": "CA",
+      "city": "Halifax",
+      "region": "Nova Scotia",
+      "is_public": true
+    }
+  },
+  "programmes": [
+    {
+      "field": "computer_data_science",
+      "domain": "kcl.ac.uk",
+      "target_title": "Data Science MSc",
+      "urls": [
+        "https://www.kcl.ac.uk/study/postgraduate-taught/courses/data-science-msc",
+        "https://www.kcl.ac.uk/study/postgraduate-taught/courses/data-science-msc/fees",
+        "https://www.kcl.ac.uk/study/postgraduate-taught/courses/data-science-msc/requirements"
+      ]
+    },
+    {
+      "field": "computer_data_science",
+      "domain": "qmul.ac.uk",
+      "target_title": "Data Science MSc",
+      "urls": [
+        "https://www.qmul.ac.uk/postgraduate/taught/coursefinder/courses/data-science-msc/"
+      ]
+    },
+    {
+      "field": "computer_data_science",
+      "domain": "qmul.ac.uk",
+      "target_title": "Data Science and Artificial Intelligence (Conversion Programme) MSc",
+      "urls": [
+        "https://www.qmul.ac.uk/postgraduate/taught/coursefinder/courses/data-science-and-artificial-intelligence-conversion-programme-msc/"
+      ]
+    },
+    {
+      "field": "computer_data_science",
+      "domain": "citystgeorges.ac.uk",
+      "target_title": "Data Science MSc",
+      "urls": [
+        "https://www.citystgeorges.ac.uk/prospective-students/courses/postgraduate/data-science/2027"
+      ]
+    },
+    {
+      "field": "computer_data_science",
+      "domain": "brunel.ac.uk",
+      "target_title": "Data Science and Analytics MSc",
+      "urls": [
+        "https://www.brunel.ac.uk/study/courses/data-science-and-analytics-msc"
+      ]
+    },
+    {
+      "field": "computer_data_science",
+      "domain": "manchester.ac.uk",
+      "target_title": "MSc Data Science and Artificial Intelligence (Computer Science Data Informatics)",
+      "urls": [
+        "https://www.manchester.ac.uk/study/masters/courses/list/22195/msc-data-science-and-artificial-intelligence-computer-science-data-informatics/"
+      ]
+    },
+    {
+      "field": "computer_data_science",
+      "domain": "manchester.ac.uk",
+      "target_title": "MSc Health Data Science and AI",
+      "urls": [
+        "https://www.manchester.ac.uk/study/masters/courses/list/22128/msc-health-data-science-and-ai/"
+      ]
+    },
+    {
+      "field": "computer_data_science",
+      "domain": "manchester.ac.uk",
+      "target_title": "MSc Economics and Data Science",
+      "urls": [
+        "https://www.manchester.ac.uk/study/masters/courses/list/21299/msc-economics-and-data-science/all-content/"
+      ]
+    },
+    {
+      "field": "computer_data_science",
+      "domain": "mmu.ac.uk",
+      "target_title": "MSc Data Science",
+      "urls": [
+        "https://www.mmu.ac.uk/study/postgraduate/course/msc-data-science"
+      ]
+    },
+    {
+      "field": "computer_data_science",
+      "domain": "mmu.ac.uk",
+      "target_title": "MSc Computer Science",
+      "urls": [
+        "https://www.mmu.ac.uk/study/postgraduate/course/msc-computer-science"
+      ]
+    },
+    {
+      "field": "computer_data_science",
+      "domain": "utoronto.ca",
+      "target_title": "Master of Science in Applied Computing",
+      "urls": [
+        "https://mscac.utoronto.ca/",
+        "https://mscac.utoronto.ca/apply/"
+      ]
+    },
+    {
+      "field": "computer_data_science",
+      "domain": "torontomu.ca",
+      "target_title": "Data Science and Analytics (MSc)",
+      "urls": [
+        "https://www.torontomu.ca/graduate/programs/data-science-analytics/",
+        "https://www.torontomu.ca/current-students/tuition-fees/graduate/"
+      ]
+    },
+    {
+      "field": "computer_data_science",
+      "domain": "yorku.ca",
+      "target_title": "Computer Science (MSc)",
+      "urls": [
+        "https://lassonde.yorku.ca/academics/graduate-program-in-computer-science"
+      ]
+    },
+    {
+      "field": "computer_data_science",
+      "domain": "mcgill.ca",
+      "target_title": "Computer Science (Non-Thesis) (M.Sc.)",
+      "urls": [
+        "https://www.mcgill.ca/gradapplicants/program/computer-science-msc",
+        "https://coursecatalogue.mcgill.ca/en/graduate/science/computer-science/computer-science-non-thesis-msc/"
+      ]
+    },
+    {
+      "field": "computer_data_science",
+      "domain": "concordia.ca",
+      "target_title": "Master of Applied Computer Science (MApCompSc)",
+      "urls": [
+        "https://www.concordia.ca/academics/graduate/computer-science-mcompsci-applied.html"
+      ]
+    },
+    {
+      "field": "computer_data_science",
+      "domain": "concordia.ca",
+      "target_title": "Master of Computer Science (MCompSc)",
+      "urls": [
+        "https://www.concordia.ca/academics/graduate/computer-science-mcompsc.html"
+      ]
+    },
+    {
+      "field": "computer_data_science",
+      "domain": "concordia.ca",
+      "target_title": "Software Engineering (MEng)",
+      "urls": [
+        "https://www.concordia.ca/academics/graduate/software-engineering-meng.html"
+      ]
+    },
+    {
+      "field": "computer_data_science",
+      "domain": "dal.ca",
+      "target_title": "Computer Science (MCSc)",
+      "urls": [
+        "https://www.dal.ca/study/programs/graduate-professional/computer-science-mcsc.html"
+      ]
+    },
+    {
+      "field": "computer_data_science",
+      "domain": "dal.ca",
+      "target_title": "Applied Computer Science (MACSc)",
+      "urls": [
+        "https://www.dal.ca/study/programs/graduate-professional/applied-computer-science-macsc.html",
+        "https://www.dal.ca/study/program-sites/applied-computer-science/tuition---support.html"
+      ]
+    },
+    {
+      "field": "computer_data_science",
+      "domain": "smu.ca",
+      "target_title": "MSc in Computing and Data Analytics",
+      "urls": [
+        "https://www.smu.ca/academics/msc-in-computing-and-data-analytics.html"
+      ]
+    },
+    {
+      "field": "nursing",
+      "domain": "kcl.ac.uk",
+      "target_title": "Nursing with Registration as an Adult Nurse MSc",
+      "urls": [
+        "https://www.kcl.ac.uk/study/undergraduate/courses/nursing-with-registration-as-an-adult-nurse-msc"
+      ]
+    },
+    {
+      "field": "nursing",
+      "domain": "kcl.ac.uk",
+      "target_title": "Advanced Clinical Practice MSc",
+      "urls": [
+        "https://www.kcl.ac.uk/study/postgraduate-taught/courses/advanced-clinical-practice-msc-pg-dip-pg-cert",
+        "https://www.kcl.ac.uk/study/postgraduate-taught/courses/advanced-clinical-practice-msc-pg-dip-pg-cert/entry-requirements"
+      ]
+    },
+    {
+      "field": "nursing",
+      "domain": "citystgeorges.ac.uk",
+      "target_title": "MSc Adult Nursing",
+      "urls": [
+        "https://www.citystgeorges.ac.uk/prospective-students/courses/postgraduate/adult-nursing-pre-registration"
+      ]
+    },
+    {
+      "field": "nursing",
+      "domain": "manchester.ac.uk",
+      "target_title": "MSc Adult Nursing",
+      "urls": [
+        "https://www.manchester.ac.uk/study/masters/courses/list/18749/msc-adult-nursing/"
+      ]
+    },
+    {
+      "field": "nursing",
+      "domain": "mmu.ac.uk",
+      "target_title": "MSc Adult Nursing (Pre-registration)",
+      "urls": [
+        "https://www.mmu.ac.uk/study/postgraduate/course/msc-adult-nursing-pre-registration"
+      ]
+    },
+    {
+      "field": "nursing",
+      "domain": "utoronto.ca",
+      "target_title": "Master of Nursing",
+      "urls": [
+        "https://bloomberg.nursing.utoronto.ca/learn-with-us/how-to-apply/how-to-apply-master-of-nursing/"
+      ]
+    },
+    {
+      "field": "nursing",
+      "domain": "mcgill.ca",
+      "target_title": "Master of Science (Applied) in Nursing (Direct Entry)",
+      "urls": [
+        "https://www.mcgill.ca/nursing/programs/masters-programs/msca-direct-entry",
+        "https://www.mcgill.ca/nursing/programs/masters-programs/msca-direct-entry/welcome-overview"
+      ]
+    },
+    {
+      "field": "nursing",
+      "domain": "dal.ca",
+      "target_title": "Master of Nursing (MN)",
+      "urls": [
+        "https://www.dal.ca/study/programs/graduate-professional/nursing-mn.html",
+        "https://www.dal.ca/faculty/health/nursing/graduate-programs/master-of-nursing--mn-/professional-stream/admission-requirements.html"
+      ]
+    },
+    {
+      "field": "nursing",
+      "domain": "torontomu.ca",
+      "target_title": "Master of Nursing (MN) Course Stream",
+      "urls": [
+        "https://www.torontomu.ca/nursing/graduate/master-nursing-course-stream/",
+        "https://www.torontomu.ca/nursing/graduate/admissions/master-nursing-course-stream/"
+      ]
+    },
+    {
+      "field": "nursing",
+      "domain": "yorku.ca",
+      "target_title": "Master of Science in Nursing (MScN)",
+      "urls": [
+        "https://www.yorku.ca/gradstudies/nursing/future-students/admission-requirements/"
+      ]
+    },
+    {
+      "field": "mental_health",
+      "domain": "kcl.ac.uk",
+      "target_title": "Mental Health Studies MSc",
+      "urls": [
+        "https://www.kcl.ac.uk/study/postgraduate-taught/courses/mental-health-studies-msc",
+        "https://www.kcl.ac.uk/study/postgraduate-taught/courses/mental-health-studies-msc/fees",
+        "https://www.kcl.ac.uk/study/postgraduate-taught/courses/mental-health-studies-msc/requirements"
+      ]
+    },
+    {
+      "field": "mental_health",
+      "domain": "qmul.ac.uk",
+      "target_title": "Mental Health: Psychological Therapies MSc",
+      "urls": [
+        "https://www.qmul.ac.uk/postgraduate/taught/coursefinder/courses/mental-health-psychological-therapies-msc/"
+      ]
+    },
+    {
+      "field": "mental_health",
+      "domain": "citystgeorges.ac.uk",
+      "target_title": "MSc Psychology (Conversion)",
+      "urls": [
+        "https://www.citystgeorges.ac.uk/prospective-students/courses/postgraduate/psychology-conversion"
+      ]
+    },
+    {
+      "field": "mental_health",
+      "domain": "manchester.ac.uk",
+      "target_title": "MSc Forensic Psychology and Mental Health",
+      "urls": [
+        "https://www.manchester.ac.uk/study/masters/courses/list/09847/msc-forensic-psychology-and-mental-health/"
+      ]
+    },
+    {
+      "field": "mental_health",
+      "domain": "mmu.ac.uk",
+      "target_title": "MSc Health Psychology",
+      "urls": [
+        "https://www.mmu.ac.uk/study/postgraduate/course/msc-health-psychology"
+      ]
+    },
+    {
+      "field": "mental_health",
+      "domain": "utoronto.ca",
+      "target_title": "Master of Education in Counselling Psychology (Counselling and Psychotherapy)",
+      "urls": [
+        "https://www.oise.utoronto.ca/aphd/programs/master-education-counselling-psychology-counselling-psychotherapy-field"
+      ]
+    },
+    {
+      "field": "mental_health",
+      "domain": "torontomu.ca",
+      "target_title": "Psychology (MA), Clinical Psychology",
+      "urls": [
+        "https://www.torontomu.ca/graduate/programs/psychology/",
+        "https://www.torontomu.ca/psychology/programs/graduate/clinical-psychology/"
+      ]
+    },
+    {
+      "field": "mental_health",
+      "domain": "concordia.ca",
+      "target_title": "Art Therapy (MA)",
+      "urls": [
+        "https://www.concordia.ca/academics/graduate/art-therapy.html"
+      ]
+    },
+    {
+      "field": "mental_health",
+      "domain": "concordia.ca",
+      "target_title": "Drama Therapy (MA)",
+      "urls": [
+        "https://www.concordia.ca/academics/graduate/drama-therapy.html"
+      ]
+    },
+    {
+      "field": "mental_health",
+      "domain": "msvu.ca",
+      "target_title": "MA School Psychology",
+      "urls": [
+        "https://www.msvu.ca/academics/faculty-of-education/graduate-programs-in-education/school-psychology/"
+      ]
+    }
+  ],
+  "cost_pages": {
+    "kcl.ac.uk": [
+      "https://www.kcl.ac.uk/accommodation/residences"
+    ],
+    "qmul.ac.uk": [
+      "https://www.qmul.ac.uk/residences/college/fees/",
+      "https://www.qmul.ac.uk/global/partnerships/information-for-prospective-students/finances/"
+    ],
+    "citystgeorges.ac.uk": [
+      "https://www.citystgeorges.ac.uk/prospective-students/accommodation/residential-halls",
+      "https://www.bayes.citystgeorges.ac.uk/study/masters/student-life/cost-of-living"
+    ],
+    "brunel.ac.uk": [
+      "https://www.brunel.ac.uk/life/accommodation/rents-and-contract-lengths"
+    ],
+    "manchester.ac.uk": [
+      "https://www.manchester.ac.uk/study/international/accommodation/",
+      "https://www.manchester.ac.uk/study/postgraduate-research/funding/living-costs/"
+    ],
+    "mmu.ac.uk": [
+      "https://www.mmu.ac.uk/study/accommodation/our-halls",
+      "https://www.mmu.ac.uk/study/accommodation/your-contract/fees"
+    ],
+    "utoronto.ca": [
+      "https://gradhouse.utoronto.ca/prospective-students/fees/"
+    ],
+    "torontomu.ca": [
+      "https://www.torontomu.ca/international/admissions/paying-for-your-education/tuition-fees/",
+      "https://www.torontomu.ca/housing/future-students/fees/"
+    ],
+    "yorku.ca": [
+      "https://www.yorku.ca/international/international-students/work-finances/budgeting-for-your-education/"
+    ],
+    "mcgill.ca": [
+      "https://www.mcgill.ca/students/housing/fees-applying/graduate-downtown-fees",
+      "https://www.mcgill.ca/ece/graduate/fees"
+    ],
+    "concordia.ca": [
+      "https://www.concordia.ca/students/financial/tuition-fees/costs.html",
+      "https://www.concordia.ca/students/housing/costs.html"
+    ],
+    "dal.ca": [
+      "https://www.dal.ca/campus_life/residence_housing/residence/halifax-campus/costs---fees.html",
+      "https://www.dal.ca/campus_life/residence_housing/off-campus-living/living-in-halifax/rental-costs.html"
+    ],
+    "smu.ca": [
+      "https://www.smu.ca/student-life/residences-fees.html",
+      "https://smu.ca/future-students/money-matters.html"
+    ],
+    "msvu.ca": [
+      "https://www.msvu.ca/campus-life/residence-life-at-the-mount/residence-life-fees/",
+      "https://www.msvu.ca/international/guidance-for-new-international-students/preparing-for-msvu-and-halifax/arrange-for-housing/"
+    ]
+  }
+}

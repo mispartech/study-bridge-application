@@ -13,6 +13,7 @@ import type { CardView } from "@/lib/match/present"
 import { formatShort, type FxRates } from "@/lib/money"
 
 import { BudgetChip, dateLabel, ProgrammeHeading } from "./card-parts"
+import { DataConfidence } from "./confidence"
 import { CostSheet } from "./cost-sheet"
 import { IncludesEstimates } from "./estimated-tag"
 
@@ -67,6 +68,12 @@ export function MatchCard({
       </p>
 
       <div className="flex flex-wrap gap-1.5">
+        {card.open_to_international === "no" && (
+          <VisaStatusChip status="suspended" size="sm" label="Not open to international students" />
+        )}
+        {card.open_to_international === "limited" && (
+          <VisaStatusChip status="conditional" size="sm" label="Limited places for international students" />
+        )}
         {card.has_coop && <Chip size="sm">Co-op or placement</Chip>}
         {card.flags.includes("related_field") && <Chip size="sm">Related field</Chip>}
         {card.flags.includes("check_test_requirement") && <Chip size="sm">Check test requirement</Chip>}
@@ -79,6 +86,7 @@ export function MatchCard({
           />
         )}
         <FreshnessBadge lastVerifiedAt={card.last_verified_at} now={now} sourceUrl={card.source_url} size="sm" />
+        <DataConfidence score={card.data_confidence} />
       </div>
 
       {explanation ? (

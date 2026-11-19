@@ -56,7 +56,15 @@ export function supportsForcedTool({ provider, model }: ModelRef): boolean {
   return !(provider === "anthropic" && NO_FORCED_TOOL.test(model))
 }
 
-/** Temperature 0 where the provider allows it; Anthropic's current API rejects sampling params. */
-export function deterministicSettings({ provider }: ModelRef): { temperature?: number } {
-  return provider === "anthropic" ? {} : { temperature: 0 }
+/** Gemini 3 and later loop or reason worse below temperature 1, so Google asks for the default. */
+const GEMINI_DEFAULT_TEMPERATURE = /^gemini-([3-9]|\d{2,})/
+
+/**
+ * Temperature 0 where it helps. Anthropic's current API rejects sampling params, and Gemini 3+
+ * should keep its default.
+ */
+export function deterministicSettings({ provider, model }: ModelRef): { temperature?: number } {
+  if (provider === "anthropic") return {}
+  if (provider === "google" && GEMINI_DEFAULT_TEMPERATURE.test(model)) return {}
+  return { temperature: 0 }
 }

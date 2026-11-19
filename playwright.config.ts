@@ -39,6 +39,11 @@ export default defineConfig({
     reuseExistingServer: !process.env.CI,
     timeout: 300_000,
     // A fake PostHog, so tests can prove when events are and aren't sent.
-    env: { NEXT_PUBLIC_POSTHOG_KEY: "phc_test", NEXT_PUBLIC_POSTHOG_HOST: "https://posthog.invalid" },
+    env: {
+      NEXT_PUBLIC_POSTHOG_KEY: "phc_test",
+      NEXT_PUBLIC_POSTHOG_HOST: "https://posthog.invalid",
+      // Cloudflare's documented test key: the widget always passes.
+      NEXT_PUBLIC_TURNSTILE_SITE_KEY: "1x00000000000000000000AA",
+    },
   },
 })

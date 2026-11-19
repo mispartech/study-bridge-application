@@ -141,3 +141,10 @@ def test_bare_enums_are_typed_for_providers():
     assert out["properties"]["mode"] == {"anyOf": [{"type": "string", "enum": ["full_time"]}, {"type": "null"}]}
     assert out["properties"]["country"] == {"type": "string", "enum": ["UK"]}
     assert schema["properties"]["mode"] == {"enum": ["full_time", None]}  # validation still uses the original
+
+
+def test_gemini_3_keeps_default_temperature():
+    from ingest.ai import _request_params
+
+    assert "temperature" not in _request_params(ModelRef("google", "gemini-3.6-flash"), forced=True)
+    assert _request_params(ModelRef("google", "gemini-2.5-flash"), forced=True)["temperature"] == 0

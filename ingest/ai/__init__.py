@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import copy
 import json
+import logging
 import os
 import re
 import time
@@ -37,6 +38,7 @@ PROVIDER_KEY_ENV = {
 LITELLM_PREFIX = {"anthropic": "anthropic", "google": "gemini", "openai": "openai", "openrouter": "openrouter"}
 
 # Models that reject forced tool calls; they use native structured output instead.
+GEMINI_DEFAULT_TEMPERATURE = re.compile(r"^gemini-([3-9]|\d{2,})")
 NO_FORCED_TOOL = re.compile(r"^claude-(sonnet-5-5|opus-5-5|fable-5-1|mythos-5-1)")
 
 litellm.drop_params = False  # fail loudly rather than silently dropping a parameter
@@ -68,7 +70,26 @@ def _provider(name: str) -> str:
     return name
 
 
+def _admin_choice(task: str) -> ModelRef | None:
+    """The model an admin picked in Settings (app_setting.ai_models), if any. Best effort."""
+    if os.environ.get("AI_USAGE_LOGGING") == "off":  # unit tests: no database
+        return None
+    try:
+        from ..db import connect
+
+        with connect() as conn:
+            row = conn.execute("select value -> %s from public.app_setting where key = 'ai_models'", (task,)).fetchone()
+        if row and row[0]:
+            return ModelRef(_provider(row[0]["provider"]), row[0]["model"])
+    except Exception as err:  # noqa: BLE001 - fall back to config/ai.json
+        logging.getLogger(__name__).warning("admin model setting unavailable: %s", err)
+    return None
+
+
 def model_for(task: str) -> ModelRef:
+    chosen = _admin_choice(task)
+    if chosen:
+        return chosen
     config = json.loads(CONFIG_PATH.read_text(encoding="utf-8"))
     if task not in config:
         raise KeyError(f"No model configured for task {task!r} in config/ai.json")
@@ -166,7 +187,8 @@ def _request_params(ref: ModelRef, forced: bool) -> dict[str, Any]:
         # with thinking, which claude-haiku-5-5 allows switching off.
         if forced:
             params["thinking"] = {"type": "disabled"}
-    else:
+    elif not (ref.provider == "google" and GEMINI_DEFAULT_TEMPERATURE.match(ref.model)):
+        # Gemini 3+ loops or reasons worse below temperature 1, so Google asks for the default.
         params["temperature"] = 0
     return params
 

@@ -25,6 +25,7 @@ export type Draft = {
   cgpa: string
   cgpa_scale: string
   hnd_pgd: boolean
+  professional_registration: string
   field: string
   graduation_year: string
   work_years: string
@@ -60,6 +61,7 @@ export const emptyDraft: Draft = {
   cgpa: "",
   cgpa_scale: "5",
   hnd_pgd: false,
+  professional_registration: "",
   field: "",
   graduation_year: "",
   work_years: "",

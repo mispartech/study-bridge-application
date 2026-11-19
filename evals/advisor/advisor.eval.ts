@@ -21,8 +21,9 @@ const BASE_BACKOFF_MS = 15_000
 const KOBO = 100
 // `npm run eval:advisor:retest`: last run's failures plus the trick questions, reported separately.
 const retest = import.meta.env.MODE === "retest"
-const resultsPath = fileURLToPath(new URL(retest ? "./results-retest.jsonl" : "./results.jsonl", import.meta.url))
-const reportPath = fileURLToPath(new URL(retest ? "./report-retest.md" : "./report.md", import.meta.url))
+const suffix = retest ? "-retest" : process.env.EVAL_ONLY ? `-${process.env.EVAL_ONLY}` : ""
+const resultsPath = fileURLToPath(new URL(`./results${suffix}.jsonl`, import.meta.url))
+const reportPath = fileURLToPath(new URL(`./report${suffix}.md`, import.meta.url))
 const TRICKS = ["invented_fee", "visa_law", "agent_link"]
 
 const student = (nationality: string): MatchProfile =>

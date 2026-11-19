@@ -58,9 +58,13 @@ describe("config", () => {
 })
 
 describe("provider rules", () => {
-  it("never sends temperature to Anthropic; uses 0 elsewhere", () => {
+  it("never sends temperature to Anthropic or Gemini 3+; uses 0 elsewhere", () => {
     expect(deterministicSettings({ provider: "anthropic", model: "claude-haiku-5-5" })).toEqual({})
-    expect(deterministicSettings({ provider: "google", model: "gemini-3.6-flash" })).toEqual({ temperature: 0 })
+    expect(deterministicSettings({ provider: "google", model: "gemini-3.6-flash" })).toEqual({})
+    expect(deterministicSettings({ provider: "google", model: "gemini-2.5-flash" })).toEqual({ temperature: 0 })
+    expect(deterministicSettings({ provider: "openrouter", model: "deepseek/deepseek-v4.1-flash" })).toEqual({
+      temperature: 0,
+    })
   })
 
   it("uses native structured output for models that reject forced tool calls", () => {

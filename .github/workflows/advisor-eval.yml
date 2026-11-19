@@ -1,9 +1,14 @@
 name: Advisor eval
 
+# Manual only while the pilot runs: nightly runs were using up Gemini credit.
 on:
   workflow_dispatch:
-  schedule:
-    - cron: "0 2 * * *"
+    inputs:
+      subset:
+        description: "retest (last failures and trick questions) or full (all questions)"
+        type: choice
+        options: [retest, full]
+        default: retest
 
 jobs:
   eval:
@@ -18,8 +23,7 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      # Nightly costs less: only last run's failures and the trick questions. The full 200 is manual.
       - run: npm run eval:advisor:retest
-        if: github.event_name == 'schedule'
+        if: inputs.subset == 'retest'
       - run: npm run eval:advisor
-        if: github.event_name != 'schedule'
+        if: inputs.subset == 'full'

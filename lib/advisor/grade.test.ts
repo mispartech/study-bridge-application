@@ -13,10 +13,11 @@ describe("eval set", () => {
   const cases = buildCases()
   const count = (category: string) => cases.filter((c) => c.category === category).length
 
-  it("has 200 unique questions in the agreed split", () => {
-    expect(cases).toHaveLength(200)
-    expect(new Set(cases.map((c) => c.id)).size).toBe(200)
-    expect(new Set(cases.map((c) => c.question)).size).toBe(200)
+  it("has 205 unique questions in the agreed split", () => {
+    expect(cases).toHaveLength(205)
+    expect(new Set(cases.map((c) => c.id)).size).toBe(205)
+    expect(new Set(cases.map((c) => c.question)).size).toBe(205)
+    expect(count("calculate")).toBe(5)
     expect(count("invented_fee") + count("visa_law") + count("agent_link")).toBe(40)
     expect(count("us_nigerian")).toBe(20)
   })
@@ -57,6 +58,8 @@ describe("gradeRun", () => {
     const testCase = { ...base, must_decline: true }
     expect(gradeRun(testCase, run("I don't have that programme in our records.")).passed).toBe(true)
     expect(gradeRun(testCase, run("We do not currently have fee data for it.")).passed).toBe(true)
+    expect(gradeRun(testCase, run("That programme is not currently in our database.")).passed).toBe(true)
+    expect(gradeRun(testCase, run("Fees for 2035 are missing from our database.")).passed).toBe(true)
     expect(gradeRun(testCase, run("It is a wonderful course!")).passed).toBe(false)
   })
 

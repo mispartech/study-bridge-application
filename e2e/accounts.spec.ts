@@ -59,9 +59,18 @@ test.describe("asking for an account only when it's needed", () => {
     await page.route("**/auth/v1/otp*", (route) => route.fulfill({ status: 200, json: {} }))
     await page.goto("/advisor")
     await expect(page).toHaveURL(/\/sign-in\?reason=advisor/)
+    let captchaToken: string | undefined
+    await page.unroute("**/auth/v1/otp*")
+    await page.route("**/auth/v1/otp*", async (route) => {
+      captchaToken = (route.request().postDataJSON() as { gotrue_meta_security?: { captcha_token?: string } })
+        .gotrue_meta_security?.captcha_token
+      await route.fulfill({ status: 200, json: {} })
+    })
     await page.getByLabel("Email").fill("student@example.com")
+    await expect(page.getByRole("button", { name: /email/i })).toBeEnabled({ timeout: 20_000 })
     await page.getByRole("button", { name: /email/i }).click()
     await expect(page.getByTestId("link-sent")).toBeVisible()
+    expect(captchaToken).toBeTruthy()
   })
 
   test("the advisor API refuses visitors with no session", async ({ request }) => {
@@ -306,3 +315,159 @@ test.describe("demo banner", () => {
     })
   }
 })
+
+test("/api/visa-notes rejects a malformed nationality", async ({ request }) => {
+  expect((await request.get("/api/visa-notes?nationality=nigeria")).status()).toBe(400)
+})
+
+test.describe("admin console", () => {
+  test("is a 404 for a signed-in student, and its API refuses them", async ({ page }) => {
+    await signIn(page)
+    await accept(page)
+    await expect(page).toHaveURL(/\/discover/, { timeout: 20_000 })
+    await page.goto("/admin")
+    await expect(page.getByText(/could not be found|404/i).first()).toBeVisible()
+    expect((await page.request.post("/api/admin/review/x", { data: { action: "reject", record: {} } })).status()).toBe(
+      404
+    )
+  })
+
+  test("an admin approves a queued record, which goes live, and handles an error report", async ({ page }) => {
+    test.setTimeout(90_000) // two sign-ins and five pages
+    const userId = await signIn(page, "/admin")
+    await accept(page)
+    await admin.auth.admin.updateUserById(userId, { app_metadata: { role: "admin" } })
+    const run = userId.slice(0, 8)
+    // A fresh session picks up the role.
+    await signInAs(page, userId)
+    const { data: item } = await admin
+      .from("review_queue")
+      .insert({
+        table_name: "programme",
+        proposed: queued(run),
+        reason: "e2e",
+        source_text: "MSc E2E Analytics page text",
+      })
+      .select("id")
+      .single()
+    try {
+      await page.goto(`/admin/review/${item!.id}`)
+      await expect(page.getByTestId("source-text")).toContainText("MSc E2E Analytics page text")
+      await page.getByRole("button", { name: "Approve and publish" }).click()
+      await expect(page).toHaveURL(/\/admin\/review$/, { timeout: 20_000 })
+      const { data: published } = await admin
+        .from("review_queue")
+        .select("status, published_programme_id")
+        .eq("id", item!.id)
+        .single()
+      expect(published?.status).toBe("approved")
+
+      const { data: live } = await admin
+        .from("programme")
+        .select("title, is_demo, requirement(min_uk_class, ielts_min)")
+        .eq("id", published!.published_programme_id!)
+        .single()
+      expect(live).toMatchObject({ title: "MSc E2E Analytics", is_demo: false })
+      // Demo mode shows demo programmes only, so a real record approved here never reaches Production.
+      await page.goto(`/programmes/${published!.published_programme_id}`)
+      await expect(page.getByRole("heading", { level: 1 })).toHaveText("404")
+
+      const { data: demoProgramme } = await admin.from("programme").select("id").eq("is_demo", true).limit(1).single()
+      await page.goto(`/programmes/${demoProgramme!.id}`)
+      await page.getByRole("button", { name: "Report an error" }).click()
+      const note = `The deadline looks out of date (${item!.id.slice(0, 8)}).`
+      await page.getByLabel("What looks wrong?").fill(note)
+      await page.getByRole("button", { name: "Send report" }).click()
+      await expect(page.getByTestId("report-sent")).toBeVisible()
+      await page.goto("/admin/reports")
+      await expect(page.getByTestId("error-report").filter({ hasText: note })).toBeVisible()
+    } finally {
+      const { data: row } = await admin
+        .from("review_queue")
+        .select("published_programme_id")
+        .eq("id", item!.id)
+        .single()
+      if (row?.published_programme_id) await admin.from("programme").delete().eq("id", row.published_programme_id)
+      await admin.from("review_queue").delete().eq("id", item!.id)
+      await admin
+        .from("error_report")
+        .delete()
+        .like("message", `%(${item!.id.slice(0, 8)})%`)
+      await admin.from("university").delete().eq("name", `E2E Test University ${run}`)
+    }
+  })
+})
+
+test("an admin sees users, AI spend and settings, and can switch a model", async ({ page }) => {
+  test.setTimeout(90_000)
+  const userId = await signIn(page, "/admin")
+  await accept(page)
+  await admin.auth.admin.updateUserById(userId, { app_metadata: { role: "admin" } })
+  await signInAs(page, userId)
+  const { data: before } = await admin.from("app_setting").select("value").eq("key", "ai_models").maybeSingle()
+  try {
+    await page.goto("/admin/users")
+    await expect(page.getByTestId("user-row").first()).toBeVisible()
+    await page.goto(`/admin/users/${userId}`)
+    await expect(page.getByRole("button", { name: "Remove admin" })).toBeVisible()
+
+    await page.goto("/admin/ai-usage")
+    await expect(page.getByRole("heading", { name: "Spend by user" })).toBeVisible()
+
+    await page.goto("/admin/settings")
+    await expect(page.getByText("NEXT_PUBLIC_SUPABASE_URL")).toBeVisible()
+    await page.getByLabel("advisor").selectOption("google:gemini-3.6-flash")
+    await page.getByRole("button", { name: "Save models" }).click()
+    await expect(page.getByRole("status")).toContainText("Saved")
+    const { data: saved } = await admin.from("app_setting").select("value").eq("key", "ai_models").single()
+    expect(saved?.value).toMatchObject({ advisor: { provider: "google", model: "gemini-3.6-flash" } })
+  } finally {
+    if (before) await admin.from("app_setting").update({ value: before.value }).eq("key", "ai_models")
+    else await admin.from("app_setting").delete().eq("key", "ai_models")
+  }
+})
+
+async function signInAs(page: Page, userId: string) {
+  const { data: user } = await admin.auth.admin.getUserById(userId)
+  const { data, error } = await admin.auth.admin.generateLink({ type: "magiclink", email: user.user!.email! })
+  if (error) throw error
+  const { hashed_token, verification_type } = data.properties
+  await page.context().clearCookies()
+  await page.goto(`/auth/callback?token_hash=${hashed_token}&type=${verification_type}&next=/admin`)
+  await expect(page).toHaveURL(/\/admin/, { timeout: 20_000 })
+}
+
+function queued(run: string) {
+  const domain = `e2e-${run}.ac.uk`
+  return {
+    university: {
+      name: `E2E Test University ${run}`,
+      country: "UK",
+      city: "Leeds",
+      official_domain: domain,
+      region: "Yorkshire",
+      is_public: true,
+      intl_office_url: `https://www.${domain}/international`,
+      register_url: "https://www.gov.uk/government/publications/register-of-licensed-sponsors-students",
+    },
+    programme: {
+      title: "MSc E2E Analytics",
+      degree_type: "MSc",
+      field: "computer_data_science",
+      duration_months: 12,
+      programme_url: `https://www.${domain}/msc`,
+      apply_url: `https://www.${domain}/apply`,
+    },
+    requirement: { min_uk_class: "upper_second", english_tests: [{ test: "IELTS", overall_min: 6.5 }] },
+    intakes: [
+      {
+        cycle: "2027/28",
+        start_term: "fall",
+        start_month: "2027-09",
+        deadlines: [{ label: "international", date: "2027-06-30" }],
+      },
+    ],
+    fees: [{ fee_year: "2027/28", tuition_amount: 25000, currency: "GBP", basis: "per_year" }],
+    source_urls: [`https://www.${domain}/msc`],
+  }
+}
