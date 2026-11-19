@@ -14,11 +14,24 @@ export type Permission =
   | "ai" // AI usage and cost
   | "payments"
   | "audit" // the staff audit log
+  | "overview" // funnel and headline numbers
+  | "users.erase" // export a user's data, delete an account
 
 const GRANTS: Record<StaffRole, readonly Permission[]> = {
-  support: ["users.read", "users.manage"],
+  support: ["users.read", "users.manage", "overview"],
   data_editor: ["content"],
-  admin: ["users.read", "users.manage", "content", "roles", "settings", "ai", "payments", "audit"],
+  admin: [
+    "users.read",
+    "users.manage",
+    "users.erase",
+    "content",
+    "roles",
+    "settings",
+    "ai",
+    "payments",
+    "audit",
+    "overview",
+  ],
 }
 
 export const ROLE_LABEL: Record<StaffRole | "student", string> = {

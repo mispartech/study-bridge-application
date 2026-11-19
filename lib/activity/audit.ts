@@ -23,6 +23,10 @@ export type AuditAction =
   | "market_rate_entered"
   | "estimate_entered"
   | "error_report_updated"
+  | "user_unsuspended"
+  | "link_resent"
+  | "report_deleted"
+  | "email_blocked"
 
 /**
  * Records one staff action with what changed. The table refuses edits and deletes. Failing to record is

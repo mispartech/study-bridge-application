@@ -664,6 +664,61 @@ test.describe("staff roles and two-factor", () => {
     expect(review.status()).toBe(403)
   })
 
+  test("an admin sees the overview, exports it, and suspends then deletes an account", async ({ page }) => {
+    test.setTimeout(120_000)
+    const userId = await staffAccount(page, "admin")
+    await signInAs(page, userId)
+    await expect(page.getByRole("heading", { name: "Overview" })).toBeVisible()
+    await expect(page.getByTestId("funnel-step")).toHaveCount(7)
+
+    const csv = await page.request.get("/api/admin/export?dataset=funnel&range=7d")
+    expect(csv.status()).toBe(200)
+    expect(csv.headers()["content-type"]).toContain("text/csv")
+    expect((await csv.text()).split(String.fromCharCode(10))[0]?.trim()).toBe("step,people,from_previous")
+    const { data: exported } = await admin
+      .from("staff_audit")
+      .select("id")
+      .eq("staff_id", userId)
+      .eq("action", "export_downloaded")
+    expect(exported?.length).toBeGreaterThan(0)
+
+    const email = `e2e-target-${crypto.randomUUID().slice(0, 8)}@example.com`
+    const { data: target } = await admin.auth.admin.createUser({ email, email_confirm: true })
+    created.push(target.user!.id)
+    await page.goto(`/admin/users?q=${email}`)
+    await expect(page.getByTestId("user-row")).toHaveCount(1)
+    await page.getByRole("link", { name: email }).click()
+    await page.getByLabel("Reason (needed to suspend or delete)").fill("e2e check")
+    await page.getByRole("button", { name: "Suspend" }).click()
+    await expect(page.getByTestId("suspended")).toBeVisible({ timeout: 20_000 })
+    const { data: banned } = await admin.auth.admin.getUserById(target.user!.id)
+    expect(banned.user?.banned_until).toBeTruthy()
+    await page.getByRole("button", { name: "Lift suspension" }).click()
+    await expect(page.getByRole("button", { name: "Suspend" })).toBeVisible({ timeout: 20_000 })
+
+    await page.getByLabel("Reason (needed to suspend or delete)").fill("e2e erasure")
+    await page.getByLabel("Type DELETE to confirm").fill("DELETE")
+    await page.getByRole("button", { name: "Delete account" }).click()
+    await expect(page).toHaveURL(/\/admin\/users$/, { timeout: 20_000 })
+    const { data: gone } = await admin.auth.admin.getUserById(target.user!.id)
+    expect(gone.user).toBeNull()
+    const { data: audited } = await admin
+      .from("staff_audit")
+      .select("action, reason")
+      .eq("target_id", target.user!.id)
+      .eq("action", "user_deleted")
+      .single()
+    expect(audited?.reason).toBe("e2e erasure")
+  })
+
+  test("support can't export a user's data", async ({ page }) => {
+    test.setTimeout(90_000)
+    const userId = await staffAccount(page, "support")
+    await signInAs(page, userId)
+    const res = await page.request.get(`/api/admin/users/${userId}/export`)
+    expect(res.status()).toBe(403)
+  })
+
   test("a data editor works the review queue but can't see users", async ({ page }) => {
     test.setTimeout(90_000)
     const userId = await staffAccount(page, "data_editor")

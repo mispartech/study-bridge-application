@@ -17,6 +17,7 @@ const ACTIONS = [
   "market_rate_entered",
   "estimate_entered",
   "error_report_updated",
+  "export_downloaded",
 ] as const
 
 /** Every staff action, newest first. Read-only: the table itself refuses edits and deletes. */
@@ -38,7 +39,10 @@ export default async function Page({
     <div className="flex flex-col gap-4">
       <h1 className="font-heading text-xl font-bold">Audit log</h1>
       <p className="text-sm text-muted-foreground">
-        Every staff action, with what changed. Entries can&apos;t be edited or deleted, by anyone.
+        Every staff action, with what changed. Entries can&apos;t be edited or deleted, by anyone.{" "}
+        <a href="/api/admin/export?dataset=audit&range=90d" className="underline underline-offset-4">
+          Export the last 90 days (CSV)
+        </a>
       </p>
       <form className="flex flex-wrap items-end gap-2 text-sm" method="get">
         <label className="flex flex-col gap-1">

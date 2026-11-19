@@ -27,6 +27,7 @@ export const THUMBS_LABEL: Record<(typeof THUMBS_REASONS)[number], string> = {
 export const EVENT_SCHEMAS = {
   quick_match_run: z.object({ results: z.number().int().min(0).max(100) }).strict(),
   wizard_step_completed: z.object({ step: z.number().int().min(1).max(10) }).strict(),
+  wizard_completed: none,
   results_viewed: z.object({ ranked: z.number().int().min(0).max(1000) }).strict(),
   filter_changed: z
     .object({ filter: z.enum(["country", "fee", "sort", "coop", "no_gre", "stem", "related"]) })
@@ -61,6 +62,7 @@ export type ActivityProps<E extends ActivityEvent> = z.infer<(typeof EVENT_SCHEM
 export const CLIENT_EVENTS = [
   "quick_match_run",
   "wizard_step_completed",
+  "wizard_completed",
   "results_viewed",
   "filter_changed",
   "programme_viewed",

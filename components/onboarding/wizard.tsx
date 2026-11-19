@@ -147,6 +147,7 @@ export function Wizard() {
 
   async function finish() {
     track(`onboarding_step_${step + 1}`)
+    logActivity("wizard_completed")
     saveProfile(toMatchProfile(draft, new Date()), completeness(draft))
     // Value before account: results come first. The answers stay in this browser and move into an
     // account if the student signs up later (when saving, emailing the report or using the advisor).

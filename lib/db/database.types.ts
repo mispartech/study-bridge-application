@@ -1577,6 +1577,31 @@ export type Database = {
       }
     }
     Functions: {
+      activity_by_target: {
+        Args: { p_events: string[]; p_from: string; p_to: string }
+        Returns: {
+          event: string
+          events: number
+          reason: string
+          target_id: string
+        }[]
+      }
+      activity_daily: {
+        Args: { p_events: string[]; p_from: string; p_to: string }
+        Returns: {
+          day: string
+          event: string
+          events: number
+        }[]
+      }
+      activity_summary: {
+        Args: { p_from: string; p_to: string }
+        Returns: {
+          actors: number
+          event: string
+          events: number
+        }[]
+      }
       anonymise_activity: { Args: { p_actor_id: string }; Returns: number }
       consume_advisor_message: {
         Args: { p_free_limit?: number; p_user_id: string }
@@ -1621,6 +1646,14 @@ export type Database = {
       refund_rate_limit: {
         Args: { p_bucket: string; p_key_hash: string; p_offset_seconds?: number; p_window_seconds: number }
         Returns: number
+      }
+      search_summary: {
+        Args: { p_from: string; p_to: string }
+        Returns: {
+          key: string
+          kind: string
+          n: number
+        }[]
       }
       url_host: { Args: { url: string }; Returns: string }
     }

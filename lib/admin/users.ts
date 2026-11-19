@@ -1,3 +1,4 @@
+import { roleOf } from "@/lib/auth/roles"
 import { estimateCostUsd, type Settings } from "@/lib/settings/schema"
 
 export type UsageRow = {
@@ -15,6 +16,8 @@ export type UserSummary = {
   created_at: string
   last_sign_in_at: string | null
   admin: boolean
+  role: "student" | "support" | "data_editor" | "admin"
+  suspended: boolean
   plan: "free" | "plus"
   searches: number
   ai_calls: number
@@ -31,6 +34,7 @@ type AuthUser = {
   created_at: string
   last_sign_in_at?: string | null
   app_metadata?: Record<string, unknown>
+  banned_until?: string | null
 }
 
 export type UsageTotals = Pick<UserSummary, "ai_calls" | "ai_failures" | "input_tokens" | "output_tokens" | "cost_usd">
@@ -74,6 +78,8 @@ export function summariseUsers(
         created_at: u.created_at,
         last_sign_in_at: u.last_sign_in_at ?? null,
         admin: u.app_metadata?.role === "admin",
+        role: (roleOf(u) ?? "student") as UserSummary["role"],
+        suspended: Boolean(u.banned_until && new Date(u.banned_until) > now),
         plan: active ? ("plus" as const) : ("free" as const),
         searches: searchCount.get(u.id) ?? 0,
         ...totals(usageBy.get(u.id) ?? [], prices),
@@ -84,3 +90,17 @@ export function summariseUsers(
 
 export const formatUsd = (n: number | null) =>
   n === null ? "price not set" : n < 0.01 && n > 0 ? "< $0.01" : `$${n.toFixed(2)}`
+
+export type UserFilter = { q?: string; role?: string; plan?: string; status?: string }
+
+/** Search by email or id, and filter by role, plan and status. */
+export function filterUsers(rows: UserSummary[], f: UserFilter): UserSummary[] {
+  const q = f.q?.trim().toLowerCase()
+  return rows.filter(
+    (r) =>
+      (!q || (r.email ?? "").toLowerCase().includes(q) || r.id.startsWith(q)) &&
+      (!f.role || r.role === f.role) &&
+      (!f.plan || r.plan === f.plan) &&
+      (!f.status || (f.status === "suspended" ? r.suspended : !r.suspended))
+  )
+}
