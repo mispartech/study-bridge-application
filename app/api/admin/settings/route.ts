@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server"
+import { audit } from "@/lib/activity/audit"
 import { z } from "zod"
 
 import { PROVIDER_KEY_ENV } from "@/lib/ai/config"
 import { staffFromRequest } from "@/lib/auth/admin"
-import { saveSetting, settingsSchema } from "@/lib/settings"
+import { getSettings, saveSetting, settingsSchema } from "@/lib/settings"
 import { failureResponse } from "@/lib/server-errors"
 
 const body = z.discriminatedUnion("key", [
@@ -31,7 +32,14 @@ export async function POST(request: Request) {
   }
   try {
     // Narrowed by the discriminated union above.
+    const before = (await getSettings())[parsed.data.key]
     await saveSetting(parsed.data.key, parsed.data.value as never, user.id)
+    await audit(user, "setting_changed", {
+      targetType: "setting",
+      targetId: parsed.data.key,
+      before,
+      after: parsed.data.value,
+    })
     return NextResponse.json({ ok: true })
   } catch (err) {
     return failureResponse(err)

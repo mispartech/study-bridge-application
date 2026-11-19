@@ -1,4 +1,6 @@
 import { NextResponse } from "next/server"
+import { roleOf } from "@/lib/auth/roles"
+import { audit } from "@/lib/activity/audit"
 import { z } from "zod"
 
 import { staffFromRequest } from "@/lib/auth/admin"
@@ -25,6 +27,12 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     const role = parsed.data.role === "student" ? null : parsed.data.role
     const { error } = await db.auth.admin.updateUserById(id, { app_metadata: { role } })
     if (error) throw error
+    await audit(user, "role_changed", {
+      targetType: "user",
+      targetId: id,
+      before: { role: roleOf(data.user) ?? "student" },
+      after: { role: parsed.data.role },
+    })
     return NextResponse.json({ ok: true })
   } catch (err) {
     return failureResponse(err)

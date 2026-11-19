@@ -5,6 +5,49 @@ export type Json = string | number | boolean | null | { [key: string]: Json | un
 export type Database = {
   public: {
     Tables: {
+      activity_event: {
+        Row: {
+          actor_id: string | null
+          actor_type: Database["public"]["Enums"]["actor_type"]
+          event: string
+          id: number
+          ip_hash: string | null
+          occurred_at: string
+          properties: NonNullable<Json>
+          session_id: string | null
+          target_id: string | null
+          target_type: string | null
+          user_agent_family: string | null
+        }
+        ComputedFields: never
+        Insert: {
+          actor_id?: string | null
+          actor_type: Database["public"]["Enums"]["actor_type"]
+          event: string
+          id?: never
+          ip_hash?: string | null
+          occurred_at?: string
+          properties?: NonNullable<Json>
+          session_id?: string | null
+          target_id?: string | null
+          target_type?: string | null
+          user_agent_family?: string | null
+        }
+        Update: {
+          actor_id?: string | null
+          actor_type?: Database["public"]["Enums"]["actor_type"]
+          event?: string
+          id?: never
+          ip_hash?: string | null
+          occurred_at?: string
+          properties?: NonNullable<Json>
+          session_id?: string | null
+          target_id?: string | null
+          target_type?: string | null
+          user_agent_family?: string | null
+        }
+        Relationships: []
+      }
       advisor_daily_usage: {
         Row: {
           day: string
@@ -1177,6 +1220,46 @@ export type Database = {
         }
         Relationships: []
       }
+      staff_audit: {
+        Row: {
+          action: string
+          after: Json | null
+          before: Json | null
+          id: number
+          occurred_at: string
+          reason: string | null
+          staff_email: string | null
+          staff_id: string
+          target_id: string | null
+          target_type: string | null
+        }
+        ComputedFields: never
+        Insert: {
+          action: string
+          after?: Json | null
+          before?: Json | null
+          id?: never
+          occurred_at?: string
+          reason?: string | null
+          staff_email?: string | null
+          staff_id: string
+          target_id?: string | null
+          target_type?: string | null
+        }
+        Update: {
+          action?: string
+          after?: Json | null
+          before?: Json | null
+          id?: never
+          occurred_at?: string
+          reason?: string | null
+          staff_email?: string | null
+          staff_id?: string
+          target_id?: string | null
+          target_type?: string | null
+        }
+        Relationships: []
+      }
       student_profile: {
         Row: {
           accommodation_pref: Database["public"]["Enums"]["accommodation_type"] | null
@@ -1494,6 +1577,7 @@ export type Database = {
       }
     }
     Functions: {
+      anonymise_activity: { Args: { p_actor_id: string }; Returns: number }
       consume_advisor_message: {
         Args: { p_free_limit?: number; p_user_id: string }
         Returns: {
@@ -1531,6 +1615,7 @@ export type Database = {
         }
         Returns: string
       }
+      purge_activity_events: { Args: Record<PropertyKey, never>; Returns: number }
       rate_limit_window: { Args: { p_offset_seconds: number; p_window_seconds: number }; Returns: string }
       refund_advisor_message: { Args: { p_user_id: string }; Returns: number }
       refund_rate_limit: {
@@ -1541,6 +1626,7 @@ export type Database = {
     }
     Enums: {
       accommodation_type: "university_halls" | "private_studio" | "shared_flat" | "homestay" | "off_campus_shared"
+      actor_type: "anonymous" | "student" | "staff" | "system"
       confidence_level: "official" | "university_page" | "third_party" | "estimated"
       country_code: "UK" | "CA" | "US"
       degree_type: "MSc" | "MA" | "MEng" | "MBA" | "MRes" | "MPH" | "LLM" | "MPS" | "Other"
@@ -1678,6 +1764,7 @@ export const Constants = {
   public: {
     Enums: {
       accommodation_type: ["university_halls", "private_studio", "shared_flat", "homestay", "off_campus_shared"],
+      actor_type: ["anonymous", "student", "staff", "system"],
       confidence_level: ["official", "university_page", "third_party", "estimated"],
       country_code: ["UK", "CA", "US"],
       degree_type: ["MSc", "MA", "MEng", "MBA", "MRes", "MPH", "LLM", "MPS", "Other"],

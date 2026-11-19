@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server"
+import { recordActivity } from "@/lib/activity/record"
 
 import { serviceClient } from "@/lib/db/service"
 import { PROFILE_COOKIE } from "@/lib/match/profile-store"
@@ -42,6 +43,10 @@ export async function POST(request: Request) {
       .is("claimed_user_id", null)
     if (claimError) throw claimError
 
+    await recordActivity("report_link_opened", {
+      actor: { type: "student", id: link.user.id },
+      target: { type: "report", id },
+    })
     const { hashed_token, verification_type } = link.properties
     const response = back(
       origin,

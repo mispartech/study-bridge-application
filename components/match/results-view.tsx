@@ -7,6 +7,7 @@ import * as React from "react"
 
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
+import { logActivity } from "@/lib/activity/client"
 import { track } from "@/lib/analytics/track"
 import { CountryChips } from "@/components/match/country-chips"
 import type { CountryCode } from "@/lib/match/countries"
@@ -413,8 +414,12 @@ export function ResultsView({
       }).catch(() => null)
       if (controller.signal.aborted) return
       if (res?.ok) {
-        setLoaded((await res.json()) as MatchView)
-        if (first) track("results_viewed")
+        const next = (await res.json()) as MatchView
+        setLoaded(next)
+        if (first) {
+          track("results_viewed")
+          logActivity("results_viewed", { properties: { ranked: next.ranked.length + next.more.length } })
+        }
         setFailed(false)
       } else if (attemptsLeft > 0) {
         retry = setTimeout(() => void load(attemptsLeft - 1), RETRY_MS)
@@ -437,11 +442,15 @@ export function ResultsView({
       savedStore.set(on ? saved.filter((s) => s !== id) : [...saved, id])
       if (!on) {
         track("programme_saved")
+        logActivity("programme_saved", { target: { type: "programme", id } })
         router.push("/sign-in?reason=save&next=/discover")
       }
       return
     }
-    if (!on) track("programme_saved")
+    if (!on) {
+      track("programme_saved")
+      logActivity("programme_saved", { target: { type: "programme", id } })
+    }
     setShortlist(on ? saved.filter((s) => s !== id) : [...saved, id])
     void fetch("/api/shortlist", {
       method: on ? "DELETE" : "POST",
@@ -476,7 +485,13 @@ export function ResultsView({
         onSave={() => toggleSaved(c.id)}
         compared={compare.includes(c.id)}
         compareDisabled={!compare.includes(c.id) && compare.length >= MAX_COMPARE}
-        onCompare={() => setCompare((ids) => (ids.includes(c.id) ? ids.filter((id) => id !== c.id) : [...ids, c.id]))}
+        onCompare={() =>
+          setCompare((ids) => {
+            if (ids.includes(c.id)) return ids.filter((id) => id !== c.id)
+            logActivity("compare_used", { properties: { count: ids.length + 1 } })
+            return [...ids, c.id]
+          })
+        }
       />
     </m.li>
   )

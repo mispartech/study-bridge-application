@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server"
+import { audit } from "@/lib/activity/audit"
 import { z } from "zod"
 
 import { staffFromRequest } from "@/lib/auth/admin"
@@ -41,6 +42,11 @@ export async function POST(request: Request) {
     })
     if (auditError) throw auditError
     invalidateCatalogue()
+    await audit(user, "market_rate_entered", {
+      targetType: "fx_rate",
+      targetId: data.id,
+      after: { currency, rate, observed_on, source_url },
+    })
     return NextResponse.json({ ok: true })
   } catch (err) {
     return failureResponse(err)

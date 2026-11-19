@@ -1,4 +1,5 @@
 import { after, NextResponse } from "next/server"
+import { actorFor, recordActivity } from "@/lib/activity/record"
 import { z } from "zod"
 
 import { currentUser } from "@/lib/auth/server"
@@ -78,9 +79,14 @@ export async function POST(request: Request) {
       .single()
     if (error) throw error
     const origin = new URL(request.url).origin
-    after(() =>
-      deliverReport({ reportId: data.id, email, origin, profile: profile.data, result, view, catalogue, now })
-    )
+    after(async () => {
+      await recordActivity("report_emailed", {
+        actor: actorFor(user, client.deviceKey),
+        target: { type: "report", id: data.id },
+        properties: { reminders: parsed.data.reminders_consent, marketing: parsed.data.marketing_consent },
+      })
+      await deliverReport({ reportId: data.id, email, origin, profile: profile.data, result, view, catalogue, now })
+    })
     return withDeviceCookie(NextResponse.json({ ok: true }, { status: 202 }), client)
   } catch (err) {
     return failureResponse(err)

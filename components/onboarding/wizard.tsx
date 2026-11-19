@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation"
 import * as React from "react"
 
+import { logActivity } from "@/lib/activity/client"
 import { track } from "@/lib/analytics/track"
 import { CountryChips } from "@/components/match/country-chips"
 import type { CountryCode } from "@/lib/match/countries"
@@ -140,6 +141,7 @@ export function Wizard() {
 
   function advance() {
     track(`onboarding_step_${step + 1}`)
+    logActivity("wizard_step_completed", { properties: { step: step + 1 } })
     update({ step: step + 1 })
   }
 

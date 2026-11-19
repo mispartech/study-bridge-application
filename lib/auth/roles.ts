@@ -13,11 +13,12 @@ export type Permission =
   | "settings" // models, prices, limits, diagnostics
   | "ai" // AI usage and cost
   | "payments"
+  | "audit" // the staff audit log
 
 const GRANTS: Record<StaffRole, readonly Permission[]> = {
   support: ["users.read", "users.manage"],
   data_editor: ["content"],
-  admin: ["users.read", "users.manage", "content", "roles", "settings", "ai", "payments"],
+  admin: ["users.read", "users.manage", "content", "roles", "settings", "ai", "payments", "audit"],
 }
 
 export const ROLE_LABEL: Record<StaffRole | "student", string> = {

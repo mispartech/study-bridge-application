@@ -17,6 +17,7 @@ const LINKS: [href: string, label: string, permission: Permission][] = [
   ["/admin/estimates", "Flights and health", "content"],
   ["/admin/ai-usage", "AI usage", "ai"],
   ["/admin/settings", "Settings", "settings"],
+  ["/admin/audit", "Audit log", "audit"],
   ["/admin/diagnostics", "Diagnostics", "settings"],
 ]
 

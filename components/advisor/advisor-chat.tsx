@@ -6,6 +6,7 @@ import * as React from "react"
 
 import { useTurnstile } from "@/components/account/turnstile"
 import { IncludesEstimates } from "@/components/match/estimated-tag"
+import { Thumbs } from "@/components/match/feedback"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import type { ProgrammeCard, Source } from "@/lib/advisor/tools"
@@ -22,6 +23,8 @@ type Message = {
   sources: Source[]
   failed?: boolean
   checking?: boolean
+  /** Random id for feedback on this answer; never linked to the text, which isn't stored. */
+  id?: string
 }
 
 const STARTERS = [
@@ -144,7 +147,7 @@ export function AdvisorChat({
     setMessages((list) => [
       ...list,
       { role: "user", text: question, programmes: [], sources: [] },
-      { role: "assistant", text: "", programmes: [], sources: [] },
+      { role: "assistant", text: "", programmes: [], sources: [], id: crypto.randomUUID() },
     ])
     try {
       const token = anonymous ? await captcha.nextToken() : null
@@ -292,6 +295,9 @@ export function AdvisorChat({
               <p role="alert" className="text-sm text-danger-strong">
                 Something went wrong answering that. Please try again.
               </p>
+            )}
+            {m.role === "assistant" && m.id && m.text && !m.failed && !(busy && i === messages.length - 1) && (
+              <Thumbs label="Helpful?" target={{ type: "advisor_turn", id: m.id }} kind="advisor" />
             )}
           </li>
         ))}

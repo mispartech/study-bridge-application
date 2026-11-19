@@ -37,6 +37,8 @@ describe("schemas match the generated database types", () => {
       search_log: true,
       rate_limit: true,
       report: true,
+      activity_event: true,
+      staff_audit: true,
     }
     expect(Object.keys(rowSchemas).sort()).toEqual(Object.keys(tables).sort())
   })

@@ -4,6 +4,7 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import * as React from "react"
 
+import { logActivity } from "@/lib/activity/client"
 import { track } from "@/lib/analytics/track"
 
 import { Button } from "@/components/ui/button"
@@ -78,7 +79,9 @@ export function QuickMatch() {
       })
       captcha.reset() // a token works once
       if (!res.ok) throw new Error("match failed")
-      setView((await res.json()) as MatchView)
+      const result = (await res.json()) as MatchView
+      setView(result)
+      logActivity("quick_match_run", { properties: { results: Math.min(100, result.ranked.length) } })
       draftStore.set({
         ...draftStore.get(),
         field,

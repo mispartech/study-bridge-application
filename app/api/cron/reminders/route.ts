@@ -1,4 +1,5 @@
 import { timingSafeEqual } from "node:crypto"
+import { recordActivity } from "@/lib/activity/record"
 
 import { NextResponse } from "next/server"
 
@@ -83,7 +84,22 @@ export async function GET(request: Request) {
       .from("reminder_log")
       .upsert(reminder, { onConflict: "user_id,dedupe_key", ignoreDuplicates: true })
       .select("id")
-    if (claimed?.length && (await sendEmail({ subject, text }))) sent++
+    if (claimed?.length && (await sendEmail({ subject, text }))) {
+      sent++
+      await recordActivity("reminder_sent", {
+        actor: { type: "system" },
+        target: { type: "user", id: reminder.user_id },
+        properties: { kind: reminder.dedupe_key.startsWith("change") ? "change" : "deadline" },
+      })
+    }
   }
-  return NextResponse.json({ due: reminders.length, sent, expired_reports: expiredReports ?? 0 })
+  // Retention: activity older than 24 months goes (docs/SPEC_ACCESS_ADMIN.md, section 4).
+  const { data: purged, error: purgeError } = await db.rpc("purge_activity_events")
+  if (purgeError) console.error("activity purge failed:", purgeError.message)
+  return NextResponse.json({
+    due: reminders.length,
+    sent,
+    expired_reports: expiredReports ?? 0,
+    purged_activity: purged ?? 0,
+  })
 }

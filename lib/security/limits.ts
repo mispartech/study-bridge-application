@@ -28,6 +28,11 @@ export const LIMITS = {
     device: { bucket: "report:device", windowSeconds: DAY, limit: 3, offsetSeconds: LAGOS_OFFSET },
     ip: { bucket: "report:ip", windowSeconds: DAY, limit: 30, offsetSeconds: LAGOS_OFFSET },
   },
+  /** Activity events from browsers: generous, but enough to stop a script flooding the table. */
+  activity: {
+    device: { bucket: "activity:device", windowSeconds: HOUR, limit: 600 },
+    ip: { bucket: "activity:ip", windowSeconds: HOUR, limit: 6000 },
+  },
 } satisfies Record<string, { device: Limit; ip: Limit }>
 
 /** Spec: at most 2 reports a day to one email address. */

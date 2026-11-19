@@ -11,6 +11,7 @@ import { formatShort } from "@/lib/money"
 import { estimateCostUsd, getSettings } from "@/lib/settings"
 import { can, roleOf } from "@/lib/auth/roles"
 import { requireStaff } from "@/lib/auth/staff-page"
+import { audit } from "@/lib/activity/audit"
 
 const nf = new Intl.NumberFormat("en-GB")
 const time = (iso: string) => iso.slice(0, 16).replace("T", " ")
@@ -24,6 +25,7 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
   const { data: auth } = await db.auth.admin.getUserById(id)
   const user = auth?.user
   if (!user) notFound()
+  await audit(viewer.user, "user_viewed", { targetType: "user", targetId: user.id })
   const [usage, searches, shortlist, advisor, settings] = await Promise.all([
     db
       .from("ai_usage")

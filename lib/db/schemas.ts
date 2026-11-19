@@ -474,6 +474,33 @@ export const reportRow = z.object({
   expires_at: timestamp,
 })
 
+export const activityEventRow = z.object({
+  id: z.number().int(),
+  occurred_at: timestamp,
+  actor_type: z.enum(["anonymous", "student", "staff", "system"]),
+  actor_id: z.string().nullable(),
+  session_id: z.string().nullable(),
+  event: z.string().min(1),
+  target_type: z.string().nullable(),
+  target_id: z.string().nullable(),
+  properties: json,
+  ip_hash: z.string().nullable(),
+  user_agent_family: z.string().nullable(),
+})
+
+export const staffAuditRow = z.object({
+  id: z.number().int(),
+  occurred_at: timestamp,
+  staff_id: uuid,
+  staff_email: z.string().nullable(),
+  action: z.string().min(1),
+  target_type: z.string().nullable(),
+  target_id: z.string().nullable(),
+  before: z.json().nullable(),
+  after: z.json().nullable(),
+  reason: z.string().nullable(),
+})
+
 export const rowSchemas = {
   student_profile: studentProfileRow,
   shortlist: shortlistRow,
@@ -503,6 +530,8 @@ export const rowSchemas = {
   search_log: searchLogRow,
   rate_limit: rateLimitRow,
   report: reportRow,
+  activity_event: activityEventRow,
+  staff_audit: staffAuditRow,
 } as const
 
 export type TableName = keyof Database["public"]["Tables"]

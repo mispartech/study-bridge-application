@@ -1,4 +1,5 @@
 import { cookies } from "next/headers"
+import { recordActivity } from "@/lib/activity/record"
 import { NextResponse } from "next/server"
 import { z } from "zod"
 
@@ -113,6 +114,11 @@ export async function POST(request: Request) {
       refund: () => refundBoth(LIMITS.advisorAnonymous, client),
     }
   }
+  // Counts only: the message text is never stored.
+  await recordActivity("advisor_message", {
+    actor: user ? { type: "student", id: user.id } : { type: "anonymous", id: client.deviceKey },
+    properties: { anonymous: !user },
+  })
   return withDeviceCookie(stream(parsed.data.messages, turn), client)
 }
 
@@ -129,7 +135,13 @@ function stream(messages: z.infer<typeof body>["messages"], { ctx, shortlist, us
       try {
         const turn = advisorTurn(messages, ctx, shortlist, {
           userId: userId ?? undefined,
-          onGuard: (trigger) => logGuardTrigger(userId, trigger),
+          onGuard: (trigger) => {
+            void logGuardTrigger(userId, trigger)
+            void recordActivity("advisor_guard_triggered", {
+              actor: userId ? { type: "student", id: userId } : { type: "anonymous", id: null },
+              properties: { outcome: trigger.outcome },
+            })
+          },
         })
         for await (const event of turn) {
           if (event.type === "tool") {

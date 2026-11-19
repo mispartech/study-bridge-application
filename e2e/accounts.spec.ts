@@ -418,6 +418,18 @@ test.describe("admin console", () => {
       await expect(page.getByTestId("report-sent")).toBeVisible()
       await page.goto("/admin/reports")
       await expect(page.getByTestId("error-report").filter({ hasText: note })).toBeVisible()
+
+      // The approval is in the audit log, which nobody can change.
+      await page.goto("/admin/audit?action=record_approved")
+      await expect(page.getByTestId("audit-entry").filter({ hasText: item!.id.slice(0, 8) })).toBeVisible()
+      const { data: entry } = await admin
+        .from("staff_audit")
+        .select("id")
+        .eq("target_id", item!.id)
+        .eq("action", "record_approved")
+        .single()
+      const removed = await admin.from("staff_audit").delete().eq("id", entry!.id)
+      expect(removed.error?.message).toContain("append-only")
     } finally {
       const { data: row } = await admin
         .from("review_queue")
@@ -471,6 +483,37 @@ const reportToken = (id: string, purpose: "claim" | "unsubscribe") =>
     .update(`${purpose}:${id}`)
     .digest("base64url")
     .slice(0, 43)
+
+test("a student says why a match isn't for them; the reason is recorded and Undo restores it", async ({ page }) => {
+  const started = new Date().toISOString()
+  await page.context().addCookies([
+    { name: "sb-profile", value: encodeURIComponent(JSON.stringify(worked)), url: BASE },
+    { name: "sb-analytics", value: "1", url: BASE },
+  ])
+  await page.goto("/discover")
+  await expect(page.locator('[data-loaded="true"]')).toBeVisible({ timeout: 20_000 })
+  const card = page.getByTestId("match-card").first()
+  const title = (await card.getByRole("heading").first().textContent())!.trim()
+  await card.getByRole("button", { name: "Not for me" }).click()
+  await card.getByRole("button", { name: "Too expensive" }).click()
+  const dismissed = page.getByTestId("match-card-dismissed").first()
+  await expect(dismissed).toContainText("not for you (too expensive)")
+  await expect
+    .poll(
+      async () => {
+        const { data } = await admin
+          .from("activity_event")
+          .select("properties, target_type, actor_type")
+          .eq("event", "programme_dismissed")
+          .gte("occurred_at", started)
+        return data?.find((e) => (e.properties as { reason?: string }).reason === "too_expensive") ?? null
+      },
+      { timeout: 15_000 }
+    )
+    .toMatchObject({ target_type: "programme", actor_type: "anonymous" })
+  await dismissed.getByRole("button", { name: "Undo" }).click()
+  await expect(page.getByTestId("match-card").first()).toContainText(title)
+})
 
 test.describe("emailed report", () => {
   test("a visitor emails their report, and its link signs them in with their results", async ({ page }) => {

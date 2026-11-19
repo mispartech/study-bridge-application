@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server"
+import { recordActivity } from "@/lib/activity/record"
 import { z } from "zod"
 
 import { CONSENT_VERSION } from "@/lib/account/consent"
@@ -56,6 +57,13 @@ export async function POST(request: Request) {
         .upsert(rows, { onConflict: "student_id,programme_id", ignoreDuplicates: true })
       if (shortlistError) return NextResponse.json({ error: "Could not save your shortlist" }, { status: 500 })
     }
+  }
+  if (accepted && !existing?.consent_given_at) {
+    const fromReport = Object.keys(answers).length > 0 && !draft
+    await recordActivity("account_created", {
+      actor: { type: "student", id: user.id },
+      properties: { source: fromReport ? "report" : draft ? "save" : "direct" },
+    })
   }
   // Reaching here means consent is on record, which is what turns analytics on for this browser.
   const response = NextResponse.json({ ok: true })
