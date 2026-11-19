@@ -35,18 +35,19 @@ export const turnstileSiteKey = () => process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY
  */
 export function useTurnstile() {
   const siteKey = turnstileSiteKey()
-  const box = React.useRef<HTMLDivElement>(null)
+  // A callback ref: the widget renders once its box is on the page.
+  const [box, setBox] = React.useState<HTMLDivElement | null>(null)
   const widget = React.useRef<string | null>(null)
   const [token, setToken] = React.useState<string | null>(null)
   const [failed, setFailed] = React.useState(false)
 
   React.useEffect(() => {
-    if (!siteKey || !box.current) return
+    if (!siteKey || !box) return
     let cancelled = false
     loadScript()
       .then(() => {
-        if (cancelled || !box.current || !window.turnstile) return
-        widget.current = window.turnstile.render(box.current, {
+        if (cancelled || !window.turnstile) return
+        widget.current = window.turnstile.render(box, {
           sitekey: siteKey,
           callback: (value: string) => setToken(value),
           "expired-callback": () => setToken(null),
@@ -59,12 +60,12 @@ export function useTurnstile() {
       if (widget.current) window.turnstile?.remove(widget.current)
       widget.current = null
     }
-  }, [siteKey])
+  }, [siteKey, box])
 
   const reset = React.useCallback(() => {
     setToken(null)
     if (widget.current) window.turnstile?.reset(widget.current)
   }, [])
 
-  return { enabled: siteKey !== null, token, failed, reset, box }
+  return { enabled: siteKey !== null, token, failed, reset, box: setBox }
 }

@@ -27,7 +27,7 @@ export function SignInForm() {
   const [email, setEmail] = React.useState("")
   const [state, setState] = React.useState<"idle" | "sending" | "sent" | "failed">("idle")
   const callback = () => `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`
-  const captcha = useTurnstile()
+  const { box: captchaBox, ...captcha } = useTurnstile()
 
   async function sendLink(event: React.FormEvent) {
     event.preventDefault()
@@ -84,7 +84,7 @@ export function SignInForm() {
               className="h-11 w-full rounded-button border border-border bg-surface px-3 text-[0.9375rem]"
             />
           </label>
-          {captcha.enabled && <div ref={captcha.box} data-testid="turnstile" className="min-h-16" />}
+          {captcha.enabled && <div ref={captchaBox} data-testid="turnstile" className="min-h-16" />}
           {captcha.failed && (
             <p role="alert" className="text-sm text-danger-strong">
               The security check didn&apos;t load. Refresh the page, or use Google below.
