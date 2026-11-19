@@ -14,7 +14,7 @@ export const FIELD_CODES = [
   "mental_health",
 ] as const
 
-export const BANDS =["pass", "third", "lower_second", "upper_second", "first"] as const
+export const BANDS = ["pass", "third", "lower_second", "upper_second", "first"] as const
 export type Band = (typeof BANDS)[number]
 
 export const TERM_FIRST_MONTH = { fall: 8, winter: 1, spring: 3, summer: 6 } as const
@@ -58,10 +58,7 @@ export const matchProfile = z
     include_related_fields: z.boolean().default(false),
     /** Landing page: only field, CGPA and budget are known, so English and admission tests are checked later. */
     quick_match: z.boolean().default(false),
-    field: z
-      .enum(FIELD_CODES)
-      .nullable()
-      .default(null),
+    field: z.enum(FIELD_CODES).nullable().default(null),
     work_years: z.number().min(0).default(0),
     ielts: score(0, 9),
     toefl: score(0, 120),
