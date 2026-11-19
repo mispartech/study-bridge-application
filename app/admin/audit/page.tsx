@@ -18,6 +18,14 @@ const ACTIONS = [
   "estimate_entered",
   "error_report_updated",
   "export_downloaded",
+  "user_suspended",
+  "user_unsuspended",
+  "user_deleted",
+  "link_resent",
+  "report_resent",
+  "report_deleted",
+  "email_blocked",
+  "refund_issued",
 ] as const
 
 /** Every staff action, newest first. Read-only: the table itself refuses edits and deletes. */

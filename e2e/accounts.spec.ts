@@ -711,6 +711,65 @@ test.describe("staff roles and two-factor", () => {
     expect(audited?.reason).toBe("e2e erasure")
   })
 
+  test("an admin opens every console page, and blocking an address stops new reports to it", async ({ page }) => {
+    test.setTimeout(300_000)
+    const userId = await staffAccount(page, "admin")
+    await signInAs(page, userId)
+    for (const [path, heading] of [
+      ["/admin/emailed-reports", "Emailed reports"],
+      ["/admin/feedback", "Suggestions and feedback"],
+      ["/admin/advisor", "Advisor monitor"],
+      ["/admin/payments", "Payments"],
+      ["/admin/system", "System"],
+      ["/admin/audit", "Audit log"],
+    ] as const) {
+      await page.goto(path)
+      await expect(page.getByRole("heading", { name: heading, level: 1 })).toBeVisible({ timeout: 20_000 })
+    }
+
+    const email = `e2e-block-${crypto.randomUUID().slice(0, 8)}@example.com`
+    const emailHash = createHmac("sha256", process.env.IP_HASH_SALT || process.env.SUPABASE_SERVICE_ROLE_KEY!)
+      .update(`email:${email}`)
+      .digest("hex")
+      .slice(0, 32)
+    const { data: report } = await admin
+      .from("report")
+      .insert({
+        email,
+        email_hash: emailHash,
+        profile_snapshot: worked,
+        results_snapshot: {},
+        consent_text_version: "e2e",
+      })
+      .select("id")
+      .single()
+    try {
+      page.once("dialog", (d) => void d.accept())
+      await page.goto("/admin/emailed-reports")
+      const row = page.getByTestId("report-row").filter({ hasText: email })
+      await row.getByRole("button", { name: "Block address" }).click()
+      await expect(row).toHaveCount(0, { timeout: 20_000 })
+      const refused = await page.request.post("/api/report", {
+        data: { email, profile: worked, turnstile_token: "XXXX.DUMMY.TOKEN.XXXX" },
+      })
+      expect(refused.status()).toBe(422)
+    } finally {
+      await admin.from("report").delete().eq("id", report!.id)
+    }
+  })
+
+  test("support sees emailed reports but not payments or system", async ({ page }) => {
+    test.setTimeout(90_000)
+    const userId = await staffAccount(page, "support")
+    await signInAs(page, userId)
+    await page.goto("/admin/emailed-reports")
+    await expect(page.getByRole("heading", { name: "Emailed reports", level: 1 })).toBeVisible()
+    for (const path of ["/admin/payments", "/admin/system"]) {
+      await page.goto(path)
+      await expect(page).toHaveURL(/\/admin\?denied=1/)
+    }
+  })
+
   test("support can't export a user's data", async ({ page }) => {
     test.setTimeout(90_000)
     const userId = await staffAccount(page, "support")

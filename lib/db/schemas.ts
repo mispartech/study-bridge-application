@@ -409,8 +409,9 @@ export const paymentRow = z.object({
   reference: z.string(),
   amount_minor: minor,
   currency: z.string(),
-  status: z.enum(["pending", "paid", "failed"]),
+  status: z.enum(["pending", "paid", "failed", "refunded"]),
   paid_at: timestamp.nullable(),
+  refunded_at: timestamp.nullable(),
   ...timestamps,
 })
 
@@ -501,6 +502,21 @@ export const staffAuditRow = z.object({
   reason: z.string().nullable(),
 })
 
+export const blockedEmailRow = z.object({
+  email_hash: z.string().min(1),
+  created_at: timestamp,
+  created_by: uuid.nullable(),
+})
+
+export const cronRunRow = z.object({
+  id: z.number().int(),
+  job: z.string().min(1),
+  started_at: timestamp,
+  finished_at: timestamp.nullable(),
+  ok: z.boolean().nullable(),
+  summary: json,
+})
+
 export const rowSchemas = {
   student_profile: studentProfileRow,
   shortlist: shortlistRow,
@@ -532,6 +548,8 @@ export const rowSchemas = {
   report: reportRow,
   activity_event: activityEventRow,
   staff_audit: staffAuditRow,
+  blocked_email: blockedEmailRow,
+  cron_run: cronRunRow,
 } as const
 
 export type TableName = keyof Database["public"]["Tables"]

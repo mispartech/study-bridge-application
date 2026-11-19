@@ -38,6 +38,12 @@ export async function POST(request: Request) {
   const emailHash = hashKey(`email:${email}`)
   const client = clientFrom(request)
 
+  const { data: blocked } = await serviceClient()
+    .from("blocked_email")
+    .select("email_hash")
+    .eq("email_hash", emailHash)
+    .maybeSingle()
+  if (blocked) return NextResponse.json({ error: "We can't send reports to this address." }, { status: 422 })
   const human = await verifyTurnstile(parsed.data.turnstile_token, clientIp(request.headers))
   if (!human) return NextResponse.json({ error: "Security check failed. Refresh and try again." }, { status: 403 })
   const [visitor, address] = await Promise.all([hitBoth(LIMITS.report, client), hit(REPORT_PER_EMAIL, emailHash)])

@@ -31,6 +31,39 @@ export const DATASETS: Record<string, Dataset> = {
       }))
     },
   },
+  reports: {
+    permission: "users.read",
+    columns: ["created_at", "email", "delivery_status", "claimed_at", "reminders_consent", "marketing_consent"],
+    rows: async (range) => {
+      const { data, error } = await serviceClient()
+        .from("report")
+        .select("created_at, email, delivery_status, claimed_at, reminders_consent, marketing_consent")
+        .gte("created_at", range.from.toISOString())
+        .lt("created_at", range.to.toISOString())
+        .order("created_at", { ascending: false })
+        .limit(10_000)
+      if (error) throw error
+      return data ?? []
+    },
+  },
+  feedback: {
+    permission: "overview",
+    columns: ["event", "programme_id", "reason", "count"],
+    rows: async (range) => {
+      const { data, error } = await serviceClient().rpc("activity_by_target", {
+        p_from: range.from.toISOString(),
+        p_to: range.to.toISOString(),
+        p_events: ["programme_saved", "programme_dismissed", "apply_clicked", "suggestion_feedback"],
+      })
+      if (error) throw error
+      return (data ?? []).map((r) => ({
+        event: r.event,
+        programme_id: r.target_id,
+        reason: r.reason ?? "",
+        count: Number(r.events),
+      }))
+    },
+  },
   audit: {
     permission: "audit",
     columns: ["occurred_at", "staff_email", "action", "target_type", "target_id", "reason", "before", "after"],

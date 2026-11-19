@@ -9,15 +9,21 @@ import { requireStaff } from "@/lib/auth/staff-page"
 export const metadata: Metadata = { title: "Admin", robots: { index: false, follow: false } }
 
 const LINKS: [href: string, label: string, permission: Permission][] = [
+  ["/admin", "Overview", "overview"],
   ["/admin/users", "Users", "users.read"],
+  ["/admin/emailed-reports", "Emailed reports", "users.read"],
+  ["/admin/feedback", "Suggestions and feedback", "overview"],
   ["/admin/review", "Review queue", "content"],
   ["/admin/reports", "Error reports", "content"],
   ["/admin/visa-rules", "Visa rules", "content"],
   ["/admin/fx", "Exchange rates", "content"],
   ["/admin/estimates", "Flights and health", "content"],
   ["/admin/ai-usage", "AI usage", "ai"],
+  ["/admin/advisor", "Advisor monitor", "ai"],
+  ["/admin/payments", "Payments", "payments"],
   ["/admin/settings", "Settings", "settings"],
   ["/admin/audit", "Audit log", "audit"],
+  ["/admin/system", "System", "settings"],
   ["/admin/diagnostics", "Diagnostics", "settings"],
 ]
 

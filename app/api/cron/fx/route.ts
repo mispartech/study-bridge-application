@@ -1,4 +1,5 @@
 import { timingSafeEqual } from "node:crypto"
+import { logCronRun } from "@/lib/admin/cron-log"
 
 import { NextResponse } from "next/server"
 
@@ -16,7 +17,9 @@ function authorised(request: Request) {
 /** Daily backstop. Matching also refreshes the rate whenever it's over an hour old. */
 export async function GET(request: Request) {
   if (!authorised(request)) return NextResponse.json({ error: "Unauthorised" }, { status: 401 })
+  const started = new Date()
   const result = await refreshReferenceRates()
   if (result === "refreshed") invalidateCatalogue()
+  await logCronRun("fx", started, result !== "failed", { result })
   return NextResponse.json({ result }, { status: result === "failed" ? 502 : 200 })
 }

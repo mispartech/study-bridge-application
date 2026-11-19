@@ -212,6 +212,25 @@ export type Database = {
           },
         ]
       }
+      blocked_email: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          email_hash: string
+        }
+        ComputedFields: never
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          email_hash: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          email_hash?: string
+        }
+        Relationships: []
+      }
       city_cost: {
         Row: {
           accommodation_type: Database["public"]["Enums"]["accommodation_type"]
@@ -343,6 +362,34 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      cron_run: {
+        Row: {
+          finished_at: string | null
+          id: number
+          job: string
+          ok: boolean | null
+          started_at: string
+          summary: NonNullable<Json>
+        }
+        ComputedFields: never
+        Insert: {
+          finished_at?: string | null
+          id?: never
+          job: string
+          ok?: boolean | null
+          started_at?: string
+          summary?: NonNullable<Json>
+        }
+        Update: {
+          finished_at?: string | null
+          id?: never
+          job?: string
+          ok?: boolean | null
+          started_at?: string
+          summary?: NonNullable<Json>
+        }
+        Relationships: []
       }
       error_report: {
         Row: {
@@ -651,6 +698,7 @@ export type Database = {
           id: string
           paid_at: string | null
           reference: string
+          refunded_at: string | null
           status: string
           updated_at: string
           user_id: string | null
@@ -663,6 +711,7 @@ export type Database = {
           id?: string
           paid_at?: string | null
           reference: string
+          refunded_at?: string | null
           status?: string
           updated_at?: string
           user_id?: string | null
@@ -674,6 +723,7 @@ export type Database = {
           id?: string
           paid_at?: string | null
           reference?: string
+          refunded_at?: string | null
           status?: string
           updated_at?: string
           user_id?: string | null
