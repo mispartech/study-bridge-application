@@ -1,7 +1,9 @@
 import Link from "next/link"
 import { connection } from "next/server"
 
+import { ApproveAllReady } from "@/components/admin/approve-all"
 import { Card } from "@/components/ui/card"
+import { isReady } from "@/lib/admin/approve"
 import { fieldChangeStats } from "@/lib/admin/field-changes"
 import { serviceClient } from "@/lib/db/service"
 
@@ -41,8 +43,10 @@ export default async function Page() {
     .order("id")
   const { data: reviewed } = await serviceClient().from("review_queue").select("field_changes").eq("status", "approved")
   const stats = fieldChangeStats(reviewed ?? [])
+  const ready = (data ?? []).filter(isReady).length
   return (
     <div className="flex flex-col gap-4">
+      <ApproveAllReady ready={ready} />
       <Card data-testid="field-change-stats" className="gap-2">
         <h2 className="font-heading text-base font-bold">How often reviewers change each field</h2>
         <p className="text-xs text-muted-foreground">Across {reviewed?.length ?? 0} approved records.</p>
