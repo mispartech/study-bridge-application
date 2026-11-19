@@ -7,6 +7,9 @@ import { matchProfile, rank } from "@/lib/match"
 import { currentUser, hasSessionCookie } from "@/lib/auth/server"
 import { presentResult } from "@/lib/match/present"
 import { logSearch, searchLogRow } from "@/lib/match/search-log"
+import { clientIp, LIMITS } from "@/lib/security/limits"
+import { clientFrom, hitBoth, withDeviceCookie } from "@/lib/security/rate-limit"
+import { verifyTurnstile } from "@/lib/security/turnstile"
 import { failureResponse } from "@/lib/server-errors"
 
 const QUICK_RESULTS = 3
@@ -17,9 +20,23 @@ export async function POST(request: Request) {
   if (!parsed.success) {
     return NextResponse.json({ error: "Invalid profile", issues: z.treeifyError(parsed.error) }, { status: 400 })
   }
+  const quick = parsed.data.quick_match
+  const client = clientFrom(request)
+  const token = (body as { turnstile_token?: unknown }).turnstile_token
   const demoMode = demoModeEnabled()
-  const catalogue = await loadCatalogue(demoMode).catch((err: unknown) => failureResponse(err))
+  // The limit, the bot check and the catalogue load run side by side, so protection adds no wait.
+  const [limit, human, catalogue] = await Promise.all([
+    hitBoth(quick ? LIMITS.quickMatch : LIMITS.match, client),
+    quick ? verifyTurnstile(token, clientIp(request.headers)) : Promise.resolve(true),
+    loadCatalogue(demoMode).catch((err: unknown) => failureResponse(err)),
+  ])
+  if (!limit.allowed) {
+    const res = NextResponse.json({ error: "Too many searches. Try again in a little while." }, { status: 429 })
+    return withDeviceCookie(res, client)
+  }
+  if (!human) return NextResponse.json({ error: "Security check failed. Refresh and try again." }, { status: 403 })
   if (catalogue instanceof NextResponse) return catalogue
+
   const now = new Date()
   const result = rank(parsed.data, catalogue, { now, demoMode })
   const view = presentResult(result, parsed.data, catalogue, now)
@@ -30,17 +47,20 @@ export async function POST(request: Request) {
     const user = signedIn ? await currentUser().catch(() => null) : null
     await logSearch(searchLogRow(parsed.data, view, user?.id ?? null))
   })
-  if (!parsed.data.quick_match) return NextResponse.json(view)
+  if (!quick) return withDeviceCookie(NextResponse.json(view), client)
   // The landing page shows 3 results, and every byte counts on its first visit.
   const { ranked, near_misses } = view
   const chosen = parsed.data.preferred_countries
-  return NextResponse.json({
-    ...view,
-    ranked: inCountries(ranked, chosen).slice(0, QUICK_RESULTS),
-    near_misses: inCountries(near_misses, chosen).slice(0, QUICK_RESULTS),
-    hidden_by_country: ranked.length - inCountries(ranked, chosen).length,
-    more: [],
-    restricted: [],
-    needs_english: [],
-  })
+  return withDeviceCookie(
+    NextResponse.json({
+      ...view,
+      ranked: inCountries(ranked, chosen).slice(0, QUICK_RESULTS),
+      near_misses: inCountries(near_misses, chosen).slice(0, QUICK_RESULTS),
+      hidden_by_country: ranked.length - inCountries(ranked, chosen).length,
+      more: [],
+      restricted: [],
+      needs_english: [],
+    }),
+    client
+  )
 }

@@ -449,6 +449,13 @@ export const searchLogRow = z.object({
   data_confidence: z.number().int().min(0).max(100).nullable(),
 })
 
+export const rateLimitRow = z.object({
+  bucket: z.string().min(1),
+  key_hash: z.string().min(1),
+  window_start: timestamp,
+  hits: z.number().int().nonnegative(),
+})
+
 export const rowSchemas = {
   student_profile: studentProfileRow,
   shortlist: shortlistRow,
@@ -476,6 +483,7 @@ export const rowSchemas = {
   explanation_cache: explanationCacheRow,
   app_setting: appSettingRow,
   search_log: searchLogRow,
+  rate_limit: rateLimitRow,
 } as const
 
 export type TableName = keyof Database["public"]["Tables"]

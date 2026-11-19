@@ -712,6 +712,28 @@ export type Database = {
           },
         ]
       }
+      rate_limit: {
+        Row: {
+          bucket: string
+          hits: number
+          key_hash: string
+          window_start: string
+        }
+        ComputedFields: never
+        Insert: {
+          bucket: string
+          hits?: number
+          key_hash: string
+          window_start: string
+        }
+        Update: {
+          bucket?: string
+          hits?: number
+          key_hash?: string
+          window_start?: string
+        }
+        Relationships: []
+      }
       reminder_log: {
         Row: {
           dedupe_key: string
@@ -1427,6 +1449,19 @@ export type Database = {
         }[]
       }
       current_student_id: { Args: Record<PropertyKey, never>; Returns: string }
+      hit_rate_limit: {
+        Args: {
+          p_bucket: string
+          p_key_hash: string
+          p_limit: number
+          p_offset_seconds?: number
+          p_window_seconds: number
+        }
+        Returns: {
+          allowed: boolean
+          hits: number
+        }[]
+      }
       host_matches_domains: { Args: { domains: string[]; host: string }; Returns: boolean }
       publish_review_item: {
         Args: {
@@ -1441,7 +1476,12 @@ export type Database = {
         }
         Returns: string
       }
+      rate_limit_window: { Args: { p_offset_seconds: number; p_window_seconds: number }; Returns: string }
       refund_advisor_message: { Args: { p_user_id: string }; Returns: number }
+      refund_rate_limit: {
+        Args: { p_bucket: string; p_key_hash: string; p_offset_seconds?: number; p_window_seconds: number }
+        Returns: number
+      }
       url_host: { Args: { url: string }; Returns: string }
     }
     Enums: {

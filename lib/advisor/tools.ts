@@ -54,7 +54,8 @@ export type AdvisorContext = {
   profile: MatchProfile
   catalogue: Catalogue
   options: MatchOptions
-  addToShortlist: (programmeId: string) => Promise<"added" | "limit" | "no_profile" | "error">
+  /** "sign_in_required" for anonymous visitors: saving needs a free account. */
+  addToShortlist: (programmeId: string) => Promise<"added" | "limit" | "no_profile" | "error" | "sign_in_required">
 }
 
 const isStale = (lastVerifiedAt: string, now: Date) =>

@@ -146,8 +146,10 @@ export function Wizard() {
   async function finish() {
     track(`onboarding_step_${step + 1}`)
     saveProfile(toMatchProfile(draft, new Date()), completeness(draft))
+    // Value before account: results come first. The answers stay in this browser and move into an
+    // account if the student signs up later (when saving, emailing the report or using the advisor).
     if (!hasSession()) {
-      router.push("/sign-in?reason=wizard&next=/discover")
+      router.push("/discover")
       return
     }
     const res = await fetch("/api/account/import", {

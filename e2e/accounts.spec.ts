@@ -1,4 +1,6 @@
 import { createClient } from "@supabase/supabase-js"
+import { createHmac } from "node:crypto"
+
 import { expect, test, type Page } from "@playwright/test"
 
 process.loadEnvFile(".env.local")
@@ -51,21 +53,19 @@ test.describe("asking for an account only when it's needed", () => {
   test("quick match stays open to everyone", async ({ page }) => {
     await page.goto("/")
     await page.getByRole("button", { name: "See my matches" }).click()
-    await expect(page.getByTestId("quick-result").first()).toBeVisible()
+    // A tap right after the page opens waits for the bot check's first token.
+    await expect(page.getByTestId("quick-result").first()).toBeVisible({ timeout: 15_000 })
     await expect(page).toHaveURL(/\/$/)
   })
 
-  test("the advisor asks for sign-up, and the form confirms the link", async ({ page }) => {
-    await page.route("**/auth/v1/otp*", (route) => route.fulfill({ status: 200, json: {} }))
-    await page.goto("/advisor")
-    await expect(page).toHaveURL(/\/sign-in\?reason=advisor/)
+  test("the sign-in form sends a link with a security token", async ({ page }) => {
     let captchaToken: string | undefined
-    await page.unroute("**/auth/v1/otp*")
     await page.route("**/auth/v1/otp*", async (route) => {
       captchaToken = (route.request().postDataJSON() as { gotrue_meta_security?: { captcha_token?: string } })
         .gotrue_meta_security?.captcha_token
       await route.fulfill({ status: 200, json: {} })
     })
+    await page.goto("/sign-in?reason=advisor&next=/advisor")
     await page.getByLabel("Email").fill("student@example.com")
     await expect(page.getByRole("button", { name: /email/i })).toBeEnabled({ timeout: 20_000 })
     await page.getByRole("button", { name: /email/i }).click()
@@ -73,11 +73,47 @@ test.describe("asking for an account only when it's needed", () => {
     expect(captchaToken).toBeTruthy()
   })
 
-  test("the advisor API refuses visitors with no session", async ({ request }) => {
-    const res = await request.post("/api/advisor", {
-      data: { messages: [{ role: "user", content: "Hello" }] },
-    })
-    expect(res.status()).toBe(401)
+  test("the advisor asks a visitor with no profile to run a quick match first", async ({ page, request }) => {
+    await page.goto("/advisor")
+    await expect(page).toHaveURL(/\/advisor$/)
+    await expect(page.getByRole("link", { name: "Start a quick match" })).toBeVisible()
+    const res = await request.post("/api/advisor", { data: { messages: [{ role: "user", content: "Hello" }] } })
+    expect(res.status()).toBe(409)
+  })
+
+  test("an anonymous visitor gets free messages, then an offer of a free account", async ({ page }) => {
+    const device = crypto.randomUUID()
+    const keyHash = createHmac("sha256", process.env.IP_HASH_SALT || process.env.SUPABASE_SERVICE_ROLE_KEY!)
+      .update(`device:${device}`)
+      .digest("hex")
+      .slice(0, 32)
+    const { data: window } = await admin.rpc("rate_limit_window", { p_window_seconds: 86_400, p_offset_seconds: 3600 })
+    // Both of today's free messages already used on this device.
+    await admin
+      .from("rate_limit")
+      .insert({ bucket: "advisor_anon:device", key_hash: keyHash, window_start: window!, hits: 2 })
+    try {
+      await page.context().addCookies([
+        { name: "sb-profile", value: encodeURIComponent(JSON.stringify(worked)), url: BASE },
+        { name: "sb-device", value: device, url: BASE },
+      ])
+      await page.goto("/advisor")
+      await expect(page.getByTestId("messages-left")).toHaveText("0 of 2 messages left today")
+      await expect(page.getByTestId("limit-message")).toContainText("Create a free account for 5 a day")
+      await expect(page.getByLabel("Your question")).toHaveCount(0)
+      // The server enforces it too: a request past the limit is refused.
+      const blocked = await page.request.post("/api/advisor", {
+        data: { messages: [{ role: "user", content: "Hello" }], turnstile_token: "XXXX.DUMMY.TOKEN.XXXX" },
+      })
+      expect(blocked.status()).toBe(429)
+      expect(await blocked.json()).toMatchObject({ anonymous: true, limit: 2 })
+      await expect(page.getByRole("link", { name: "Create a free account" })).toHaveAttribute(
+        "href",
+        "/sign-in?reason=advisor&next=/advisor"
+      )
+    } finally {
+      await admin.from("rate_limit").delete().eq("key_hash", keyHash)
+    }
   })
 
   test("an off-site next link stays on this site", async ({ page }) => {
@@ -280,7 +316,7 @@ test.describe("analytics follow consent", () => {
     await page.goto("/")
     await page.waitForLoadState("networkidle")
     await page.getByRole("button", { name: "See my matches" }).click()
-    await expect(page.getByTestId("quick-result").first()).toBeVisible()
+    await expect(page.getByTestId("quick-result").first()).toBeVisible({ timeout: 15_000 })
     await page
       .context()
       .addCookies([{ name: "sb-profile", value: encodeURIComponent(JSON.stringify(worked)), url: BASE }])

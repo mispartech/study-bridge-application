@@ -15,6 +15,8 @@ import { FIELDS, nextCycle } from "@/lib/match/labels"
 import type { MatchView } from "@/lib/match/present"
 import { formatShort } from "@/lib/money"
 
+import { useTurnstile } from "@/components/account/turnstile"
+
 import { BudgetChip } from "./card-parts"
 import { CountryChips } from "./country-chips"
 
@@ -34,6 +36,18 @@ export function QuickMatch() {
   const [view, setView] = React.useState<(MatchView & { hidden_by_country?: number }) | null>(null)
   const [loading, setLoading] = React.useState(false)
   const [failed, setFailed] = React.useState(false)
+  // Invisible bot check. It loads once the page is idle (or the form is touched), so the first paint stays
+  // fast and a token is usually ready by the time the student taps.
+  const { box: captchaBox, ...captcha } = useTurnstile({ invisible: true, lazy: true })
+  const startCaptcha = captcha.start
+  React.useEffect(() => {
+    if ("requestIdleCallback" in window) {
+      const id = window.requestIdleCallback(startCaptcha, { timeout: 3000 })
+      return () => window.cancelIdleCallback(id)
+    }
+    const id = setTimeout(startCaptcha, 1500)
+    return () => clearTimeout(id)
+  }, [startCaptcha])
 
   async function submit(event: React.FormEvent) {
     event.preventDefault()
@@ -45,6 +59,7 @@ export function QuickMatch() {
     setLoading(true)
     setFailed(false)
     try {
+      const token = await captcha.nextToken()
       const res = await fetch("/api/match", {
         method: "POST",
         headers: { "content-type": "application/json" },
@@ -58,8 +73,10 @@ export function QuickMatch() {
           target_cycle: nextCycle(new Date()),
           accommodation_pref: "university_halls", // same basis as the full results, so prices match
           preferred_countries: chosen,
+          ...(token && { turnstile_token: token }),
         }),
       })
+      captcha.reset() // a token works once
       if (!res.ok) throw new Error("match failed")
       setView((await res.json()) as MatchView)
       draftStore.set({
@@ -83,7 +100,13 @@ export function QuickMatch() {
   return (
     <div className="flex flex-col gap-4">
       <Card className="gap-3">
-        <form onSubmit={submit} className="flex flex-col gap-3" aria-label="Quick match">
+        <form
+          onSubmit={submit}
+          onFocus={captcha.start}
+          onPointerDown={captcha.start}
+          className="flex flex-col gap-3"
+          aria-label="Quick match"
+        >
           <label className="flex flex-col gap-1 text-sm font-medium">
             What do you want to study?
             <select className={control} value={field} onChange={(e) => setField(e.target.value)}>
@@ -129,12 +152,18 @@ export function QuickMatch() {
             onChange={setCountries}
             nationality={QUICK_NATIONALITY}
           />
+          {captcha.enabled && <div ref={captchaBox} data-testid="turnstile" />}
           <Button type="submit" variant="accent" size="lg" block loading={loading}>
             See my matches
           </Button>
           {failed && (
             <p role="alert" className="text-sm text-danger-strong">
               We couldn&apos;t run that match. Check your CGPA and budget, then try again.
+            </p>
+          )}
+          {captcha.failed && (
+            <p role="alert" className="text-sm text-danger-strong">
+              The security check didn&apos;t load. Refresh the page and try again.
             </p>
           )}
         </form>

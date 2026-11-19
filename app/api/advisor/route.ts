@@ -1,3 +1,4 @@
+import { cookies } from "next/headers"
 import { NextResponse } from "next/server"
 import { z } from "zod"
 
@@ -5,12 +6,19 @@ import { rowToProfile } from "@/lib/account/profile-row"
 import { addToShortlist } from "@/lib/account/shortlist-server"
 import { logGuardTrigger } from "@/lib/advisor/guard-log"
 import { advisorTurn } from "@/lib/advisor/run"
+import type { AdvisorContext } from "@/lib/advisor/tools"
 import { consumeAdvisorMessage, refundAdvisorMessage } from "@/lib/ai/advisor-quota"
 import { supabaseServer } from "@/lib/auth/server"
+import { parseProfileCookie } from "@/lib/match/draft"
 import { demoModeEnabled, loadCatalogue } from "@/lib/match/catalogue"
+import { PROFILE_COOKIE } from "@/lib/match/profile-store"
+import { clientIp, LIMITS } from "@/lib/security/limits"
+import { clientFrom, hitBoth, refundBoth, withDeviceCookie } from "@/lib/security/rate-limit"
+import { verifyTurnstile } from "@/lib/security/turnstile"
 
 const MAX_MESSAGE_CHARS = 2000
 const MAX_HISTORY = 12
+const ANONYMOUS_LIMIT = LIMITS.advisorAnonymous.device.limit
 
 const body = z.object({
   messages: z
@@ -25,8 +33,21 @@ const body = z.object({
     )
     .min(1)
     .max(MAX_HISTORY),
+  turnstile_token: z.string().max(2048).optional(),
 })
 
+type Turn = {
+  ctx: AdvisorContext
+  shortlist: { id: string; title: string }[]
+  userId: string | null
+  quota: { used: number; limit: number | null; anonymous: boolean }
+  refund: () => Promise<number>
+}
+
+/**
+ * One advisor turn, streamed as NDJSON. Signed-in students use their account quota. Anonymous visitors get
+ * 2 messages a day per device, behind a bot check, using the profile kept in their browser.
+ */
 export async function POST(request: Request) {
   const parsed = body.safeParse(await request.json().catch(() => null))
   const latest = parsed.data?.messages.at(-1)
@@ -37,44 +58,78 @@ export async function POST(request: Request) {
   const {
     data: { user },
   } = await supabase.auth.getUser()
-  if (!user) return NextResponse.json({ error: "Sign in first" }, { status: 401 })
-
-  const { data: row } = await supabase.from("student_profile").select("*").maybeSingle()
-  if (!row?.consent_given_at) return NextResponse.json({ error: "Consent needed" }, { status: 403 })
-
-  // The user id comes from the verified session, never the request, and the count happens in the database.
-  const quota = await consumeAdvisorMessage(user.id)
-  if (!quota.allowed) {
-    return NextResponse.json({ error: "Daily limit reached", used: quota.used, limit: quota.limit }, { status: 429 })
-  }
-
   const now = new Date()
   const demoMode = demoModeEnabled()
-  const catalogue = await loadCatalogue(demoMode)
-  const { data: saved } = await supabase.from("shortlist").select("programme_id")
-  const ids = (saved ?? []).map((s) => s.programme_id)
-  const shortlist = catalogue.programmes.filter((p) => ids.includes(p.id)).map((p) => ({ id: p.id, title: p.title }))
-  const ctx = {
-    profile: rowToProfile(row, now),
-    catalogue,
-    options: { now, demoMode },
-    addToShortlist: (programmeId: string) => addToShortlist(supabase, programmeId),
-  }
 
+  let turn: Turn
+  const client = clientFrom(request)
+  if (user) {
+    const { data: row } = await supabase.from("student_profile").select("*").maybeSingle()
+    if (!row?.consent_given_at) return NextResponse.json({ error: "Consent needed" }, { status: 403 })
+    // The user id comes from the verified session, never the request, and the count happens in the database.
+    const quota = await consumeAdvisorMessage(user.id)
+    if (!quota.allowed) {
+      return NextResponse.json({ error: "Daily limit reached", used: quota.used, limit: quota.limit }, { status: 429 })
+    }
+    const catalogue = await loadCatalogue(demoMode)
+    const { data: saved } = await supabase.from("shortlist").select("programme_id")
+    const ids = (saved ?? []).map((s) => s.programme_id)
+    turn = {
+      ctx: {
+        profile: rowToProfile(row, now),
+        catalogue,
+        options: { now, demoMode },
+        addToShortlist: (programmeId: string) => addToShortlist(supabase, programmeId),
+      },
+      shortlist: catalogue.programmes.filter((p) => ids.includes(p.id)).map((p) => ({ id: p.id, title: p.title })),
+      userId: user.id,
+      quota: { used: quota.used, limit: quota.limit, anonymous: false },
+      refund: () => refundAdvisorMessage(user.id),
+    }
+  } else {
+    const profile = parseProfileCookie((await cookies()).get(PROFILE_COOKIE)?.value)
+    if (!profile) return NextResponse.json({ error: "Profile needed" }, { status: 409 })
+    if (!(await verifyTurnstile(parsed.data.turnstile_token, clientIp(request.headers)))) {
+      return NextResponse.json({ error: "Security check failed. Refresh and try again." }, { status: 403 })
+    }
+    const limit = await hitBoth(LIMITS.advisorAnonymous, client)
+    if (!limit.allowed) {
+      const res = NextResponse.json(
+        { error: "Daily limit reached", used: ANONYMOUS_LIMIT, limit: ANONYMOUS_LIMIT, anonymous: true },
+        { status: 429 }
+      )
+      return withDeviceCookie(res, client)
+    }
+    turn = {
+      ctx: {
+        profile,
+        catalogue: await loadCatalogue(demoMode),
+        options: { now, demoMode },
+        addToShortlist: async () => "sign_in_required",
+      },
+      shortlist: [],
+      userId: null,
+      quota: { used: limit.deviceHits, limit: ANONYMOUS_LIMIT, anonymous: true },
+      refund: () => refundBoth(LIMITS.advisorAnonymous, client),
+    }
+  }
+  return withDeviceCookie(stream(parsed.data.messages, turn), client)
+}
+
+function stream(messages: z.infer<typeof body>["messages"], { ctx, shortlist, userId, quota, refund }: Turn) {
   const encoder = new TextEncoder()
   let open = true // False once the student leaves mid-answer.
   const send = (controller: ReadableStreamDefaultController<Uint8Array>, event: unknown) => {
     if (open) controller.enqueue(encoder.encode(`${JSON.stringify(event)}\n`))
   }
-
-  const stream = new ReadableStream<Uint8Array>({
+  const body = new ReadableStream<Uint8Array>({
     async start(controller) {
-      send(controller, { type: "quota", used: quota.used, limit: quota.limit })
+      send(controller, { type: "quota", ...quota })
       let failed = false
       try {
-        const turn = advisorTurn(parsed.data.messages, ctx, shortlist, {
-          userId: user.id,
-          onGuard: (trigger) => logGuardTrigger(user.id, trigger),
+        const turn = advisorTurn(messages, ctx, shortlist, {
+          userId: userId ?? undefined,
+          onGuard: (trigger) => logGuardTrigger(userId, trigger),
         })
         for await (const event of turn) {
           if (event.type === "tool") {
@@ -95,8 +150,8 @@ export async function POST(request: Request) {
       }
       // A failed model call doesn't use up one of the student's messages.
       if (failed) {
-        const used = await refundAdvisorMessage(user.id).catch(() => quota.used)
-        send(controller, { type: "quota", used, limit: quota.limit })
+        const used = await refund().catch(() => quota.used)
+        send(controller, { type: "quota", ...quota, used })
       }
       if (open) controller.close()
     },
@@ -104,5 +159,5 @@ export async function POST(request: Request) {
       open = false
     },
   })
-  return new Response(stream, { headers: { "content-type": "application/x-ndjson" } })
+  return new Response(body, { headers: { "content-type": "application/x-ndjson" } })
 }

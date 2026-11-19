@@ -36,7 +36,7 @@ test.describe("landing quick match", () => {
   test("shows 3 live results before sign-up", async ({ page }) => {
     await page.goto("/")
     await page.getByRole("button", { name: "See my matches" }).click()
-    await expect(page.getByTestId("quick-result")).toHaveCount(3)
+    await expect(page.getByTestId("quick-result")).toHaveCount(3, { timeout: 15_000 })
     await expect(page.getByRole("link", { name: "Get your full matches" })).toBeVisible()
     await noOverflow(page)
     await noViolations(page)
@@ -45,7 +45,7 @@ test.describe("landing quick match", () => {
     await page.goto("/")
     await page.getByLabel("Total budget, in millions of naira").fill("20")
     await page.getByRole("button", { name: "See my matches" }).click()
-    await expect(page.getByTestId("quick-result").first()).toContainText("over your budget")
+    await expect(page.getByTestId("quick-result").first()).toContainText("over your budget", { timeout: 15_000 })
   })
 })
 
@@ -85,8 +85,7 @@ test.describe("onboarding wizard", () => {
     await expect(page.getByTestId("step-6")).toBeVisible()
     await page.getByRole("button", { name: "See my matches" }).click()
 
-    await expect(page).toHaveURL(/\/sign-in\?reason=wizard/)
-    await page.getByRole("link", { name: "See my matches first" }).click()
+    // Value before account: the full results come straight away, with no sign-up step.
     await expect(page).toHaveURL(/\/discover$/)
     await expect(page.getByTestId("match-card").first()).toBeVisible()
   })
@@ -258,10 +257,12 @@ test.describe("country selection", () => {
 
   test("quick match keeps to the chosen countries, with a way back", async ({ page }) => {
     await page.goto("/")
-    await page.waitForLoadState("networkidle")
+    // Not "networkidle": the invisible bot check keeps a connection open.
+    await page.waitForLoadState("load")
     await page.getByRole("button", { name: "UK", exact: true }).click()
     await page.getByRole("button", { name: "See my matches" }).click()
-    await expect(page.getByTestId("quick-result").first()).toBeVisible()
+    // A tap right after the page opens waits for the bot check's first token.
+    await expect(page.getByTestId("quick-result").first()).toBeVisible({ timeout: 15_000 })
     await expect(page.getByTestId("quick-result").filter({ hasText: "UK" })).toHaveCount(0)
     await page.getByTestId("show-other-countries").click()
     await expect(page.getByRole("button", { name: "UK", exact: true })).toHaveAttribute("aria-pressed", "true")
