@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 
 import { APPROVAL_ORDER, approveItem, isReady } from "@/lib/admin/approve"
-import { adminFromRequest } from "@/lib/auth/admin"
+import { staffFromRequest } from "@/lib/auth/admin"
 import { serviceClient } from "@/lib/db/service"
 import { invalidateCatalogue } from "@/lib/match/catalogue"
 import { failureResponse } from "@/lib/server-errors"
@@ -11,7 +11,7 @@ import { failureResponse } from "@/lib/server-errors"
  * city costs and health plans find their university. Anything that fails is left pending with the reason.
  */
 export async function POST() {
-  const { user, denied } = await adminFromRequest()
+  const { user, denied } = await staffFromRequest("content")
   if (denied) return denied
   try {
     const { data, error } = await serviceClient()

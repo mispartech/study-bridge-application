@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/card"
 import { isReady } from "@/lib/admin/approve"
 import { fieldChangeStats } from "@/lib/admin/field-changes"
 import { serviceClient } from "@/lib/db/service"
+import { requireStaff } from "@/lib/auth/staff-page"
 
 type Proposed = {
   university?: { name?: string } | null
@@ -35,6 +36,7 @@ const GROUPS = [
 
 export default async function Page() {
   await connection()
+  await requireStaff("content")
   const { data } = await serviceClient()
     .from("review_queue")
     .select("id, proposed, reason, created_at, table_name")

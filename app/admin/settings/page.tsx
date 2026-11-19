@@ -6,6 +6,7 @@ import { FREE_ADVISOR_MESSAGES_PER_DAY } from "@/lib/ai/advisor-quota"
 import { AI_CONFIG } from "@/lib/ai/config"
 import { demoModeEnabled } from "@/lib/match/catalogue"
 import { AI_TASKS, getSettings, MODEL_CHOICES } from "@/lib/settings"
+import { requireStaff } from "@/lib/auth/staff-page"
 
 /** Names only: the page shows whether each is set, never its value. */
 const ENV_NAMES = [
@@ -26,6 +27,7 @@ const ENV_NAMES = [
 
 export default async function Page() {
   await connection()
+  await requireStaff("settings")
   const settings = await getSettings()
   const defaults = Object.fromEntries(AI_TASKS.map((t) => [t, AI_CONFIG[t]]))
   const priced = [...new Set([...MODEL_CHOICES, ...Object.values(defaults).map((r) => `${r.provider}:${r.model}`)])]

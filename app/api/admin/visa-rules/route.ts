@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import { z } from "zod"
 
-import { adminFromRequest } from "@/lib/auth/admin"
+import { staffFromRequest } from "@/lib/auth/admin"
 import { confidenceLevel, countryCode, visaRuleType } from "@/lib/db/schemas"
 import { serviceClient } from "@/lib/db/service"
 import { invalidateCatalogue } from "@/lib/match/catalogue"
@@ -22,7 +22,7 @@ const edited = fields.extend({ id: z.uuid() })
 const stamp = () => ({ last_verified_at: new Date().toISOString() })
 
 export async function POST(request: Request) {
-  const { denied } = await adminFromRequest()
+  const { denied } = await staffFromRequest("content")
   if (denied) return denied
   const parsed = created.safeParse(await request.json().catch(() => null))
   if (!parsed.success) return NextResponse.json({ error: "Check the form and try again" }, { status: 400 })
@@ -39,7 +39,7 @@ export async function POST(request: Request) {
 }
 
 export async function PATCH(request: Request) {
-  const { denied } = await adminFromRequest()
+  const { denied } = await staffFromRequest("content")
   if (denied) return denied
   const parsed = edited.safeParse(await request.json().catch(() => null))
   if (!parsed.success) return NextResponse.json({ error: "Check the form and try again" }, { status: 400 })

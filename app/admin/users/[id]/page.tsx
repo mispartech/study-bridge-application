@@ -2,13 +2,15 @@ import Link from "next/link"
 import { notFound } from "next/navigation"
 import { connection } from "next/server"
 
-import { RoleToggle } from "@/components/admin/role-toggle"
+import { RoleSelect } from "@/components/admin/role-select"
 import { Card } from "@/components/ui/card"
 import { formatUsd, totals } from "@/lib/admin/users"
 import { serviceClient } from "@/lib/db/service"
 import { fieldLabel } from "@/lib/match/labels"
 import { formatShort } from "@/lib/money"
 import { estimateCostUsd, getSettings } from "@/lib/settings"
+import { can, roleOf } from "@/lib/auth/roles"
+import { requireStaff } from "@/lib/auth/staff-page"
 
 const nf = new Intl.NumberFormat("en-GB")
 const time = (iso: string) => iso.slice(0, 16).replace("T", " ")
@@ -16,6 +18,7 @@ const RECENT = 50
 
 export default async function Page({ params }: { params: Promise<{ id: string }> }) {
   await connection()
+  const viewer = await requireStaff("users.read")
   const { id } = await params
   const db = serviceClient()
   const { data: auth } = await db.auth.admin.getUserById(id)
@@ -58,7 +61,11 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
           Last {calls.length} AI calls: {nf.format(sum.input_tokens + sum.output_tokens)} tokens,{" "}
           {formatUsd(sum.cost_usd)}
         </p>
-        <RoleToggle userId={user.id} admin={user.app_metadata?.role === "admin"} />
+        <RoleSelect
+          userId={user.id}
+          role={roleOf(user) ?? "student"}
+          editable={can(viewer.user, "roles") && viewer.user.id !== user.id}
+        />
       </Card>
 
       <Card className="gap-2">

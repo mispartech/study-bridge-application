@@ -5,6 +5,7 @@ import { Card } from "@/components/ui/card"
 import { formatUsd, summariseUsers } from "@/lib/admin/users"
 import { serviceClient } from "@/lib/db/service"
 import { getSettings } from "@/lib/settings"
+import { requireStaff } from "@/lib/auth/staff-page"
 
 const DAYS = 30
 const nf = new Intl.NumberFormat("en-GB")
@@ -14,6 +15,7 @@ const daysAgo = (days: number) => new Date(Date.now() - days * 86_400_000).toISO
 
 export default async function Page() {
   await connection()
+  await requireStaff("users.read")
   const db = serviceClient()
   const since = daysAgo(DAYS)
   const [{ data: auth, error }, usage, searches, plans, settings] = await Promise.all([

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import { z } from "zod"
 
-import { adminFromRequest } from "@/lib/auth/admin"
+import { staffFromRequest } from "@/lib/auth/admin"
 import { serviceClient } from "@/lib/db/service"
 import { invalidateCatalogue } from "@/lib/match/catalogue"
 import { failureResponse } from "@/lib/server-errors"
@@ -15,7 +15,7 @@ const body = z.object({
 
 /** A weekly market rate, typed in by an admin. Each one is audited: who, when, and from where. */
 export async function POST(request: Request) {
-  const { user, denied } = await adminFromRequest()
+  const { user, denied } = await staffFromRequest("content")
   if (denied) return denied
   const parsed = body.safeParse(await request.json().catch(() => null))
   if (!parsed.success) return NextResponse.json({ error: "Check the rate, date and source" }, { status: 400 })

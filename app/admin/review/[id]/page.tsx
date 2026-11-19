@@ -3,9 +3,11 @@ import { connection } from "next/server"
 
 import { ReviewEditor } from "@/components/admin/review-editor"
 import { serviceClient } from "@/lib/db/service"
+import { requireStaff } from "@/lib/auth/staff-page"
 
 export default async function Page({ params }: { params: Promise<{ id: string }> }) {
   await connection()
+  await requireStaff("content")
   const { id } = await params
   const { data: item } = await serviceClient().from("review_queue").select("*").eq("id", id).maybeSingle()
   if (!item) notFound()

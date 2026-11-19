@@ -2,7 +2,7 @@ import { NextResponse } from "next/server"
 import { z } from "zod"
 
 import { PROVIDER_KEY_ENV } from "@/lib/ai/config"
-import { adminFromRequest } from "@/lib/auth/admin"
+import { staffFromRequest } from "@/lib/auth/admin"
 import { saveSetting, settingsSchema } from "@/lib/settings"
 import { failureResponse } from "@/lib/server-errors"
 
@@ -14,7 +14,7 @@ const body = z.discriminatedUnion("key", [
 
 /** Saves one admin setting. A model can only be chosen when its provider's key is set on the server. */
 export async function POST(request: Request) {
-  const { user, denied } = await adminFromRequest()
+  const { user, denied } = await staffFromRequest("settings")
   if (denied) return denied
   const parsed = body.safeParse(await request.json().catch(() => null))
   if (!parsed.success) return NextResponse.json({ error: "Check the values and try again" }, { status: 400 })

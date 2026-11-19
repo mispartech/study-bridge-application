@@ -372,6 +372,7 @@ test.describe("admin console", () => {
     test.setTimeout(90_000) // two sign-ins and five pages
     const userId = await signIn(page, "/admin")
     await accept(page)
+    await expect(page).not.toHaveURL(/\/consent/, { timeout: 20_000 })
     await admin.auth.admin.updateUserById(userId, { app_metadata: { role: "admin" } })
     const run = userId.slice(0, 8)
     // A fresh session picks up the role.
@@ -438,6 +439,7 @@ test("an admin sees users, AI spend and settings, and can switch a model", async
   test.setTimeout(90_000)
   const userId = await signIn(page, "/admin")
   await accept(page)
+  await expect(page).not.toHaveURL(/\/consent/, { timeout: 20_000 })
   await admin.auth.admin.updateUserById(userId, { app_metadata: { role: "admin" } })
   await signInAs(page, userId)
   const { data: before } = await admin.from("app_setting").select("value").eq("key", "ai_models").maybeSingle()
@@ -445,7 +447,8 @@ test("an admin sees users, AI spend and settings, and can switch a model", async
     await page.goto("/admin/users")
     await expect(page.getByTestId("user-row").first()).toBeVisible()
     await page.goto(`/admin/users/${userId}`)
-    await expect(page.getByRole("button", { name: "Remove admin" })).toBeVisible()
+    // Your own role is shown, not editable, so the console always keeps an admin.
+    await expect(page.getByText("Role: Admin")).toBeVisible()
 
     await page.goto("/admin/ai-usage")
     await expect(page.getByRole("heading", { name: "Spend by user" })).toBeVisible()
@@ -544,15 +547,93 @@ test.describe("emailed report", () => {
   })
 })
 
-async function signInAs(page: Page, userId: string) {
+/** Signs in with a fresh session and, for staff, completes two-factor like a real authenticator app. */
+async function signInAs(page: Page, userId: string, { mfa = true } = {}) {
   const { data: user } = await admin.auth.admin.getUserById(userId)
   const { data, error } = await admin.auth.admin.generateLink({ type: "magiclink", email: user.user!.email! })
   if (error) throw error
   const { hashed_token, verification_type } = data.properties
   await page.context().clearCookies()
   await page.goto(`/auth/callback?token_hash=${hashed_token}&type=${verification_type}&next=/admin`)
-  await expect(page).toHaveURL(/\/admin/, { timeout: 20_000 })
+  await expect(page).toHaveURL(/\/staff\/verify/, { timeout: 20_000 })
+  if (mfa) await passMfa(page)
 }
+
+/** Reads the setup key shown on /staff/verify and enters the current code. */
+async function passMfa(page: Page) {
+  const secret = (await page.getByTestId("totp-secret").textContent({ timeout: 20_000 }))!.trim()
+  await page.getByLabel("6-digit code").fill(totp(secret))
+  await page.getByRole("button", { name: "Verify" }).click()
+  await expect(page).toHaveURL(/\/admin$/, { timeout: 20_000 })
+}
+
+/** RFC 6238 time-based code, as an authenticator app computes it (SHA-1, 30 seconds, 6 digits). */
+function totp(base32: string, at = Date.now()) {
+  const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567"
+  let bits = ""
+  for (const c of base32.replace(/=+$/, "").toUpperCase()) bits += alphabet.indexOf(c).toString(2).padStart(5, "0")
+  const key = Buffer.from(bits.match(/.{8}/g)!.map((b) => parseInt(b, 2)))
+  const counter = Buffer.alloc(8)
+  counter.writeBigUInt64BE(BigInt(Math.floor(at / 30_000)))
+  const hash = createHmac("sha1", key).update(counter).digest()
+  const offset = hash[hash.length - 1]! & 0xf
+  return String((hash.readUInt32BE(offset) & 0x7fffffff) % 1_000_000).padStart(6, "0")
+}
+
+/** A signed-in, consented account with the given staff role. */
+async function staffAccount(page: Page, role: "support" | "data_editor" | "admin") {
+  const userId = await signIn(page, "/admin")
+  await accept(page)
+  // Wait for consent to be saved (the page moves on) before the role changes and cookies are cleared.
+  await expect(page).not.toHaveURL(/\/consent/, { timeout: 20_000 })
+  await admin.auth.admin.updateUserById(userId, { app_metadata: { role } })
+  return userId
+}
+
+test.describe("staff roles and two-factor", () => {
+  test("staff must verify with an authenticator before the console or its API opens", async ({ page }) => {
+    test.setTimeout(90_000)
+    const userId = await staffAccount(page, "admin")
+    await signInAs(page, userId, { mfa: false })
+    await page.goto("/admin/settings")
+    await expect(page).toHaveURL(/\/staff\/verify/)
+    const blocked = await page.request.post("/api/admin/settings", {
+      data: { key: "advisor_free_limit", value: null },
+    })
+    expect(blocked.status()).toBe(403)
+    expect(await blocked.json()).toMatchObject({ code: "mfa_required" })
+    await passMfa(page)
+    await expect(page.getByRole("navigation", { name: "Admin" })).toContainText("Settings")
+  })
+
+  test("support sees users but can't change roles or edit content", async ({ page }) => {
+    test.setTimeout(90_000)
+    const userId = await staffAccount(page, "support")
+    await signInAs(page, userId)
+    const nav = page.getByRole("navigation", { name: "Admin" })
+    await expect(nav).toContainText("Users")
+    await expect(nav).not.toContainText("Review queue")
+    await page.goto("/admin/review")
+    await expect(page).toHaveURL(/\/admin\?denied=1/)
+    const role = await page.request.post(`/api/admin/users/${crypto.randomUUID()}`, { data: { role: "admin" } })
+    expect(role.status()).toBe(403)
+    const review = await page.request.post("/api/admin/review/approve-ready")
+    expect(review.status()).toBe(403)
+  })
+
+  test("a data editor works the review queue but can't see users", async ({ page }) => {
+    test.setTimeout(90_000)
+    const userId = await staffAccount(page, "data_editor")
+    await signInAs(page, userId)
+    const nav = page.getByRole("navigation", { name: "Admin" })
+    await expect(nav).toContainText("Review queue")
+    await expect(nav).not.toContainText("Users")
+    await page.goto("/admin/users")
+    await expect(page).toHaveURL(/\/admin\?denied=1/)
+    await page.goto("/admin/review")
+    await expect(page.getByText("How often reviewers change each field")).toBeVisible()
+  })
+})
 
 function queued(run: string) {
   const domain = `e2e-${run}.ac.uk`

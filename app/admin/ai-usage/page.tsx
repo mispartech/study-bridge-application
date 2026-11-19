@@ -8,6 +8,7 @@ import { Card } from "@/components/ui/card"
 import { formatUsd, totals, type UsageRow } from "@/lib/admin/users"
 import { serviceClient } from "@/lib/db/service"
 import { estimateCostUsd, getSettings } from "@/lib/settings"
+import { requireStaff } from "@/lib/auth/staff-page"
 
 export const metadata: Metadata = { title: "AI usage", robots: { index: false, follow: false } }
 
@@ -21,6 +22,7 @@ function windowStart(days: number): string {
 
 async function UsageTables() {
   await connection() // per-request data; also keeps the service key out of the static build
+  await requireStaff("ai")
   const since = windowStart(DAYS)
   const { data, error } = await serviceClient()
     .from("ai_usage_daily")
@@ -100,6 +102,7 @@ const TOP_USERS = 20
 /** Spend per account and the latest individual generations. Cost uses the prices set in Settings. */
 async function PerUser() {
   await connection()
+  await requireStaff("ai")
   const db = serviceClient()
   const since = new Date(Date.now() - DAYS * 86_400_000).toISOString()
   const [{ data: usage }, { data: recent }, { data: auth }, settings] = await Promise.all([

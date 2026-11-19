@@ -3,7 +3,7 @@ import { randomUUID } from "node:crypto"
 import { NextResponse } from "next/server"
 import { z } from "zod"
 
-import { adminFromRequest } from "@/lib/auth/admin"
+import { staffFromRequest } from "@/lib/auth/admin"
 import { serviceClient } from "@/lib/db/service"
 import { invalidateCatalogue } from "@/lib/match/catalogue"
 import { failureResponse } from "@/lib/server-errors"
@@ -29,7 +29,7 @@ const fields = z
 
 /** Flights by destination city, health cover by province. Labelled estimated, with a screenshot as evidence. */
 export async function POST(request: Request) {
-  const { denied } = await adminFromRequest()
+  const { denied } = await staffFromRequest("content")
   if (denied) return denied
   const form = await request.formData().catch(() => null)
   if (!form) return NextResponse.json({ error: "Invalid form" }, { status: 400 })

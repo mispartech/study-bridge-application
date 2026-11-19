@@ -1,6 +1,7 @@
 import type { EmailOtpType } from "@supabase/supabase-js"
 import { NextResponse } from "next/server"
 
+import { STAFF_SEEN_COOKIE } from "@/lib/auth/roles"
 import { safeNext } from "@/lib/auth/safe-next"
 import { supabaseServer } from "@/lib/auth/server"
 
@@ -20,5 +21,8 @@ export async function GET(request: Request) {
       : { error: new Error("No sign-in code") }
 
   if (error) return NextResponse.redirect(new URL("/sign-in?error=link", url.origin))
-  return NextResponse.redirect(new URL(`/consent?next=${encodeURIComponent(next)}`, url.origin))
+  const response = NextResponse.redirect(new URL(`/consent?next=${encodeURIComponent(next)}`, url.origin))
+  // A fresh sign-in starts a fresh staff session.
+  response.cookies.delete(STAFF_SEEN_COOKIE)
+  return response
 }

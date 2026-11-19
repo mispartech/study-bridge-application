@@ -12,6 +12,10 @@ import { useTurnstile } from "./turnstile"
 
 const REASONS: Record<string, { title: string; body: string }> = {
   save: { title: "Save this programme", body: "Create a free account to keep your shortlist on any device." },
+  staff_timeout: {
+    title: "Signed out after 8 hours",
+    body: "Staff sessions end after 8 hours without activity. Sign in again to carry on.",
+  },
   advisor: { title: "Talk to the advisor", body: "Create a free account to ask about programmes, costs and visas." },
   wizard: {
     title: "Keep your profile",
