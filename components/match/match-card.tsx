@@ -1,6 +1,7 @@
 "use client"
 
 import { Bookmark, CalendarClock } from "lucide-react"
+import * as React from "react"
 
 import { ApplyLink } from "@/components/analytics/apply-link"
 import { Button } from "@/components/ui/button"
@@ -16,6 +17,7 @@ import { BudgetChip, dateLabel, ProgrammeHeading } from "./card-parts"
 import { DataConfidence } from "./confidence"
 import { CostSheet } from "./cost-sheet"
 import { IncludesEstimates } from "./estimated-tag"
+import { dismissLabel, NotForMe, Thumbs } from "./feedback"
 
 export type Explanation = { why: string; watch_out: string | null }
 
@@ -44,6 +46,19 @@ export function MatchCard({
   compareDisabled,
   onCompare,
 }: MatchCardProps) {
+  const [dismissed, setDismissed] = React.useState<Parameters<typeof dismissLabel>[0] | null>(null)
+  if (dismissed) {
+    return (
+      <Card data-testid="match-card-dismissed" className="flex-row items-center justify-between gap-2 py-3 text-sm">
+        <span className="min-w-0 truncate text-muted-foreground">
+          {card.title}: not for you ({dismissLabel(dismissed).toLowerCase()})
+        </span>
+        <Button size="sm" variant="ghost" onClick={() => setDismissed(null)}>
+          Undo
+        </Button>
+      </Card>
+    )
+  }
   return (
     <Card data-testid="match-card" className="gap-3">
       <div className="flex items-start justify-between gap-2">
@@ -93,6 +108,7 @@ export function MatchCard({
         <div data-testid="explanation" className="flex flex-col gap-1 text-sm">
           <p>{explanation.why}</p>
           {explanation.watch_out && <p className="font-medium text-warning-strong">{explanation.watch_out}</p>}
+          <Thumbs label="Was this helpful?" target={{ type: "programme", id: card.id }} kind="explanation" />
         </div>
       ) : (
         explaining && (
@@ -106,7 +122,9 @@ export function MatchCard({
       <div className="flex flex-wrap items-center gap-2">
         {card.apply_url && (
           <Button asChild size="sm" variant="primary">
-            <ApplyLink href={card.apply_url}>Apply</ApplyLink>
+            <ApplyLink href={card.apply_url} programmeId={card.id}>
+              Apply
+            </ApplyLink>
           </Button>
         )}
         <Button size="sm" variant="outline" aria-pressed={saved} onClick={onSave}>
@@ -116,6 +134,7 @@ export function MatchCard({
         <Button size="sm" variant="ghost" aria-pressed={compared} disabled={compareDisabled} onClick={onCompare}>
           {compared ? "In compare" : "Compare"}
         </Button>
+        <NotForMe programmeId={card.id} dismissed={dismissed} onDismiss={setDismissed} />
       </div>
     </Card>
   )

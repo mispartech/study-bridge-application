@@ -3,10 +3,14 @@
 import { useRouter } from "next/navigation"
 import * as React from "react"
 
+import { logActivity } from "@/lib/activity/client"
 import { track } from "@/lib/analytics/track"
 import { CountryChips } from "@/components/match/country-chips"
+import { MAX_COUNTRIES } from "@/lib/match/countries"
 import type { CountryCode } from "@/lib/match/countries"
 
+import { JourneySteps } from "@/components/journey/journey-steps"
+import { SavedNote } from "@/components/privacy/cookie-banner"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { ProgressRing } from "@/components/ui/progress-ring"
@@ -140,14 +144,18 @@ export function Wizard() {
 
   function advance() {
     track(`onboarding_step_${step + 1}`)
+    logActivity("wizard_step_completed", { properties: { step: step + 1 } })
     update({ step: step + 1 })
   }
 
   async function finish() {
     track(`onboarding_step_${step + 1}`)
+    logActivity("wizard_completed")
     saveProfile(toMatchProfile(draft, new Date()), completeness(draft))
+    // Step 3 of the journey: offer to save the results with an email (skippable). The answers stay in this
+    // browser and move into the account if the student signs up, now or later.
     if (!hasSession()) {
-      router.push("/sign-in?reason=wizard&next=/discover")
+      router.push("/onboarding/save")
       return
     }
     const res = await fetch("/api/account/import", {
@@ -324,10 +332,12 @@ export function Wizard() {
     </>,
     <>
       <CountryChips
+        legend="Where would you like to study?"
         selected={draft.countries as CountryCode[]}
         onChange={(countries) => update({ countries })}
         nationality={draft.nationality || null}
         travelDocument={draft.travel_document || null}
+        max={MAX_COUNTRIES}
       />
       <Field label="Cities or regions you like (comma separated)">
         <input className={control} {...text("cities")} />
@@ -373,9 +383,22 @@ export function Wizard() {
   ]
 
   const last = step === STEPS.length - 1
+  const signedIn = React.useSyncExternalStore(
+    () => () => undefined,
+    hasSession,
+    () => false
+  )
+  const carried = Boolean(draft.field && draft.cgpa && draft.budget_millions)
 
   return (
     <div className="mx-auto flex w-full max-w-lg flex-col gap-4">
+      {!signedIn && <JourneySteps current={2} />}
+      {step === 0 && carried && (
+        <p data-testid="carried-over" className="rounded-button bg-primary-tint p-3 text-sm">
+          We&apos;ve filled in your course, CGPA, budget and countries from your quick search. Check them as you go: the
+          more you tell us, the more precise your matches.
+        </p>
+      )}
       <header className="flex items-center gap-4">
         <ProgressRing
           value={Math.round(((step + 1) / STEPS.length) * 100)}
@@ -404,10 +427,10 @@ export function Wizard() {
           </Button>
         )}
         <Button className="flex-1" onClick={() => (last ? finish() : advance())}>
-          {last ? "See my matches" : "Continue"}
+          {last ? (signedIn ? "See my matches" : "Next: save your results") : "Continue"}
         </Button>
       </div>
-      <p className="text-center text-xs text-muted-foreground">Saved on this phone as you go.</p>
+      <SavedNote />
     </div>
   )
 }

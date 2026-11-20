@@ -1,47 +1,61 @@
 import type { Metadata } from "next"
 import Link from "next/link"
-import { notFound, redirect } from "next/navigation"
-import { connection } from "next/server"
 import { Suspense } from "react"
+import { connection } from "next/server"
 
-import { currentUser } from "@/lib/auth/server"
-import { isAdmin } from "@/lib/auth/roles"
+import { can, ROLE_LABEL, type Permission } from "@/lib/auth/roles"
+import { requireStaff } from "@/lib/auth/staff-page"
 
 export const metadata: Metadata = { title: "Admin", robots: { index: false, follow: false } }
 
-const LINKS = [
-  ["/admin/users", "Users"],
-  ["/admin/review", "Review queue"],
-  ["/admin/reports", "Error reports"],
-  ["/admin/visa-rules", "Visa rules"],
-  ["/admin/fx", "Exchange rates"],
-  ["/admin/estimates", "Flights and health"],
-  ["/admin/ai-usage", "AI usage"],
-  ["/admin/settings", "Settings"],
-  ["/admin/diagnostics", "Diagnostics"],
-] as const
+const LINKS: [href: string, label: string, permission: Permission][] = [
+  ["/admin", "Overview", "overview"],
+  ["/admin/users", "Users", "users.read"],
+  ["/admin/emailed-reports", "Emailed reports", "users.read"],
+  ["/admin/feedback", "Suggestions and feedback", "overview"],
+  ["/admin/review", "Review queue", "content"],
+  ["/admin/reports", "Error reports", "content"],
+  ["/admin/visa-rules", "Visa rules", "content"],
+  ["/admin/fx", "Exchange rates", "content"],
+  ["/admin/estimates", "Flights and health", "content"],
+  ["/admin/ai-usage", "AI usage", "ai"],
+  ["/admin/advisor", "Advisor monitor", "ai"],
+  ["/admin/payments", "Payments", "payments"],
+  ["/admin/settings", "Settings", "settings"],
+  ["/admin/audit", "Audit log", "audit"],
+  ["/admin/system", "System", "settings"],
+  ["/admin/diagnostics", "Diagnostics", "settings"],
+]
 
-/** Every admin page sits behind this role check, and children only render if it passes. */
-async function AdminOnly({ children }: { children: React.ReactNode }) {
+/**
+ * Every admin page sits behind this check: a staff role and a session verified with two-factor. Each page
+ * also checks its own permission, and every admin API checks again on the server.
+ */
+async function StaffOnly({ children }: { children: React.ReactNode }) {
   await connection()
-  const user = await currentUser()
-  if (!user) redirect("/sign-in?next=/admin")
-  if (!isAdmin(user)) notFound()
-  return children
+  const { user, role } = await requireStaff()
+  return (
+    <>
+      <nav aria-label="Admin" className="flex flex-wrap items-center gap-3 text-sm font-medium">
+        {LINKS.filter(([, , permission]) => can(user, permission)).map(([href, label]) => (
+          <Link key={href} href={href} className="underline-offset-4 hover:underline">
+            {label}
+          </Link>
+        ))}
+        <span className="ml-auto text-xs text-muted-foreground">
+          {user.email} · {ROLE_LABEL[role]}
+        </span>
+      </nav>
+      {children}
+    </>
+  )
 }
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="mx-auto flex w-full max-w-6xl flex-col gap-4 px-4 py-4">
-      <nav aria-label="Admin" className="flex flex-wrap gap-3 text-sm font-medium">
-        {LINKS.map(([href, label]) => (
-          <Link key={href} href={href} className="underline-offset-4 hover:underline">
-            {label}
-          </Link>
-        ))}
-      </nav>
       <Suspense fallback={<p className="text-sm text-muted-foreground">Loading…</p>}>
-        <AdminOnly>{children}</AdminOnly>
+        <StaffOnly>{children}</StaffOnly>
       </Suspense>
     </div>
   )

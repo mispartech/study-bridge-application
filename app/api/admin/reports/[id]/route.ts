@@ -1,14 +1,15 @@
 import { NextResponse } from "next/server"
+import { audit } from "@/lib/activity/audit"
 import { z } from "zod"
 
-import { adminFromRequest } from "@/lib/auth/admin"
+import { staffFromRequest } from "@/lib/auth/admin"
 import { serviceClient } from "@/lib/db/service"
 import { failureResponse } from "@/lib/server-errors"
 
 const body = z.object({ status: z.enum(["resolved", "dismissed"]) })
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
-  const { denied } = await adminFromRequest()
+  const { user, denied } = await staffFromRequest("content")
   if (denied) return denied
   const parsed = body.safeParse(await request.json().catch(() => null))
   if (!parsed.success) return NextResponse.json({ error: "Invalid request" }, { status: 400 })
@@ -16,6 +17,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   try {
     const { error } = await serviceClient().from("error_report").update(parsed.data).eq("id", id)
     if (error) throw error
+    await audit(user, "error_report_updated", { targetType: "error_report", targetId: id, after: parsed.data })
     return NextResponse.json({ ok: true })
   } catch (err) {
     return failureResponse(err)

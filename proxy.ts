@@ -1,8 +1,38 @@
 import { createServerClient } from "@supabase/ssr"
 import { NextResponse, type NextRequest } from "next/server"
 
-export function proxy(request: NextRequest) {
-  return refreshSession(request)
+import { STAFF_IDLE_MS, STAFF_SEEN_COOKIE } from "@/lib/auth/roles"
+
+const STAFF_PATH = /^\/(admin|api\/admin)(\/|$)/
+
+export async function proxy(request: NextRequest) {
+  const response = await refreshSession(request)
+  return STAFF_PATH.test(request.nextUrl.pathname) ? staffIdle(request, response) : response
+}
+
+/**
+ * Staff sessions end after 8 hours without an admin request (docs/SPEC_ACCESS_ADMIN.md, section 3).
+ * Every admin request moves the "last seen" time forward.
+ */
+function staffIdle(request: NextRequest, response: NextResponse) {
+  const seen = Number(request.cookies.get(STAFF_SEEN_COOKIE)?.value)
+  if (seen && Date.now() - seen > STAFF_IDLE_MS) {
+    if (request.nextUrl.pathname.startsWith("/api/")) {
+      return NextResponse.json(
+        { error: "Signed out after 8 hours without activity", code: "staff_idle" },
+        { status: 401 }
+      )
+    }
+    return NextResponse.redirect(new URL("/staff/expired", request.url))
+  }
+  response.cookies.set(STAFF_SEEN_COOKIE, String(Date.now()), {
+    path: "/",
+    httpOnly: true,
+    sameSite: "lax",
+    secure: request.nextUrl.protocol === "https:",
+    maxAge: 30 * 24 * 60 * 60,
+  })
+  return response
 }
 
 /**

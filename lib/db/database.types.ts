@@ -5,6 +5,49 @@ export type Json = string | number | boolean | null | { [key: string]: Json | un
 export type Database = {
   public: {
     Tables: {
+      activity_event: {
+        Row: {
+          actor_id: string | null
+          actor_type: Database["public"]["Enums"]["actor_type"]
+          event: string
+          id: number
+          ip_hash: string | null
+          occurred_at: string
+          properties: NonNullable<Json>
+          session_id: string | null
+          target_id: string | null
+          target_type: string | null
+          user_agent_family: string | null
+        }
+        ComputedFields: never
+        Insert: {
+          actor_id?: string | null
+          actor_type: Database["public"]["Enums"]["actor_type"]
+          event: string
+          id?: never
+          ip_hash?: string | null
+          occurred_at?: string
+          properties?: NonNullable<Json>
+          session_id?: string | null
+          target_id?: string | null
+          target_type?: string | null
+          user_agent_family?: string | null
+        }
+        Update: {
+          actor_id?: string | null
+          actor_type?: Database["public"]["Enums"]["actor_type"]
+          event?: string
+          id?: never
+          ip_hash?: string | null
+          occurred_at?: string
+          properties?: NonNullable<Json>
+          session_id?: string | null
+          target_id?: string | null
+          target_type?: string | null
+          user_agent_family?: string | null
+        }
+        Relationships: []
+      }
       advisor_daily_usage: {
         Row: {
           day: string
@@ -169,6 +212,25 @@ export type Database = {
           },
         ]
       }
+      blocked_email: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          email_hash: string
+        }
+        ComputedFields: never
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          email_hash: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          email_hash?: string
+        }
+        Relationships: []
+      }
       city_cost: {
         Row: {
           accommodation_type: Database["public"]["Enums"]["accommodation_type"]
@@ -300,6 +362,34 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      cron_run: {
+        Row: {
+          finished_at: string | null
+          id: number
+          job: string
+          ok: boolean | null
+          started_at: string
+          summary: NonNullable<Json>
+        }
+        ComputedFields: never
+        Insert: {
+          finished_at?: string | null
+          id?: never
+          job: string
+          ok?: boolean | null
+          started_at?: string
+          summary?: NonNullable<Json>
+        }
+        Update: {
+          finished_at?: string | null
+          id?: never
+          job?: string
+          ok?: boolean | null
+          started_at?: string
+          summary?: NonNullable<Json>
+        }
+        Relationships: []
       }
       error_report: {
         Row: {
@@ -608,6 +698,7 @@ export type Database = {
           id: string
           paid_at: string | null
           reference: string
+          refunded_at: string | null
           status: string
           updated_at: string
           user_id: string | null
@@ -620,6 +711,7 @@ export type Database = {
           id?: string
           paid_at?: string | null
           reference: string
+          refunded_at?: string | null
           status?: string
           updated_at?: string
           user_id?: string | null
@@ -631,6 +723,7 @@ export type Database = {
           id?: string
           paid_at?: string | null
           reference?: string
+          refunded_at?: string | null
           status?: string
           updated_at?: string
           user_id?: string | null
@@ -712,6 +805,28 @@ export type Database = {
           },
         ]
       }
+      rate_limit: {
+        Row: {
+          bucket: string
+          hits: number
+          key_hash: string
+          window_start: string
+        }
+        ComputedFields: never
+        Insert: {
+          bucket: string
+          hits?: number
+          key_hash: string
+          window_start: string
+        }
+        Update: {
+          bucket?: string
+          hits?: number
+          key_hash?: string
+          window_start?: string
+        }
+        Relationships: []
+      }
       reminder_log: {
         Row: {
           dedupe_key: string
@@ -747,6 +862,61 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      report: {
+        Row: {
+          claimed_at: string | null
+          claimed_user_id: string | null
+          consent_text_version: string
+          created_at: string
+          delivery_status: string
+          email: string
+          email_hash: string
+          expires_at: string
+          id: string
+          marketing_consent: boolean
+          opened_at: string | null
+          profile_snapshot: NonNullable<Json>
+          reminders_consent: boolean
+          results_snapshot: NonNullable<Json>
+          sent_at: string | null
+        }
+        ComputedFields: never
+        Insert: {
+          claimed_at?: string | null
+          claimed_user_id?: string | null
+          consent_text_version: string
+          created_at?: string
+          delivery_status?: string
+          email: string
+          email_hash: string
+          expires_at?: string
+          id?: string
+          marketing_consent?: boolean
+          opened_at?: string | null
+          profile_snapshot: NonNullable<Json>
+          reminders_consent?: boolean
+          results_snapshot: NonNullable<Json>
+          sent_at?: string | null
+        }
+        Update: {
+          claimed_at?: string | null
+          claimed_user_id?: string | null
+          consent_text_version?: string
+          created_at?: string
+          delivery_status?: string
+          email?: string
+          email_hash?: string
+          expires_at?: string
+          id?: string
+          marketing_consent?: boolean
+          opened_at?: string | null
+          profile_snapshot?: NonNullable<Json>
+          reminders_consent?: boolean
+          results_snapshot?: NonNullable<Json>
+          sent_at?: string | null
+        }
+        Relationships: []
       }
       requirement: {
         Row: {
@@ -1100,6 +1270,46 @@ export type Database = {
         }
         Relationships: []
       }
+      staff_audit: {
+        Row: {
+          action: string
+          after: Json | null
+          before: Json | null
+          id: number
+          occurred_at: string
+          reason: string | null
+          staff_email: string | null
+          staff_id: string
+          target_id: string | null
+          target_type: string | null
+        }
+        ComputedFields: never
+        Insert: {
+          action: string
+          after?: Json | null
+          before?: Json | null
+          id?: never
+          occurred_at?: string
+          reason?: string | null
+          staff_email?: string | null
+          staff_id: string
+          target_id?: string | null
+          target_type?: string | null
+        }
+        Update: {
+          action?: string
+          after?: Json | null
+          before?: Json | null
+          id?: never
+          occurred_at?: string
+          reason?: string | null
+          staff_email?: string | null
+          staff_id?: string
+          target_id?: string | null
+          target_type?: string | null
+        }
+        Relationships: []
+      }
       student_profile: {
         Row: {
           accommodation_pref: Database["public"]["Enums"]["accommodation_type"] | null
@@ -1417,6 +1627,32 @@ export type Database = {
       }
     }
     Functions: {
+      activity_by_target: {
+        Args: { p_events: string[]; p_from: string; p_to: string }
+        Returns: {
+          event: string
+          events: number
+          reason: string
+          target_id: string
+        }[]
+      }
+      activity_daily: {
+        Args: { p_events: string[]; p_from: string; p_to: string }
+        Returns: {
+          day: string
+          event: string
+          events: number
+        }[]
+      }
+      activity_summary: {
+        Args: { p_from: string; p_to: string }
+        Returns: {
+          actors: number
+          event: string
+          events: number
+        }[]
+      }
+      anonymise_activity: { Args: { p_actor_id: string }; Returns: number }
       consume_advisor_message: {
         Args: { p_free_limit?: number; p_user_id: string }
         Returns: {
@@ -1427,6 +1663,19 @@ export type Database = {
         }[]
       }
       current_student_id: { Args: Record<PropertyKey, never>; Returns: string }
+      hit_rate_limit: {
+        Args: {
+          p_bucket: string
+          p_key_hash: string
+          p_limit: number
+          p_offset_seconds?: number
+          p_window_seconds: number
+        }
+        Returns: {
+          allowed: boolean
+          hits: number
+        }[]
+      }
       host_matches_domains: { Args: { domains: string[]; host: string }; Returns: boolean }
       publish_review_item: {
         Args: {
@@ -1441,11 +1690,26 @@ export type Database = {
         }
         Returns: string
       }
+      purge_activity_events: { Args: Record<PropertyKey, never>; Returns: number }
+      rate_limit_window: { Args: { p_offset_seconds: number; p_window_seconds: number }; Returns: string }
       refund_advisor_message: { Args: { p_user_id: string }; Returns: number }
+      refund_rate_limit: {
+        Args: { p_bucket: string; p_key_hash: string; p_offset_seconds?: number; p_window_seconds: number }
+        Returns: number
+      }
+      search_summary: {
+        Args: { p_from: string; p_to: string }
+        Returns: {
+          key: string
+          kind: string
+          n: number
+        }[]
+      }
       url_host: { Args: { url: string }; Returns: string }
     }
     Enums: {
       accommodation_type: "university_halls" | "private_studio" | "shared_flat" | "homestay" | "off_campus_shared"
+      actor_type: "anonymous" | "student" | "staff" | "system"
       confidence_level: "official" | "university_page" | "third_party" | "estimated"
       country_code: "UK" | "CA" | "US"
       degree_type: "MSc" | "MA" | "MEng" | "MBA" | "MRes" | "MPH" | "LLM" | "MPS" | "Other"
@@ -1583,6 +1847,7 @@ export const Constants = {
   public: {
     Enums: {
       accommodation_type: ["university_halls", "private_studio", "shared_flat", "homestay", "off_campus_shared"],
+      actor_type: ["anonymous", "student", "staff", "system"],
       confidence_level: ["official", "university_page", "third_party", "estimated"],
       country_code: ["UK", "CA", "US"],
       degree_type: ["MSc", "MA", "MEng", "MBA", "MRes", "MPH", "LLM", "MPS", "Other"],

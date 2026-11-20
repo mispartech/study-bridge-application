@@ -409,8 +409,9 @@ export const paymentRow = z.object({
   reference: z.string(),
   amount_minor: minor,
   currency: z.string(),
-  status: z.enum(["pending", "paid", "failed"]),
+  status: z.enum(["pending", "paid", "failed", "refunded"]),
   paid_at: timestamp.nullable(),
+  refunded_at: timestamp.nullable(),
   ...timestamps,
 })
 
@@ -449,6 +450,73 @@ export const searchLogRow = z.object({
   data_confidence: z.number().int().min(0).max(100).nullable(),
 })
 
+export const rateLimitRow = z.object({
+  bucket: z.string().min(1),
+  key_hash: z.string().min(1),
+  window_start: timestamp,
+  hits: z.number().int().nonnegative(),
+})
+
+export const reportRow = z.object({
+  id: uuid,
+  email: z.string().min(3),
+  email_hash: z.string().min(1),
+  profile_snapshot: json,
+  results_snapshot: json,
+  reminders_consent: z.boolean(),
+  marketing_consent: z.boolean(),
+  consent_text_version: z.string().min(1),
+  created_at: timestamp,
+  sent_at: timestamp.nullable(),
+  delivery_status: z.enum(["queued", "sent", "failed"]),
+  opened_at: timestamp.nullable(),
+  claimed_user_id: uuid.nullable(),
+  claimed_at: timestamp.nullable(),
+  expires_at: timestamp,
+})
+
+export const activityEventRow = z.object({
+  id: z.number().int(),
+  occurred_at: timestamp,
+  actor_type: z.enum(["anonymous", "student", "staff", "system"]),
+  actor_id: z.string().nullable(),
+  session_id: z.string().nullable(),
+  event: z.string().min(1),
+  target_type: z.string().nullable(),
+  target_id: z.string().nullable(),
+  properties: json,
+  ip_hash: z.string().nullable(),
+  user_agent_family: z.string().nullable(),
+})
+
+export const staffAuditRow = z.object({
+  id: z.number().int(),
+  occurred_at: timestamp,
+  staff_id: uuid,
+  staff_email: z.string().nullable(),
+  action: z.string().min(1),
+  target_type: z.string().nullable(),
+  target_id: z.string().nullable(),
+  before: z.json().nullable(),
+  after: z.json().nullable(),
+  reason: z.string().nullable(),
+})
+
+export const blockedEmailRow = z.object({
+  email_hash: z.string().min(1),
+  created_at: timestamp,
+  created_by: uuid.nullable(),
+})
+
+export const cronRunRow = z.object({
+  id: z.number().int(),
+  job: z.string().min(1),
+  started_at: timestamp,
+  finished_at: timestamp.nullable(),
+  ok: z.boolean().nullable(),
+  summary: json,
+})
+
 export const rowSchemas = {
   student_profile: studentProfileRow,
   shortlist: shortlistRow,
@@ -476,6 +544,12 @@ export const rowSchemas = {
   explanation_cache: explanationCacheRow,
   app_setting: appSettingRow,
   search_log: searchLogRow,
+  rate_limit: rateLimitRow,
+  report: reportRow,
+  activity_event: activityEventRow,
+  staff_audit: staffAuditRow,
+  blocked_email: blockedEmailRow,
+  cron_run: cronRunRow,
 } as const
 
 export type TableName = keyof Database["public"]["Tables"]

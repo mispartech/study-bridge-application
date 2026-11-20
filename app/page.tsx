@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 import Link from "next/link"
 
+import { JourneySteps } from "@/components/journey/journey-steps"
 import { QuickMatch } from "@/components/match/quick-match"
 import { Logo } from "@/components/shell/app-shell"
 import { ThemeToggle } from "@/components/theme-toggle"
@@ -23,8 +24,11 @@ export default function Landing() {
           <h1 className="text-3xl leading-tight font-extrabold">
             Your Master&apos;s abroad, matched to your grades and your budget.
           </h1>
-          <p className="text-muted-foreground">Three questions. Real programmes, with the full cost in naira.</p>
+          <p className="text-muted-foreground">
+            Four quick questions, then real programmes with the full cost in naira. No account needed.
+          </p>
         </div>
+        <JourneySteps current={1} />
         <QuickMatch />
         <p className="text-center text-sm">
           Already started?{" "}

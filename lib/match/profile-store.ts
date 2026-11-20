@@ -1,10 +1,11 @@
 // No zod here: this file ships to every student page, so it has to stay small.
 import type { MatchProfile } from "./types"
 
+import { answerCookieAge, answerStorage } from "@/lib/privacy/cookie-choice"
+
 export const PROFILE_COOKIE = "sb-profile"
 export const COMPLETENESS_COOKIE = "sb-completeness"
 const DRAFT_KEY = "sb-draft"
-const COOKIE_MAX_AGE = 60 * 60 * 24 * 365
 
 /** Used when a student picks "I don't know yet" for the budget. A starting point, marked incomplete. */
 export const DEFAULT_BUDGET_MILLIONS = 60
@@ -112,7 +113,7 @@ export const matchConfidence = (score: number | null) =>
 /** The server renders first results from this cookie, so they arrive with the page on a slow connection. */
 export function saveProfile(profile: MatchProfile, completenessScore?: number) {
   const write = (name: string, value: string) => {
-    document.cookie = `${name}=${value}; path=/; max-age=${COOKIE_MAX_AGE}; samesite=lax`
+    document.cookie = `${name}=${value}; path=/${answerCookieAge()}; samesite=lax`
   }
   write(PROFILE_COOKIE, encodeURIComponent(JSON.stringify(profile)))
   if (completenessScore !== undefined) write(COMPLETENESS_COOKIE, String(completenessScore))
@@ -124,7 +125,7 @@ const listeners = new Set<() => void>()
 
 function readDraft(): Draft {
   try {
-    const raw = localStorage.getItem(DRAFT_KEY)
+    const raw = answerStorage()?.getItem(DRAFT_KEY) ?? null
     return raw ? { ...emptyDraft, ...(JSON.parse(raw) as Partial<Draft>) } : emptyDraft
   } catch {
     return emptyDraft
@@ -141,7 +142,7 @@ export const draftStore = {
   set(next: Draft) {
     current = next
     try {
-      localStorage.setItem(DRAFT_KEY, JSON.stringify(next))
+      answerStorage()?.setItem(DRAFT_KEY, JSON.stringify(next))
     } catch {
       // Private windows can refuse storage; the wizard still works for this visit.
     }
@@ -163,7 +164,7 @@ export const savedStore = {
   get() {
     if (savedList) return savedList
     try {
-      savedList = JSON.parse(localStorage.getItem(SAVED_KEY) ?? "[]") as string[]
+      savedList = JSON.parse(answerStorage()?.getItem(SAVED_KEY) ?? "[]") as string[]
     } catch {
       savedList = NONE_SAVED
     }
@@ -173,7 +174,7 @@ export const savedStore = {
   set(next: string[]) {
     savedList = next
     try {
-      localStorage.setItem(SAVED_KEY, JSON.stringify(next))
+      answerStorage()?.setItem(SAVED_KEY, JSON.stringify(next))
     } catch {
       // The button still works for this visit.
     }
@@ -184,8 +185,10 @@ export const savedStore = {
 /** After sign-up the account holds everything, so nothing personal stays in this browser. */
 export function clearBrowserProfile() {
   try {
-    localStorage.removeItem(DRAFT_KEY)
-    localStorage.removeItem(SAVED_KEY)
+    for (const store of [localStorage, sessionStorage]) {
+      store.removeItem(DRAFT_KEY)
+      store.removeItem(SAVED_KEY)
+    }
   } catch {
     // Nothing was stored, then.
   }

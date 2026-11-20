@@ -80,6 +80,7 @@ test("landing page paints under 3s on a first visit", async ({ page }) => {
 test("quick match answers under 3s once the landing page is open", async ({ page }) => {
   await page.goto("/")
   await page.waitForLoadState("networkidle")
+  await page.getByRole("button", { name: "UK", exact: true }).click()
   await throttle(page)
   const started = Date.now()
   await page.getByRole("button", { name: "See my matches" }).click()

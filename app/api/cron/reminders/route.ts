@@ -1,4 +1,6 @@
 import { timingSafeEqual } from "node:crypto"
+import { logCronRun } from "@/lib/admin/cron-log"
+import { recordActivity } from "@/lib/activity/record"
 
 import { NextResponse } from "next/server"
 
@@ -23,6 +25,15 @@ export async function GET(request: Request) {
   if (!authorised(request)) return NextResponse.json({ error: "Unauthorised" }, { status: 401 })
   const db = serviceClient()
   const now = new Date()
+  const started = now
+
+  // Retention: an emailed report nobody opened is deleted after 12 months (docs/SPEC_ACCESS_ADMIN.md, s2).
+  const { count: expiredReports, error: expiryError } = await db
+    .from("report")
+    .delete({ count: "exact" })
+    .is("claimed_user_id", null)
+    .lt("expires_at", now.toISOString())
+  if (expiryError) console.error("report expiry failed:", expiryError.message)
 
   const [{ data: saved, error }, { data: intakes }, { data: trackers }] = await Promise.all([
     db
@@ -75,7 +86,24 @@ export async function GET(request: Request) {
       .from("reminder_log")
       .upsert(reminder, { onConflict: "user_id,dedupe_key", ignoreDuplicates: true })
       .select("id")
-    if (claimed?.length && (await sendEmail({ subject, text }))) sent++
+    if (claimed?.length && (await sendEmail({ subject, text }))) {
+      sent++
+      await recordActivity("reminder_sent", {
+        actor: { type: "system" },
+        target: { type: "user", id: reminder.user_id },
+        properties: { kind: reminder.dedupe_key.startsWith("change") ? "change" : "deadline" },
+      })
+    }
   }
-  return NextResponse.json({ due: reminders.length, sent })
+  // Retention: activity older than 24 months goes (docs/SPEC_ACCESS_ADMIN.md, section 4).
+  const { data: purged, error: purgeError } = await db.rpc("purge_activity_events")
+  if (purgeError) console.error("activity purge failed:", purgeError.message)
+  const summary = {
+    due: reminders.length,
+    sent,
+    expired_reports: expiredReports ?? 0,
+    purged_activity: purged ?? 0,
+  }
+  await logCronRun("reminders", started, true, summary)
+  return NextResponse.json(summary)
 }

@@ -3,12 +3,14 @@ import { connection } from "next/server"
 import { MarketRateForm } from "@/components/admin/market-rate-form"
 import { Card } from "@/components/ui/card"
 import { serviceClient } from "@/lib/db/service"
+import { requireStaff } from "@/lib/auth/staff-page"
 
 const dated = (date: string) =>
   new Date(date).toLocaleString("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "Africa/Lagos" })
 
 export default async function Page() {
   await connection()
+  await requireStaff("content")
   const { data } = await serviceClient()
     .from("fx_rate")
     .select("base, rate, rate_kind, fetched_at, source_url, entered_by")

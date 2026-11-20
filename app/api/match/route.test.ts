@@ -9,6 +9,14 @@ import { POST } from "./route"
 vi.mock("next/server", async (original) => ({ ...(await original<typeof import("next/server")>()), after: vi.fn() }))
 vi.mock("@/lib/match/search-log", () => ({ logSearch: vi.fn(), searchLogRow: vi.fn() }))
 
+const limits = vi.hoisted(() => ({ allowed: true, human: true }))
+vi.mock("@/lib/security/rate-limit", () => ({
+  clientFrom: () => ({ deviceId: "d", newDevice: false, deviceKey: "dk", ipKey: "ik" }),
+  hitBoth: async () => ({ allowed: limits.allowed, deviceHits: 1 }),
+  withDeviceCookie: (res: Response) => res,
+}))
+vi.mock("@/lib/security/turnstile", () => ({ verifyTurnstile: async () => limits.human }))
+
 vi.mock("@/lib/match/catalogue", () => ({
   demoModeEnabled: () => true,
   loadCatalogue: async () => demo,
@@ -76,5 +84,22 @@ describe("POST /api/match", () => {
     expect(body.ranked.length).toBeGreaterThan(0)
     expect(typeof body.ranked[0]!.cost.total_minor).toBe("string")
     expect(body.ranked[0]!.apply_url).toContain("-demo.example")
+  })
+
+  it("turns a visitor away with a 429 once they pass the limit", async () => {
+    limits.allowed = false
+    const res = await post(profile)
+    limits.allowed = true
+    expect(res.status).toBe(429)
+  })
+
+  it("refuses a quick match whose security check failed", async () => {
+    limits.human = false
+    const quick = await post({ ...profile, quick_match: true })
+    const full = await post(profile)
+    limits.human = true
+    expect(quick.status).toBe(403)
+    // Only the landing page's quick match carries the check; full results rely on the rate limit.
+    expect(full.status).toBe(200)
   })
 })

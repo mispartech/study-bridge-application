@@ -4,7 +4,9 @@ import { Send } from "lucide-react"
 import Link from "next/link"
 import * as React from "react"
 
+import { useTurnstile } from "@/components/account/turnstile"
 import { IncludesEstimates } from "@/components/match/estimated-tag"
+import { Thumbs } from "@/components/match/feedback"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import type { ProgrammeCard, Source } from "@/lib/advisor/tools"
@@ -21,6 +23,8 @@ type Message = {
   sources: Source[]
   failed?: boolean
   checking?: boolean
+  /** Random id for feedback on this answer; never linked to the text, which isn't stored. */
+  id?: string
 }
 
 const STARTERS = [
@@ -109,7 +113,16 @@ function dedupe<T>(items: T[], key: (item: T) => string) {
   return [...new Map(items.map((item) => [key(item), item])).values()]
 }
 
-export function AdvisorChat({ initialUsed, limit }: { initialUsed: number; limit: number | null }) {
+export function AdvisorChat({
+  initialUsed,
+  limit,
+  anonymous = false,
+}: {
+  initialUsed: number
+  limit: number | null
+  /** No account: a few free messages a day, behind an invisible bot check. */
+  anonymous?: boolean
+}) {
   const [messages, setMessages] = React.useState<Message[]>([])
   const [input, setInput] = React.useState("")
   const [busy, setBusy] = React.useState(false)
@@ -117,6 +130,7 @@ export function AdvisorChat({ initialUsed, limit }: { initialUsed: number; limit
   const [showSources, setShowSources] = React.useState(false)
   const [limited, setLimited] = React.useState(limit !== null && initialUsed >= limit)
   const remaining = limit === null ? null : Math.max(0, limit - used)
+  const { box: captchaBox, ...captcha } = useTurnstile({ invisible: true, lazy: !anonymous })
 
   const patchLast = (patch: (message: Message) => Message) =>
     setMessages((list) => [...list.slice(0, -1), patch(list.at(-1)!)])
@@ -133,14 +147,16 @@ export function AdvisorChat({ initialUsed, limit }: { initialUsed: number; limit
     setMessages((list) => [
       ...list,
       { role: "user", text: question, programmes: [], sources: [] },
-      { role: "assistant", text: "", programmes: [], sources: [] },
+      { role: "assistant", text: "", programmes: [], sources: [], id: crypto.randomUUID() },
     ])
     try {
+      const token = anonymous ? await captcha.nextToken() : null
       const res = await fetch("/api/advisor", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ messages: history }),
+        body: JSON.stringify({ messages: history, ...(token && { turnstile_token: token }) }),
       })
+      if (anonymous) captcha.reset() // a token works once
       if (res.status === 429) {
         setLimited(true)
         setMessages((list) => list.slice(0, -2))
@@ -280,11 +296,26 @@ export function AdvisorChat({ initialUsed, limit }: { initialUsed: number; limit
                 Something went wrong answering that. Please try again.
               </p>
             )}
+            {m.role === "assistant" && m.id && m.text && !m.failed && !(busy && i === messages.length - 1) && (
+              <Thumbs label="Helpful?" target={{ type: "advisor_turn", id: m.id }} kind="advisor" />
+            )}
           </li>
         ))}
       </ul>
 
-      {limited ? (
+      {anonymous && captcha.enabled && <div ref={captchaBox} data-testid="turnstile" />}
+      {limited && anonymous ? (
+        <Card data-testid="limit-message" className="gap-2">
+          <h2 className="font-heading text-lg font-bold">Want to keep asking?</h2>
+          <p className="text-sm text-muted-foreground">
+            You&apos;ve used today&apos;s {limit} free messages. Create a free account for 5 a day, and to keep your
+            shortlist on any device. Your matches stay as they are.
+          </p>
+          <Button asChild block>
+            <Link href="/sign-in?reason=advisor&next=/advisor">Create a free account</Link>
+          </Button>
+        </Card>
+      ) : limited ? (
         <Card data-testid="limit-message" className="gap-1">
           <h2 className="font-heading text-lg font-bold">You&apos;ve used today&apos;s {limit} free messages</h2>
           <p className="text-sm text-muted-foreground">

@@ -109,6 +109,41 @@ export function draftToRow(draft: Draft, now: Date): Omit<TablesInsert<"student_
   }
 }
 
+/** A matching profile as stored columns: used when an emailed report becomes an account. */
+export function profileToRow(p: MatchProfile): Omit<TablesInsert<"student_profile">, "user_id"> {
+  return {
+    nationality: p.nationality,
+    travel_document: p.travel_document,
+    degree_class: p.degree_class,
+    cgpa: p.cgpa,
+    cgpa_scale: p.cgpa_scale,
+    hnd_pgd: p.hnd_pgd,
+    professional_registration: p.professional_registration,
+    field: p.field,
+    include_related_fields: p.include_related_fields,
+    work_years: p.work_years,
+    ielts: p.ielts,
+    toefl: p.toefl,
+    toefl_scale: p.toefl_scale,
+    duolingo: p.duolingo,
+    pte: p.pte,
+    gre: p.gre,
+    gmat: p.gmat,
+    tests_planned: p.tests_planned,
+    english_medium_degree: p.english_medium_degree,
+    waec_english_grade: p.waec_english_grade,
+    budget_total_minor: p.budget_total_minor,
+    target_cycle: p.target_cycle,
+    target_term: p.target_term,
+    preferred_countries: p.preferred_countries,
+    preferred_cities: p.preferred_cities,
+    accommodation_pref: p.accommodation_pref,
+    dependants: p.dependants,
+    post_study_work: p.post_study_work,
+    weights: p.weights,
+  }
+}
+
 /** What matching needs from a stored profile. Anything invalid falls back to the defaults. */
 export function rowToProfile(row: Tables<"student_profile">, now: Date): MatchProfile {
   const weights = row.weights as MatchProfile["weights"] | null

@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server"
+import { audit } from "@/lib/activity/audit"
 import { z } from "zod"
 
 import { PROVIDER_KEY_ENV } from "@/lib/ai/config"
-import { adminFromRequest } from "@/lib/auth/admin"
-import { saveSetting, settingsSchema } from "@/lib/settings"
+import { staffFromRequest } from "@/lib/auth/admin"
+import { getSettings, saveSetting, settingsSchema } from "@/lib/settings"
 import { failureResponse } from "@/lib/server-errors"
 
 const body = z.discriminatedUnion("key", [
@@ -14,7 +15,7 @@ const body = z.discriminatedUnion("key", [
 
 /** Saves one admin setting. A model can only be chosen when its provider's key is set on the server. */
 export async function POST(request: Request) {
-  const { user, denied } = await adminFromRequest()
+  const { user, denied } = await staffFromRequest("settings")
   if (denied) return denied
   const parsed = body.safeParse(await request.json().catch(() => null))
   if (!parsed.success) return NextResponse.json({ error: "Check the values and try again" }, { status: 400 })
@@ -31,7 +32,14 @@ export async function POST(request: Request) {
   }
   try {
     // Narrowed by the discriminated union above.
+    const before = (await getSettings())[parsed.data.key]
     await saveSetting(parsed.data.key, parsed.data.value as never, user.id)
+    await audit(user, "setting_changed", {
+      targetType: "setting",
+      targetId: parsed.data.key,
+      before,
+      after: parsed.data.value,
+    })
     return NextResponse.json({ ok: true })
   } catch (err) {
     return failureResponse(err)

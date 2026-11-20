@@ -4,11 +4,13 @@ import { EstimateForm } from "@/components/admin/estimate-form"
 import { Card } from "@/components/ui/card"
 import { serviceClient } from "@/lib/db/service"
 import { formatShort, type Currency } from "@/lib/money"
+import { requireStaff } from "@/lib/auth/staff-page"
 
 const EVIDENCE_LINK_SECONDS = 600
 
 export default async function Page() {
   await connection()
+  await requireStaff("content")
   const db = serviceClient()
   const { data } = await db.from("cost_estimate").select("*").eq("is_demo", false).order("country").order("item")
   const rows = await Promise.all(

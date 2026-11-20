@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server"
+import { audit } from "@/lib/activity/audit"
 import { z } from "zod"
 
-import { adminFromRequest } from "@/lib/auth/admin"
+import { staffFromRequest } from "@/lib/auth/admin"
 import { confidenceLevel, countryCode, visaRuleType } from "@/lib/db/schemas"
 import { serviceClient } from "@/lib/db/service"
 import { invalidateCatalogue } from "@/lib/match/catalogue"
@@ -22,7 +23,7 @@ const edited = fields.extend({ id: z.uuid() })
 const stamp = () => ({ last_verified_at: new Date().toISOString() })
 
 export async function POST(request: Request) {
-  const { denied } = await adminFromRequest()
+  const { user, denied } = await staffFromRequest("content")
   if (denied) return denied
   const parsed = created.safeParse(await request.json().catch(() => null))
   if (!parsed.success) return NextResponse.json({ error: "Check the form and try again" }, { status: 400 })
@@ -31,6 +32,7 @@ export async function POST(request: Request) {
       .from("visa_rule")
       .insert({ ...parsed.data, value: parsed.data.value as NonNullable<Json>, ...stamp() })
     if (error) return NextResponse.json({ error: error.message }, { status: 422 })
+    await audit(user, "visa_rule_changed", { targetType: "visa_rule", after: parsed.data })
     invalidateCatalogue()
     return NextResponse.json({ ok: true })
   } catch (err) {
@@ -39,17 +41,19 @@ export async function POST(request: Request) {
 }
 
 export async function PATCH(request: Request) {
-  const { denied } = await adminFromRequest()
+  const { user, denied } = await staffFromRequest("content")
   if (denied) return denied
   const parsed = edited.safeParse(await request.json().catch(() => null))
   if (!parsed.success) return NextResponse.json({ error: "Check the form and try again" }, { status: 400 })
   const { id, ...rest } = parsed.data
   try {
+    const { data: before } = await serviceClient().from("visa_rule").select("*").eq("id", id).maybeSingle()
     const { error } = await serviceClient()
       .from("visa_rule")
       .update({ ...rest, value: rest.value as NonNullable<Json>, ...stamp() })
       .eq("id", id)
     if (error) return NextResponse.json({ error: error.message }, { status: 422 })
+    await audit(user, "visa_rule_changed", { targetType: "visa_rule", targetId: id, before, after: rest })
     invalidateCatalogue()
     return NextResponse.json({ ok: true })
   } catch (err) {

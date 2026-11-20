@@ -57,12 +57,25 @@ export function ruleOn(
     .sort((a, b) => b.effective_from.localeCompare(a.effective_from))[0]
 }
 
-function rate(fx: Catalogue["fxRates"], currency: string, kind: RateKind, demoMode: boolean): bigint | undefined {
-  const row = usable(fx, demoMode)
+function latest(fx: Catalogue["fxRates"], currency: string, kind: RateKind, demoMode: boolean) {
+  return usable(fx, demoMode)
     .filter((r) => r.base === currency && r.quote === "NGN" && r.rate_kind === kind)
     .sort((a, b) => b.fetched_at.localeCompare(a.fetched_at))[0]
+}
+
+/**
+ * Naira per unit. Until an admin enters this week's market rate, the market figure falls back to the
+ * mid-market (official) rate, so students still get results; the page says which rate was used.
+ */
+function rate(fx: Catalogue["fxRates"], currency: string, kind: RateKind, demoMode: boolean): bigint | undefined {
+  const row =
+    latest(fx, currency, kind, demoMode) ?? (kind === "market" ? latest(fx, currency, "official", demoMode) : undefined)
   return row ? BigInt(Math.round(row.rate * Number(RATE_SCALE))) : undefined
 }
+
+/** True when no market rate has been entered for a currency, so the mid-market rate stands in. */
+export const marketRateMissing = (fx: Catalogue["fxRates"], currency: string, demoMode: boolean) =>
+  currency !== "NGN" && !latest(fx, currency, "market", demoMode) && Boolean(latest(fx, currency, "official", demoMode))
 
 export function toNgn(minor: bigint, currency: string, kind: RateKind, fx: Catalogue["fxRates"], demoMode: boolean) {
   if (currency === "NGN") return minor

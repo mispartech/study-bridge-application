@@ -5,27 +5,13 @@ import { Card } from "@/components/ui/card"
 import { FREE_ADVISOR_MESSAGES_PER_DAY } from "@/lib/ai/advisor-quota"
 import { AI_CONFIG } from "@/lib/ai/config"
 import { demoModeEnabled } from "@/lib/match/catalogue"
+import { ENV_NAMES } from "@/lib/admin/env"
 import { AI_TASKS, getSettings, MODEL_CHOICES } from "@/lib/settings"
-
-/** Names only: the page shows whether each is set, never its value. */
-const ENV_NAMES = [
-  "NEXT_PUBLIC_SUPABASE_URL",
-  "NEXT_PUBLIC_SUPABASE_ANON_KEY",
-  "SUPABASE_SERVICE_ROLE_KEY",
-  "GEMINI_API_KEY",
-  "ANTHROPIC_API_KEY",
-  "RESEND_API_KEY",
-  "PAYSTACK_SECRET_KEY",
-  "CRON_SECRET",
-  "NEXT_PUBLIC_TURNSTILE_SITE_KEY",
-  "SENTRY_DSN",
-  "NEXT_PUBLIC_SENTRY_DSN",
-  "NEXT_PUBLIC_POSTHOG_KEY",
-  "NEXT_PUBLIC_POSTHOG_HOST",
-] as const
+import { requireStaff } from "@/lib/auth/staff-page"
 
 export default async function Page() {
   await connection()
+  await requireStaff("settings")
   const settings = await getSettings()
   const defaults = Object.fromEntries(AI_TASKS.map((t) => [t, AI_CONFIG[t]]))
   const priced = [...new Set([...MODEL_CHOICES, ...Object.values(defaults).map((r) => `${r.provider}:${r.model}`)])]

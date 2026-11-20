@@ -2,9 +2,11 @@ import { connection } from "next/server"
 
 import { VisaRuleForm } from "@/components/admin/visa-rule-form"
 import { serviceClient } from "@/lib/db/service"
+import { requireStaff } from "@/lib/auth/staff-page"
 
 export default async function Page() {
   await connection()
+  await requireStaff("content")
   const { data } = await serviceClient()
     .from("visa_rule")
     .select("*")

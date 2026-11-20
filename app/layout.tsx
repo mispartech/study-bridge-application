@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next"
 import localFont from "next/font/local"
+import { CookieBanner } from "@/components/privacy/cookie-banner"
 
 import { DemoBanner } from "@/components/demo-banner"
 import { themeInitScript } from "@/lib/theme"
@@ -79,6 +80,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body className="min-h-dvh">
         <DemoBanner />
         {children}
+        <CookieBanner />
       </body>
     </html>
   )

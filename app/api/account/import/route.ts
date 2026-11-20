@@ -1,11 +1,14 @@
 import { NextResponse } from "next/server"
+import { recordActivity } from "@/lib/activity/record"
 import { z } from "zod"
 
 import { CONSENT_VERSION } from "@/lib/account/consent"
 import { ANALYTICS_COOKIE } from "@/lib/analytics/consent"
-import { draftSchema, draftToRow, hasAnswers } from "@/lib/account/profile-row"
+import { draftSchema, draftToRow, hasAnswers, profileToRow } from "@/lib/account/profile-row"
 import { FREE_SHORTLIST_LIMIT } from "@/lib/account/shortlist"
 import { supabaseServer } from "@/lib/auth/server"
+import { serviceClient } from "@/lib/db/service"
+import { matchProfile } from "@/lib/match/types"
 import type { Draft } from "@/lib/match/profile-store"
 
 const ONE_YEAR_SECONDS = 365 * 24 * 60 * 60
@@ -33,7 +36,9 @@ export async function POST(request: Request) {
   }
 
   const { draft, saved, accepted } = parsed.data
-  const answers = draft && hasAnswers(draft as Draft) ? draftToRow(draft as Draft, new Date()) : {}
+  let answers = draft && hasAnswers(draft as Draft) ? draftToRow(draft as Draft, new Date()) : {}
+  // First consent after opening an emailed report: the report's profile becomes the account's.
+  if (!draft && accepted && !existing?.consent_given_at) answers = await claimedReportAnswers(user.id)
   const consent = accepted ? { consent_given_at: new Date().toISOString(), consent_version: CONSENT_VERSION } : {}
   const { data: profile, error } = await supabase
     .from("student_profile")
@@ -53,8 +58,28 @@ export async function POST(request: Request) {
       if (shortlistError) return NextResponse.json({ error: "Could not save your shortlist" }, { status: 500 })
     }
   }
+  if (accepted && !existing?.consent_given_at) {
+    const fromReport = Object.keys(answers).length > 0 && !draft
+    await recordActivity("account_created", {
+      actor: { type: "student", id: user.id },
+      properties: { source: fromReport ? "report" : draft ? "save" : "direct" },
+    })
+  }
   // Reaching here means consent is on record, which is what turns analytics on for this browser.
   const response = NextResponse.json({ ok: true })
   response.cookies.set(ANALYTICS_COOKIE, "1", { path: "/", sameSite: "lax", maxAge: ONE_YEAR_SECONDS })
   return response
+}
+
+/** The profile from the newest report this student opened, as columns, or nothing. */
+async function claimedReportAnswers(userId: string) {
+  const { data } = await serviceClient()
+    .from("report")
+    .select("profile_snapshot")
+    .eq("claimed_user_id", userId)
+    .order("claimed_at", { ascending: false })
+    .limit(1)
+    .maybeSingle()
+  const profile = matchProfile.safeParse(data?.profile_snapshot)
+  return profile.success ? profileToRow(profile.data) : {}
 }

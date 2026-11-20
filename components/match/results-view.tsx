@@ -7,6 +7,7 @@ import * as React from "react"
 
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
+import { logActivity } from "@/lib/activity/client"
 import { track } from "@/lib/analytics/track"
 import { CountryChips } from "@/components/match/country-chips"
 import type { CountryCode } from "@/lib/match/countries"
@@ -22,6 +23,7 @@ import { cn } from "@/lib/utils"
 
 import { SearchConfidence } from "./confidence"
 import { CostSheet } from "./cost-sheet"
+import { EmailReport } from "./email-report"
 import { BudgetChip, ProgrammeHeading } from "./card-parts"
 import { MatchCard, type Explanation } from "./match-card"
 
@@ -156,6 +158,7 @@ function FilterRail({
         onChange={(countries) => onChange({ ...filters, countries })}
         nationality={nationality}
         travelDocument={travelDocument}
+        emptyHint="None chosen, so every country is shown."
       />
       <label className="flex flex-col gap-1 font-medium">
         City
@@ -340,6 +343,7 @@ const EMPTY_VIEW: MatchView = {
   excluded: {},
   needs_registration: [],
   fx: { market: {}, official: {} },
+  fx_fallback: [],
   now: "",
   data_confidence: null,
 }
@@ -412,8 +416,12 @@ export function ResultsView({
       }).catch(() => null)
       if (controller.signal.aborted) return
       if (res?.ok) {
-        setLoaded((await res.json()) as MatchView)
-        if (first) track("results_viewed")
+        const next = (await res.json()) as MatchView
+        setLoaded(next)
+        if (first) {
+          track("results_viewed")
+          logActivity("results_viewed", { properties: { ranked: next.ranked.length + next.more.length } })
+        }
         setFailed(false)
       } else if (attemptsLeft > 0) {
         retry = setTimeout(() => void load(attemptsLeft - 1), RETRY_MS)
@@ -436,11 +444,15 @@ export function ResultsView({
       savedStore.set(on ? saved.filter((s) => s !== id) : [...saved, id])
       if (!on) {
         track("programme_saved")
+        logActivity("programme_saved", { target: { type: "programme", id } })
         router.push("/sign-in?reason=save&next=/discover")
       }
       return
     }
-    if (!on) track("programme_saved")
+    if (!on) {
+      track("programme_saved")
+      logActivity("programme_saved", { target: { type: "programme", id } })
+    }
     setShortlist(on ? saved.filter((s) => s !== id) : [...saved, id])
     void fetch("/api/shortlist", {
       method: on ? "DELETE" : "POST",
@@ -475,7 +487,13 @@ export function ResultsView({
         onSave={() => toggleSaved(c.id)}
         compared={compare.includes(c.id)}
         compareDisabled={!compare.includes(c.id) && compare.length >= MAX_COMPARE}
-        onCompare={() => setCompare((ids) => (ids.includes(c.id) ? ids.filter((id) => id !== c.id) : [...ids, c.id]))}
+        onCompare={() =>
+          setCompare((ids) => {
+            if (ids.includes(c.id)) return ids.filter((id) => id !== c.id)
+            logActivity("compare_used", { properties: { count: ids.length + 1 } })
+            return [...ids, c.id]
+          })
+        }
       />
     </m.li>
   )
@@ -494,6 +512,11 @@ export function ResultsView({
           {profile.target_cycle} entry{grades ? `, ${grades}` : ""}
         </p>
         <SearchConfidence score={searchConfidence(profileScore, loaded ? loaded.data_confidence : dataScore)} />
+        {(loaded?.fx_fallback.length ?? 0) > 0 && (
+          <p data-testid="fx-fallback" className="text-xs text-muted-foreground">
+            Naira figures use today&apos;s mid-market exchange rate.
+          </p>
+        )}
       </header>
 
       <div className="grid gap-4 lg:grid-cols-[18rem_minmax(0,1fr)] lg:items-start">
@@ -710,6 +733,7 @@ export function ResultsView({
           )}
         </section>
       </div>
+      {loaded && <EmailReport profile={profile} signedIn={shortlist !== null} />}
     </div>
   )
 }

@@ -27,6 +27,10 @@ export const DATA_WE_STORE = [
     why: "To rank your matches and keep your shortlist.",
   },
   {
+    what: "Cookies on this device",
+    why: "Only if you allow them: your answers are kept on this device, even when you're signed out. With essential cookies only, they last for your visit.",
+  },
+  {
     what: "Your advisor messages",
     why: "Sent to our AI provider to answer you. We count them for your daily limit but don't store the text.",
   },

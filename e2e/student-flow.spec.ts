@@ -33,24 +33,49 @@ const noOverflow = async (page: Page) =>
   expect(await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)).toBeLessThanOrEqual(0)
 
 test.describe("landing quick match", () => {
-  test("shows 3 live results before sign-up", async ({ page }) => {
+  test("shows 3 live results before sign-up, then hands over to the deep search", async ({ page }) => {
     await page.goto("/")
+    await expect(page.getByRole("navigation", { name: "Your progress" })).toContainText("Quick search")
+    await page.getByRole("button", { name: "UK", exact: true }).click()
+    await page.getByRole("button", { name: "Canada", exact: true }).click()
     await page.getByRole("button", { name: "See my matches" }).click()
-    await expect(page.getByTestId("quick-result")).toHaveCount(3)
-    await expect(page.getByRole("link", { name: "Get your full matches" })).toBeVisible()
+    await expect(page.getByTestId("quick-result")).toHaveCount(3, { timeout: 15_000 })
+    await expect(page.getByTestId("quick-summary")).toContainText("in UK and Canada")
+    await expect(page.getByTestId("next-step")).toContainText("Step 2 of 3")
+    await expect(page.getByRole("link", { name: "Continue to deep search" })).toBeVisible()
     await noOverflow(page)
     await noViolations(page)
   })
-  test("shows the gap when nothing fits the budget", async ({ page }) => {
+  test("needs a country, and allows at most two", async ({ page }) => {
+    await page.goto("/")
+    await page.getByRole("button", { name: "See my matches" }).click()
+    await expect(page.getByText("Choose at least one country")).toBeVisible()
+    await page.getByRole("button", { name: "UK", exact: true }).click()
+    await page.getByRole("button", { name: "Canada", exact: true }).click()
+    await page.getByTestId("country-US").click()
+    await expect(page.getByText("You can choose up to 2 countries")).toBeVisible()
+    await expect(page.getByTestId("country-US")).toHaveAttribute("aria-pressed", "false")
+    await expect(page.getByRole("button", { name: "UK", exact: true })).toHaveAttribute("aria-pressed", "true")
+  })
+
+  test("when nothing fits the budget, it says what would change that", async ({ page }) => {
     await page.goto("/")
     await page.getByLabel("Total budget, in millions of naira").fill("20")
+    await page.getByRole("button", { name: "UK", exact: true }).click()
     await page.getByRole("button", { name: "See my matches" }).click()
+    await expect(page.getByTestId("quick-summary")).toContainText("Nothing fits yet in UK", { timeout: 15_000 })
     await expect(page.getByTestId("quick-result").first()).toContainText("over your budget")
+    const raise = page.getByTestId("suggest-budget")
+    await expect(raise).toContainText("Raise your budget to")
+    await raise.click()
+    await expect(page.getByTestId("quick-summary")).toContainText("fit, in UK", { timeout: 15_000 })
   })
 })
 
 test("quick match and full results show the same price", async ({ page }) => {
   await page.goto("/")
+  await page.getByRole("button", { name: "UK", exact: true }).click()
+  await page.getByRole("button", { name: "Canada", exact: true }).click()
   await page.getByRole("button", { name: "See my matches" }).click()
   const price = await page.getByTestId("quick-result").first().getByText(/^₦/).innerText()
   await withProfile(page, 80)
@@ -83,12 +108,24 @@ test.describe("onboarding wizard", () => {
     await page.getByLabel("Term").selectOption("fall")
     await page.getByRole("button", { name: "Continue" }).click()
     await expect(page.getByTestId("step-6")).toBeVisible()
-    await page.getByRole("button", { name: "See my matches" }).click()
+    await page.getByRole("button", { name: "Next: save your results" }).click()
 
-    await expect(page).toHaveURL(/\/sign-in\?reason=wizard/)
-    await page.getByRole("link", { name: "See my matches first" }).click()
+    // Step 3 of 3 offers an account, but results never wait for one.
+    await expect(page).toHaveURL(/\/onboarding\/save$/)
+    await expect(page.getByRole("heading", { name: "Save your results" })).toBeVisible()
+    await page.getByTestId("skip-save").click()
     await expect(page).toHaveURL(/\/discover$/)
     await expect(page.getByTestId("match-card").first()).toBeVisible()
+  })
+
+  test("carries the quick search answers into the deep search", async ({ page }) => {
+    await page.goto("/")
+    await page.getByRole("button", { name: "Canada", exact: true }).click()
+    await page.getByRole("button", { name: "See my matches" }).click()
+    await page.getByRole("link", { name: "Continue to deep search" }).click({ timeout: 15_000 })
+    await expect(page).toHaveURL(/\/onboarding$/)
+    await expect(page.getByRole("navigation", { name: "Your progress" })).toContainText("Deep search")
+    await expect(page.getByTestId("carried-over")).toBeVisible()
   })
   test("I don't know yet is allowed for the budget", async ({ page }) => {
     await page.goto("/onboarding")
@@ -164,7 +201,7 @@ test.describe("results at ₦80m", () => {
 
   test("filters narrow the list", async ({ page }) => {
     await page.getByText("Filters").click()
-    await page.getByRole("button", { name: "UK", exact: true }).click()
+    await page.getByRole("button", { name: "Canada", exact: true }).click()
     await expect(page.getByTestId("match-card").first()).toContainText("Canada")
     await expect(page.getByTestId("match-card").filter({ hasText: "Leeds" })).toHaveCount(0)
   })
@@ -242,28 +279,51 @@ test.describe("country selection", () => {
     await page.goto("/discover")
     await expect(page.locator('[data-loaded="true"]')).toBeVisible({ timeout: 20_000 })
     await page.getByText("Filters").click()
-    await page.getByRole("button", { name: "UK", exact: true }).click()
+    await page.getByRole("button", { name: "Canada", exact: true }).click()
     await expect(page.getByTestId("match-card").filter({ hasText: "UK" })).toHaveCount(0)
     await page.getByTestId("show-other-countries").click()
     await expect(page.getByTestId("match-card").filter({ hasText: "UK" }).first()).toBeVisible()
   })
 
-  test("a Nigerian sees the published visa note on the USA chip", async ({ page }) => {
+  test("a Nigerian sees the USA marked closed, with the published reason when chosen", async ({ page }) => {
     await page.goto("/")
+    await expect(page.getByTestId("country-US")).toContainText("Closed to your passport")
+    await expect(page.getByTestId("visa-note")).toHaveCount(0)
+    await page.getByTestId("country-US").click()
     await expect(page.getByTestId("visa-note")).toContainText("USA:")
     await expect(page.getByTestId("visa-note")).toContainText("10998")
-    await page.getByRole("button", { name: "USA", exact: true }).click()
+    await page.getByTestId("country-US").click()
     await expect(page.getByTestId("visa-note")).toHaveCount(0)
   })
 
-  test("quick match keeps to the chosen countries, with a way back", async ({ page }) => {
+  test("quick match keeps to the chosen country", async ({ page }) => {
     await page.goto("/")
-    await page.waitForLoadState("networkidle")
-    await page.getByRole("button", { name: "UK", exact: true }).click()
+    // Not "networkidle": the invisible bot check keeps a connection open.
+    await page.waitForLoadState("load")
+    await page.getByRole("button", { name: "Canada", exact: true }).click()
     await page.getByRole("button", { name: "See my matches" }).click()
-    await expect(page.getByTestId("quick-result").first()).toBeVisible()
-    await expect(page.getByTestId("quick-result").filter({ hasText: "UK" })).toHaveCount(0)
-    await page.getByTestId("show-other-countries").click()
-    await expect(page.getByRole("button", { name: "UK", exact: true })).toHaveAttribute("aria-pressed", "true")
+    // A tap right after the page opens waits for the bot check's first token.
+    await expect(page.getByTestId("quick-summary")).toContainText("Canada", { timeout: 15_000 })
+    await expect(page.getByTestId("quick-result").filter({ hasText: "Leeds" })).toHaveCount(0)
+  })
+})
+
+test.describe("cookie choice", () => {
+  // Starts without the test-wide cookie choice, as a first-time visitor would.
+  test.use({ storageState: { cookies: [], origins: [] } })
+
+  test("asks once; essential only keeps answers for this visit, and allowing saves them to the device", async ({
+    page,
+  }) => {
+    await page.goto("/onboarding")
+    const banner = page.getByTestId("cookie-banner")
+    await expect(banner).toBeVisible()
+    await banner.getByRole("button", { name: "Essential only" }).click()
+    await expect(banner).toHaveCount(0)
+    await expect(page.getByTestId("saved-note")).toContainText("kept for this visit only")
+    await page.getByTestId("saved-note").getByRole("button", { name: "Allow cookies" }).click()
+    await expect(page.getByTestId("saved-note")).toContainText("saved to this device automatically")
+    await page.reload()
+    await expect(page.getByTestId("cookie-banner")).toHaveCount(0)
   })
 })

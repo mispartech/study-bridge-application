@@ -1,9 +1,10 @@
 import { randomUUID } from "node:crypto"
+import { audit } from "@/lib/activity/audit"
 
 import { NextResponse } from "next/server"
 import { z } from "zod"
 
-import { adminFromRequest } from "@/lib/auth/admin"
+import { staffFromRequest } from "@/lib/auth/admin"
 import { serviceClient } from "@/lib/db/service"
 import { invalidateCatalogue } from "@/lib/match/catalogue"
 import { failureResponse } from "@/lib/server-errors"
@@ -29,7 +30,7 @@ const fields = z
 
 /** Flights by destination city, health cover by province. Labelled estimated, with a screenshot as evidence. */
 export async function POST(request: Request) {
-  const { denied } = await adminFromRequest()
+  const { user, denied } = await staffFromRequest("content")
   if (denied) return denied
   const form = await request.formData().catch(() => null)
   if (!form) return NextResponse.json({ error: "Invalid form" }, { status: 400 })
@@ -79,6 +80,10 @@ export async function POST(request: Request) {
       is_demo: false,
     })
     if (error) throw error
+    await audit(user, "estimate_entered", {
+      targetType: "cost_estimate",
+      after: { ...scope, amount: f.amount, currency: f.currency, source_url: f.source_url, observed_on: f.observed_on },
+    })
     invalidateCatalogue()
     return NextResponse.json({ ok: true })
   } catch (err) {

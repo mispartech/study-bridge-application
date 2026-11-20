@@ -1,4 +1,6 @@
 import { NextResponse } from "next/server"
+import { eraseAccount } from "@/lib/account/erase"
+import { recordActivity } from "@/lib/activity/record"
 import { z } from "zod"
 
 import { supabaseServer } from "@/lib/auth/server"
@@ -47,8 +49,12 @@ export async function DELETE(request: Request) {
     data: { user },
   } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: "Sign in first" }, { status: 401 })
-  const { error } = await serviceClient().auth.admin.deleteUser(user.id)
-  if (error) return NextResponse.json({ error: "Could not delete" }, { status: 500 })
+  try {
+    await eraseAccount(user)
+  } catch {
+    return NextResponse.json({ error: "Could not delete" }, { status: 500 })
+  }
+  await recordActivity("account_deleted", { actor: { type: "system" } })
   await supabase.auth.signOut()
   return NextResponse.json({ ok: true })
 }

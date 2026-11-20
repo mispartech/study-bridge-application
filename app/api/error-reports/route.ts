@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server"
+import { recordActivity } from "@/lib/activity/record"
 import { z } from "zod"
 
 import { supabaseServer } from "@/lib/auth/server"
@@ -33,6 +34,10 @@ export async function POST(request: Request) {
     }
     const { error } = await db.from("error_report").insert({ ...parsed.data, user_id: user?.id ?? null })
     if (error) throw error
+    await recordActivity("error_reported", {
+      actor: user ? { type: "student", id: user.id } : { type: "anonymous", id: null },
+      target: { type: "programme", id: parsed.data.programme_id },
+    })
     return NextResponse.json({ ok: true })
   } catch (err) {
     return failureResponse(err)

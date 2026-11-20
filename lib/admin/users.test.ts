@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest"
 
 import { estimateCostUsd } from "@/lib/settings/schema"
 
-import { formatUsd, summariseUsers, totals, type UsageRow } from "./users"
+import { filterUsers, formatUsd, summariseUsers, totals, type UsageRow } from "./users"
 
 const now = new Date("2026-11-14T12:00:00Z")
 const prices = { "google:gemini-3.6-flash": { input: 0.5, output: 3 } }
@@ -65,5 +65,26 @@ describe("users summary", () => {
     expect(rows.map((r) => r.id)).toEqual(["b", "a"])
     expect(rows[1]).toMatchObject({ searches: 2, ai_calls: 1, cost_usd: 0.5, plan: "plus", admin: false })
     expect(rows[0]).toMatchObject({ searches: 0, ai_calls: 0, plan: "free", admin: true })
+  })
+})
+
+describe("users filter", () => {
+  const rows = summariseUsers(
+    [
+      { id: "aaaa1111", email: "ada@x.com", created_at: "2026-11-01T00:00:00Z", app_metadata: { role: "support" } },
+      { id: "bbbb2222", email: "bola@x.com", created_at: "2026-11-01T00:00:00Z", banned_until: "2126-01-01T00:00:00Z" },
+    ],
+    [],
+    [],
+    [],
+    {},
+    new Date("2026-11-21T00:00:00Z")
+  )
+  it("searches email and id, and filters by role and status", () => {
+    expect(filterUsers(rows, { q: "ADA" }).map((r) => r.id)).toEqual(["aaaa1111"])
+    expect(filterUsers(rows, { q: "bbbb" }).map((r) => r.id)).toEqual(["bbbb2222"])
+    expect(filterUsers(rows, { role: "support" }).map((r) => r.id)).toEqual(["aaaa1111"])
+    expect(filterUsers(rows, { status: "suspended" }).map((r) => r.id)).toEqual(["bbbb2222"])
+    expect(filterUsers(rows, { status: "active" }).map((r) => r.id)).toEqual(["aaaa1111"])
   })
 })
