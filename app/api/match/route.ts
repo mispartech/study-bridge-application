@@ -6,6 +6,7 @@ import { inCountries } from "@/lib/match/countries"
 import { matchProfile, rank } from "@/lib/match"
 import { currentUser, hasSessionCookie } from "@/lib/auth/server"
 import { presentResult } from "@/lib/match/present"
+import { suggest } from "@/lib/match/suggest"
 import { logSearch, searchLogRow } from "@/lib/match/search-log"
 import { clientIp, LIMITS } from "@/lib/security/limits"
 import { clientFrom, hitBoth, withDeviceCookie } from "@/lib/security/rate-limit"
@@ -51,12 +52,16 @@ export async function POST(request: Request) {
   // The landing page shows 3 results, and every byte counts on its first visit.
   const { ranked, near_misses } = view
   const chosen = parsed.data.preferred_countries
+  const shown = inCountries(ranked, chosen)
+  // Nothing fits: say exactly what would change that, rather than a dead end.
+  const suggestions = shown.length === 0 ? suggest(parsed.data, catalogue, { now, demoMode }) : []
   return withDeviceCookie(
     NextResponse.json({
       ...view,
-      ranked: inCountries(ranked, chosen).slice(0, QUICK_RESULTS),
+      ranked: shown.slice(0, QUICK_RESULTS),
       near_misses: inCountries(near_misses, chosen).slice(0, QUICK_RESULTS),
-      hidden_by_country: ranked.length - inCountries(ranked, chosen).length,
+      hidden_by_country: ranked.length - shown.length,
+      suggestions,
       more: [],
       restricted: [],
       needs_english: [],

@@ -52,6 +52,7 @@ test.afterAll(async () => {
 test.describe("asking for an account only when it's needed", () => {
   test("quick match stays open to everyone", async ({ page }) => {
     await page.goto("/")
+    await page.getByRole("button", { name: "UK", exact: true }).click()
     await page.getByRole("button", { name: "See my matches" }).click()
     // A tap right after the page opens waits for the bot check's first token.
     await expect(page.getByTestId("quick-result").first()).toBeVisible({ timeout: 15_000 })
@@ -315,11 +316,15 @@ test.describe("analytics follow consent", () => {
     const events = await capture(page)
     await page.goto("/")
     await page.waitForLoadState("networkidle")
+    await page.getByRole("button", { name: "UK", exact: true }).click()
     await page.getByRole("button", { name: "See my matches" }).click()
     await expect(page.getByTestId("quick-result").first()).toBeVisible({ timeout: 15_000 })
     await page
       .context()
-      .addCookies([{ name: "sb-profile", value: encodeURIComponent(JSON.stringify(worked)), url: BASE }])
+      .addCookies([
+        { name: "sb-profile", value: encodeURIComponent(JSON.stringify(worked)), url: BASE },
+        { name: "sb-cookies", value: "all", url: BASE },
+      ])
     await page.goto("/discover")
     await expect(page.locator('[data-loaded="true"]')).toBeVisible({ timeout: 20_000 })
     expect(events).toEqual([])
@@ -521,7 +526,10 @@ test.describe("emailed report", () => {
     const email = `e2e-report-${crypto.randomUUID().slice(0, 8)}@example.com`
     await page
       .context()
-      .addCookies([{ name: "sb-profile", value: encodeURIComponent(JSON.stringify(worked)), url: BASE }])
+      .addCookies([
+        { name: "sb-profile", value: encodeURIComponent(JSON.stringify(worked)), url: BASE },
+        { name: "sb-cookies", value: "all", url: BASE },
+      ])
     await page.goto("/discover")
     await expect(page.locator('[data-loaded="true"]')).toBeVisible({ timeout: 20_000 })
     await page.getByRole("button", { name: "Email me this report" }).click()
@@ -546,7 +554,7 @@ test.describe("emailed report", () => {
       const before = await admin.auth.admin.listUsers({ perPage: 1000 })
       expect(before.data.users.some((u) => u.email === email)).toBe(false)
 
-      await page.context().clearCookies()
+      await resetCookies(page)
       await page.goto(`/report/open?r=${report!.id}&t=${reportToken(report!.id, "claim")}`)
       await page.getByRole("button", { name: "Open my results" }).click()
       await accept(page)
@@ -557,7 +565,7 @@ test.describe("emailed report", () => {
       created.push(claimed!.claimed_user_id!)
 
       // A tampered link is refused.
-      await page.context().clearCookies()
+      await resetCookies(page)
       await page.goto(`/report/open?r=${report!.id}&t=${"x".repeat(43)}`)
       await page.getByRole("button", { name: "Open my results" }).click()
       await expect(page).toHaveURL(/\/sign-in\?error=link/)
@@ -596,7 +604,7 @@ async function signInAs(page: Page, userId: string, { mfa = true } = {}) {
   const { data, error } = await admin.auth.admin.generateLink({ type: "magiclink", email: user.user!.email! })
   if (error) throw error
   const { hashed_token, verification_type } = data.properties
-  await page.context().clearCookies()
+  await resetCookies(page)
   await page.goto(`/auth/callback?token_hash=${hashed_token}&type=${verification_type}&next=/admin`)
   await expect(page).toHaveURL(/\/staff\/verify/, { timeout: 20_000 })
   if (mfa) await passMfa(page)
@@ -825,4 +833,10 @@ function queued(run: string) {
     fees: [{ fee_year: "2027/28", tuition_amount: 25000, currency: "GBP", basis: "per_year" }],
     source_urls: [`https://www.${domain}/msc`],
   }
+}
+
+/** Clears every cookie but the cookie choice, so the banner doesn't cover the page. */
+async function resetCookies(page: Page) {
+  await page.context().clearCookies()
+  await page.context().addCookies([{ name: "sb-cookies", value: "all", url: BASE }])
 }

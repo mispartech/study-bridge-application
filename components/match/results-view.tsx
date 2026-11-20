@@ -158,6 +158,7 @@ function FilterRail({
         onChange={(countries) => onChange({ ...filters, countries })}
         nationality={nationality}
         travelDocument={travelDocument}
+        emptyHint="None chosen, so every country is shown."
       />
       <label className="flex flex-col gap-1 font-medium">
         City
@@ -342,6 +343,7 @@ const EMPTY_VIEW: MatchView = {
   excluded: {},
   needs_registration: [],
   fx: { market: {}, official: {} },
+  fx_fallback: [],
   now: "",
   data_confidence: null,
 }
@@ -510,6 +512,11 @@ export function ResultsView({
           {profile.target_cycle} entry{grades ? `, ${grades}` : ""}
         </p>
         <SearchConfidence score={searchConfidence(profileScore, loaded ? loaded.data_confidence : dataScore)} />
+        {(loaded?.fx_fallback.length ?? 0) > 0 && (
+          <p data-testid="fx-fallback" className="text-xs text-muted-foreground">
+            Naira figures use today&apos;s mid-market exchange rate.
+          </p>
+        )}
       </header>
 
       <div className="grid gap-4 lg:grid-cols-[18rem_minmax(0,1fr)] lg:items-start">

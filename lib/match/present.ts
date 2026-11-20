@@ -94,6 +94,8 @@ export type MatchView = {
   /** Left out because they need a registration the student doesn't hold, with the reason to show. */
   needs_registration: { programme_id: string; title: string; reason: string }[]
   fx: { market: FxRates; official: FxRates }
+  /** Currencies whose market rate hasn't been entered yet, so the mid-market rate was used. */
+  fx_fallback: string[]
   now: string
   /** Average data confidence of the top results, or null when nothing matched. */
   data_confidence: number | null
@@ -184,6 +186,14 @@ function latestRates(catalogue: Catalogue, kind: "market" | "official"): FxRates
   return Object.fromEntries(rows.map((r) => [r.base, r.rate]))
 }
 
+/** Market rates, with the mid-market rate standing in for any currency without one yet. */
+function marketRates(catalogue: Catalogue): { rates: FxRates; fallback: string[] } {
+  const market = latestRates(catalogue, "market")
+  const official = latestRates(catalogue, "official")
+  const fallback = Object.keys(official).filter((c) => market[c as keyof FxRates] === undefined)
+  return { rates: { ...official, ...market }, fallback }
+}
+
 /** The JSON a results page needs: compact, because it crosses Slow 3G, with money as strings. */
 export function presentResult(result: MatchResult, profile: MatchProfile, catalogue: Catalogue, now: Date): MatchView {
   const excluded: Record<string, number> = {}
@@ -222,7 +232,8 @@ export function presentResult(result: MatchResult, profile: MatchProfile, catalo
     needs_registration: result.excluded
       .filter((e) => e.filter === "registration")
       .map(({ programme_id, title, reason }) => ({ programme_id, title, reason })),
-    fx: { market: latestRates(catalogue, "market"), official: latestRates(catalogue, "official") },
+    fx: { market: marketRates(catalogue).rates, official: latestRates(catalogue, "official") },
+    fx_fallback: marketRates(catalogue).fallback,
     now: now.toISOString(),
     data_confidence: averageConfidence(ranked.map((c) => c.data_confidence)),
   }

@@ -21,13 +21,26 @@ const REASONS: Record<string, { title: string; body: string }> = {
     title: "Keep your profile",
     body: "Create a free account so your answers are saved and your matches stay yours.",
   },
+  results: {
+    title: "Save your results",
+    body: "Enter your email and we'll send a link to verify it. Opening it creates your free account, moves everything you've entered into it, and takes you to your dashboard to finish setting up.",
+  },
 }
 const DEFAULT_REASON = { title: "Sign in to StudyBridge", body: "New here? This creates your free account." }
 
-export function SignInForm() {
+type SignInFormProps = {
+  /** Overrides ?reason= (e.g. step 3 of the journey). */
+  reasonKey?: string
+  /** Where the link lands after sign-in, instead of ?next=. */
+  nextPath?: string
+  /** A "skip for now" link, for steps where an account is optional. */
+  skip?: { href: string; label: string }
+}
+
+export function SignInForm({ reasonKey, nextPath, skip }: SignInFormProps = {}) {
   const params = useSearchParams()
-  const reason = REASONS[params.get("reason") ?? ""] ?? DEFAULT_REASON
-  const next = params.get("next") ?? "/discover"
+  const reason = REASONS[reasonKey ?? params.get("reason") ?? ""] ?? DEFAULT_REASON
+  const next = nextPath ?? params.get("next") ?? "/discover"
   const [email, setEmail] = React.useState("")
   const [state, setState] = React.useState<"idle" | "sending" | "sent" | "failed">("idle")
   const callback = () => `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`
@@ -108,6 +121,13 @@ export function SignInForm() {
           </p>
         )}
       </Card>
+      {skip && (
+        <p className="text-center text-sm">
+          <Link href={skip.href} data-testid="skip-save" className="font-medium underline underline-offset-4">
+            {skip.label}
+          </Link>
+        </p>
+      )}
       {params.get("reason") === "wizard" && (
         <p className="text-center text-sm">
           <Link href="/discover" className="font-medium underline underline-offset-4">

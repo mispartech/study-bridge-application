@@ -12,6 +12,23 @@ export default defineConfig({
   use: {
     baseURL: `http://localhost:${PORT}`,
     trace: "on-first-retry",
+    // The cookie choice is made, so the banner doesn't cover buttons. The banner has its own test, which
+    // starts without this cookie. This doesn't turn analytics on: that needs the analytics cookie too.
+    storageState: {
+      cookies: [
+        {
+          name: "sb-cookies",
+          value: "all",
+          domain: "localhost",
+          path: "/",
+          expires: -1,
+          httpOnly: false,
+          secure: false,
+          sameSite: "Lax",
+        },
+      ],
+      origins: [],
+    },
   },
   projects: [
     // 360px Android baseline from CLAUDE.md.
