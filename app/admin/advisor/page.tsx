@@ -30,7 +30,7 @@ export default async function Page({
       .select("day, provider, model, calls, failures, input_tokens, output_tokens")
       .eq("task", "advisor")
       .gte("day", lagosDay(range.from))
-      .lte("day", lagosDay(range.to))
+      .lt("day", lagosDay(range.to)) // range.to is the next midnight, so the end is exclusive
       .order("day"),
     db.from("advisor_guard_log").select("outcome").gte("created_at", from).lt("created_at", to),
     db

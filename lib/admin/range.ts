@@ -14,7 +14,8 @@ export function lagosMidnight(at: Date): Date {
 }
 
 export function presetRange(preset: Preset, now: Date): Range {
-  const to = now
+  // To the end of today, not "now": rows written moments ago must show even if this server's clock lags the DB's.
+  const to = new Date(lagosMidnight(now).getTime() + DAY_MS)
   const from = new Date(lagosMidnight(now).getTime() - (PRESETS[preset] - 1) * DAY_MS)
   const label = preset === "today" ? "Today" : `Last ${PRESETS[preset]} days`
   return { from, to, label, preset, query: `range=${preset}` }
