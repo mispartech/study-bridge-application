@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import { assertNotProduction, PRODUCTION_SUPABASE_REFS } from "@/tests/guard/supabase-guard.mjs"
+import { ALLOW_FLAG, assertTestTarget, PRODUCTION_SUPABASE_REFS } from "@/tests/guard/supabase-guard.mjs"
 
 import { withoutInternal } from "../admin/internal"
 import { roleAlertText } from "./role-alert"
@@ -8,24 +8,29 @@ import { roleAlertText } from "./role-alert"
 describe("test runner guard", () => {
   const prod = `https://${PRODUCTION_SUPABASE_REFS[0]}.supabase.co`
 
-  it("refuses the production project, by URL or database connection", () => {
-    expect(() => assertNotProduction({ NEXT_PUBLIC_SUPABASE_URL: prod })).toThrow(/PRODUCTION/)
-    expect(() =>
-      assertNotProduction({
-        NEXT_PUBLIC_SUPABASE_URL: "https://devproject.supabase.co",
-        SUPABASE_DB_URL: `postgresql://postgres.${PRODUCTION_SUPABASE_REFS[0]}@host/db`,
-      })
-    ).toThrow(/SUPABASE_DB_URL/)
+  it("refuses the production project unless the run was started on purpose", () => {
+    expect(() => assertTestTarget({ NEXT_PUBLIC_SUPABASE_URL: prod })).toThrow(/npm run test:e2e/)
+    expect(() => assertTestTarget({ NEXT_PUBLIC_SUPABASE_URL: prod, [ALLOW_FLAG]: "1" })).not.toThrow()
   })
 
-  it("refuses when nothing is set, and allows a development project", () => {
-    expect(() => assertNotProduction({})).toThrow(/not set/)
-    expect(() => assertNotProduction({ NEXT_PUBLIC_SUPABASE_URL: "https://devproject.supabase.co" })).not.toThrow()
+  it("always refuses production in CI, even when asked", () => {
+    expect(() => assertTestTarget({ NEXT_PUBLIC_SUPABASE_URL: prod, [ALLOW_FLAG]: "1", CI: "true" })).toThrow(/CI/)
+  })
+
+  it("checks the database connection too, and needs a URL", () => {
+    expect(() =>
+      assertTestTarget({
+        NEXT_PUBLIC_SUPABASE_URL: "https://other.supabase.co",
+        SUPABASE_DB_URL: `postgresql://postgres.${PRODUCTION_SUPABASE_REFS[0]}@host/db`,
+      })
+    ).toThrow(/production/)
+    expect(() => assertTestTarget({})).toThrow(/not set/)
+    expect(() => assertTestTarget({ NEXT_PUBLIC_SUPABASE_URL: "https://other.supabase.co" })).not.toThrow()
   })
 
   it("never puts the setting's value in the message", () => {
     try {
-      assertNotProduction({ NEXT_PUBLIC_SUPABASE_URL: prod })
+      assertTestTarget({ NEXT_PUBLIC_SUPABASE_URL: prod })
     } catch (err) {
       expect((err as Error).message).not.toContain(prod)
     }

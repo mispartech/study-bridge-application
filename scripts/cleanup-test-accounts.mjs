@@ -4,14 +4,14 @@
 //   node --env-file=.env.local scripts/cleanup-test-accounts.mjs --keep owner@domain            dry run
 //   node --env-file=.env.local scripts/cleanup-test-accounts.mjs --keep owner@domain --confirm  does it
 // --keep (repeatable) names the staff accounts that keep their role. No addresses live in this file.
+//   ... --tests-only --confirm   after a test run: deletes test accounts and test reports, touches no roles
 //
 // Prints emails only, never keys or tokens.
 import { createClient } from "@supabase/supabase-js"
 
-const KEEP_STAFF = new Set(
-  process.argv.flatMap((arg, i, all) => (all[i - 1] === "--keep" ? [arg.toLowerCase()] : []))
-)
-if (KEEP_STAFF.size === 0) throw new Error("Name the staff to keep: --keep owner@domain")
+const KEEP_STAFF = new Set(process.argv.flatMap((arg, i, all) => (all[i - 1] === "--keep" ? [arg.toLowerCase()] : [])))
+const testsOnly = process.argv.includes("--tests-only")
+if (!testsOnly && KEEP_STAFF.size === 0) throw new Error("Name the staff to keep: --keep owner@domain")
 const SYSTEM_ID = "00000000-0000-0000-0000-000000000000"
 const REASON = "System cleanup: test accounts must not exist in production"
 const confirm = process.argv.includes("--confirm")
@@ -51,7 +51,9 @@ const must = (res, what) => {
 }
 
 const users = await allUsers()
-const demote = users.filter((u) => u.app_metadata?.role && !KEEP_STAFF.has((u.email ?? "").toLowerCase()))
+const demote = testsOnly
+  ? []
+  : users.filter((u) => u.app_metadata?.role && !KEEP_STAFF.has((u.email ?? "").toLowerCase()))
 const remove = users.filter((u) => isTest(u.email ?? ""))
 
 console.log(confirm ? "CLEANUP" : "DRY RUN (add --confirm to act)")
@@ -59,36 +61,41 @@ console.log(`\nStaff role removed (${demote.length}):`)
 for (const u of demote) console.log(`  ${u.email}  role ${u.app_metadata.role} -> none`)
 console.log(`\nTest accounts deleted (${remove.length}):`)
 for (const u of remove) console.log(`  ${u.email}  created ${u.created_at.slice(0, 10)}`)
-if (!confirm) process.exit(0)
-
-for (const u of demote) {
-  const before = { role: u.app_metadata.role }
-  const { role: _role, ...rest } = u.app_metadata
-  must(await db.auth.admin.updateUserById(u.id, { app_metadata: { ...rest, role: null } }), `demote ${u.email}`)
-  await audit("system_cleanup_role_removed", u, before, { role: null })
-}
-
-const totals = { reports: 0, ai_usage: 0, payments: 0, activity: 0, accounts: 0 }
-for (const u of remove) {
-  const email = (u.email ?? "").toLowerCase()
-  const reports = must(
-    await db.from("report").delete().or(`claimed_user_id.eq.${u.id},email.eq."${email}"`).select("id"),
-    `reports of ${email}`
-  )
-  const usage = must(await db.from("ai_usage").delete().eq("user_id", u.id).select("id"), `ai_usage of ${email}`)
-  const payments = must(await db.from("payment").delete().eq("user_id", u.id).select("id"), `payments of ${email}`)
-  const activity = must(await db.rpc("purge_test_activity", { p_actor_ids: [u.id] }), `activity of ${email}`)
-  // Profile, shortlist, tracker, search log, subscription, advisor counts and guard logs go with the account.
-  must(await db.auth.admin.deleteUser(u.id), `delete ${email}`)
-  const removed = {
-    reports: reports.data.length,
-    ai_usage: usage.data.length,
-    payments: payments.data.length,
-    activity: activity.data ?? 0,
+if (!confirm) {
+  console.log("\nNothing changed.")
+} else {
+  for (const u of demote) {
+    const before = { role: u.app_metadata.role }
+    const { role: _role, ...rest } = u.app_metadata
+    must(await db.auth.admin.updateUserById(u.id, { app_metadata: { ...rest, role: null } }), `demote ${u.email}`)
+    await audit("system_cleanup_role_removed", u, before, { role: null })
   }
-  await audit("system_cleanup_account_deleted", u, { email, role: u.app_metadata?.role ?? null }, removed)
-  for (const [k, v] of Object.entries(removed)) totals[k] += v
-  totals.accounts += 1
-  console.log(`  deleted ${email}: ${JSON.stringify(removed)}`)
+
+  const totals = { reports: 0, ai_usage: 0, payments: 0, activity: 0, accounts: 0 }
+  for (const u of remove) {
+    const email = (u.email ?? "").toLowerCase()
+    const reports = must(
+      await db.from("report").delete().or(`claimed_user_id.eq.${u.id},email.eq."${email}"`).select("id"),
+      `reports of ${email}`
+    )
+    const usage = must(await db.from("ai_usage").delete().eq("user_id", u.id).select("id"), `ai_usage of ${email}`)
+    const payments = must(await db.from("payment").delete().eq("user_id", u.id).select("id"), `payments of ${email}`)
+    const activity = must(await db.rpc("purge_test_activity", { p_actor_ids: [u.id] }), `activity of ${email}`)
+    // Profile, shortlist, tracker, search log, subscription, advisor counts and guard logs go with the account.
+    must(await db.auth.admin.deleteUser(u.id), `delete ${email}`)
+    const removed = {
+      reports: reports.data.length,
+      ai_usage: usage.data.length,
+      payments: payments.data.length,
+      activity: activity.data ?? 0,
+    }
+    await audit("system_cleanup_account_deleted", u, { email, role: u.app_metadata?.role ?? null }, removed)
+    for (const [k, v] of Object.entries(removed)) totals[k] += v
+    totals.accounts += 1
+    console.log(`  deleted ${email}: ${JSON.stringify(removed)}`)
+  }
+  // Reports emailed to test addresses that never became accounts.
+  const stray = must(await db.from("report").delete().like("email", "%@example.com").select("id"), "test reports")
+  totals.reports += stray.data.length
+  console.log("\nTotals:", JSON.stringify(totals))
 }
-console.log("\nTotals:", JSON.stringify(totals))
