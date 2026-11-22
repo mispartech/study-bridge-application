@@ -18,6 +18,7 @@ export type UserSummary = {
   admin: boolean
   role: "student" | "support" | "data_editor" | "admin"
   suspended: boolean
+  internal: boolean
   plan: "free" | "plus"
   searches: number
   ai_calls: number
@@ -80,6 +81,8 @@ export function summariseUsers(
         admin: u.app_metadata?.role === "admin",
         role: (roleOf(u) ?? "student") as UserSummary["role"],
         suspended: Boolean(u.banned_until && new Date(u.banned_until) > now),
+        // Staff and test accounts, flagged by the database: left out of metrics by default.
+        internal: u.app_metadata?.is_internal === true,
         plan: active ? ("plus" as const) : ("free" as const),
         searches: searchCount.get(u.id) ?? 0,
         ...totals(usageBy.get(u.id) ?? [], prices),

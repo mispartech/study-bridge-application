@@ -1,9 +1,11 @@
 import Link from "next/link"
 import { connection } from "next/server"
 
+import { InternalToggle } from "@/components/admin/internal-toggle"
 import { RangeFilter } from "@/components/admin/range-filter"
 import { Card } from "@/components/ui/card"
 import { DISMISS_LABEL } from "@/lib/activity/events"
+import { includeInternal } from "@/lib/admin/internal"
 import { loadOverview, type TargetCount } from "@/lib/admin/overview"
 import { parseRange } from "@/lib/admin/range"
 import { can } from "@/lib/auth/roles"
@@ -59,10 +61,18 @@ function TopList({ title, rows, reasons }: { title: string; rows: TargetCount[];
   )
 }
 
-async function Overview({ params }: { params: { range?: string; from?: string; to?: string } }) {
+async function Overview({
+  params,
+  internal,
+  canToggle,
+}: {
+  params: { range?: string; from?: string; to?: string }
+  internal: boolean
+  canToggle: boolean
+}) {
   const now = new Date()
   const range = parseRange(params, now)
-  const o = await loadOverview(range, now)
+  const o = await loadOverview(range, now, internal)
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-1">
@@ -72,6 +82,7 @@ async function Overview({ params }: { params: { range?: string; from?: string; t
         </p>
       </div>
       <RangeFilter path="/admin" range={range} exportHref={`/api/admin/export?dataset=funnel&${range.query}`} />
+      {canToggle && <InternalToggle path="/admin" query={range.query} included={internal} />}
 
       <Card className="gap-2">
         <h2 className="font-heading text-base font-bold">Funnel</h2>
@@ -196,7 +207,7 @@ function DeniedNote() {
 export default async function Page({
   searchParams,
 }: {
-  searchParams: Promise<{ denied?: string; range?: string; from?: string; to?: string }>
+  searchParams: Promise<{ denied?: string; range?: string; from?: string; to?: string; internal?: string }>
 }) {
   await connection()
   const { user } = await requireStaff()
@@ -205,7 +216,7 @@ export default async function Page({
   return (
     <div className="flex flex-col gap-3">
       {params.denied && <DeniedNote />}
-      <Overview params={params} />
+      <Overview params={params} internal={includeInternal(params, user)} canToggle={can(user, "roles")} />
     </div>
   )
 }

@@ -1,5 +1,10 @@
 import { defineConfig, devices } from "@playwright/test"
 
+import { loadTestEnv } from "./tests/guard/supabase-guard.mjs"
+
+// Development Supabase only: stops here if the settings point at production. The test server inherits these.
+loadTestEnv()
+
 const PORT = Number(process.env.PORT ?? 3100)
 
 // Runs against a production build: dev mode is slower and behaves differently.
@@ -53,7 +58,8 @@ export default defineConfig({
   webServer: {
     command: `npm run build && npm run start -- --port ${PORT}`,
     url: `http://localhost:${PORT}/dev`,
-    reuseExistingServer: !process.env.CI,
+    // Always a fresh server: one left running could be using production settings from .env.local.
+    reuseExistingServer: false,
     timeout: 300_000,
     // A fake PostHog, so tests can prove when events are and aren't sent.
     env: {

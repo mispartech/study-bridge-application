@@ -127,6 +127,11 @@ export default async function Page({
                     <span className="ml-2 text-xs font-semibold text-primary">{ROLE_LABEL[r.role]}</span>
                   )}
                   {r.suspended && <span className="ml-2 text-xs font-semibold text-danger-strong">suspended</span>}
+                  {r.internal && (
+                    <span data-testid="internal-badge" className="ml-2 text-xs font-semibold text-muted-foreground">
+                      internal
+                    </span>
+                  )}
                 </td>
                 <td className="py-2 pr-4 whitespace-nowrap">{day(r.created_at)}</td>
                 <td className="py-2 pr-4 whitespace-nowrap">{day(r.last_sign_in_at)}</td>

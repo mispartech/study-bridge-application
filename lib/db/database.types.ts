@@ -138,6 +138,22 @@ export type Database = {
         }
         Relationships: []
       }
+      alert_endpoint: {
+        Row: {
+          id: boolean
+          url: string
+        }
+        ComputedFields: never
+        Insert: {
+          id?: boolean
+          url: string
+        }
+        Update: {
+          id?: boolean
+          url?: string
+        }
+        Relationships: []
+      }
       app_setting: {
         Row: {
           key: string
@@ -690,6 +706,28 @@ export type Database = {
           },
         ]
       }
+      internal_actor: {
+        Row: {
+          actor_id: string
+          created_at: string
+          kind: string
+          reason: string
+        }
+        ComputedFields: never
+        Insert: {
+          actor_id: string
+          created_at?: string
+          kind: string
+          reason: string
+        }
+        Update: {
+          actor_id?: string
+          created_at?: string
+          kind?: string
+          reason?: string
+        }
+        Relationships: []
+      }
       payment: {
         Row: {
           amount_minor: number
@@ -1082,6 +1120,37 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      role_change_alert: {
+        Row: {
+          after_role: string
+          before_role: string
+          created_at: string
+          email: string | null
+          id: number
+          sent_at: string | null
+          user_id: string
+        }
+        ComputedFields: never
+        Insert: {
+          after_role: string
+          before_role: string
+          created_at?: string
+          email?: string | null
+          id?: never
+          sent_at?: string | null
+          user_id: string
+        }
+        Update: {
+          after_role?: string
+          before_role?: string
+          created_at?: string
+          email?: string | null
+          id?: never
+          sent_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
       }
       scholarship: {
         Row: {
@@ -1628,7 +1697,7 @@ export type Database = {
     }
     Functions: {
       activity_by_target: {
-        Args: { p_events: string[]; p_from: string; p_to: string }
+        Args: { p_events: string[]; p_from: string; p_include_internal?: boolean; p_to: string }
         Returns: {
           event: string
           events: number
@@ -1637,7 +1706,7 @@ export type Database = {
         }[]
       }
       activity_daily: {
-        Args: { p_events: string[]; p_from: string; p_to: string }
+        Args: { p_events: string[]; p_from: string; p_include_internal?: boolean; p_to: string }
         Returns: {
           day: string
           event: string
@@ -1645,11 +1714,25 @@ export type Database = {
         }[]
       }
       activity_summary: {
-        Args: { p_from: string; p_to: string }
+        Args: { p_from: string; p_include_internal?: boolean; p_to: string }
         Returns: {
           actors: number
           event: string
           events: number
+        }[]
+      }
+      ai_usage_daily_summary: {
+        Args: { p_include_internal?: boolean; p_since: string }
+        Returns: {
+          avg_latency_ms: number
+          calls: number
+          day: string
+          failures: number
+          input_tokens: number
+          model: string
+          output_tokens: number
+          provider: string
+          task: string
         }[]
       }
       anonymise_activity: { Args: { p_actor_id: string }; Returns: number }
@@ -1677,6 +1760,7 @@ export type Database = {
         }[]
       }
       host_matches_domains: { Args: { domains: string[]; host: string }; Returns: boolean }
+      is_test_email: { Args: { p_email: string }; Returns: boolean }
       publish_review_item: {
         Args: {
           p_fees: Json
@@ -1691,6 +1775,7 @@ export type Database = {
         Returns: string
       }
       purge_activity_events: { Args: Record<PropertyKey, never>; Returns: number }
+      purge_test_activity: { Args: { p_actor_ids: string[] }; Returns: number }
       rate_limit_window: { Args: { p_offset_seconds: number; p_window_seconds: number }; Returns: string }
       refund_advisor_message: { Args: { p_user_id: string }; Returns: number }
       refund_rate_limit: {
@@ -1698,7 +1783,7 @@ export type Database = {
         Returns: number
       }
       search_summary: {
-        Args: { p_from: string; p_to: string }
+        Args: { p_from: string; p_include_internal?: boolean; p_to: string }
         Returns: {
           key: string
           kind: string

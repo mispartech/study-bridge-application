@@ -4,6 +4,7 @@ import { serviceClient } from "@/lib/db/service"
 import { getSettings } from "@/lib/settings"
 
 import { count, funnel, type Summary } from "./funnel"
+import { internalUserIds, withoutInternal } from "./internal"
 import { presetRange, type Range } from "./range"
 import { totals, type UsageRow } from "./users"
 
@@ -11,39 +12,51 @@ export type Kpi = { label: string; today: string; week: string; month: string }
 
 const nf = new Intl.NumberFormat("en-GB")
 
-async function summary(from: Date, to: Date): Promise<Summary> {
+async function summary(from: Date, to: Date, internal: boolean): Promise<Summary> {
   const { data, error } = await serviceClient().rpc("activity_summary", {
     p_from: from.toISOString(),
     p_to: to.toISOString(),
+    p_include_internal: internal,
   })
   if (error) throw error
   return (data ?? []).map((r) => ({ event: r.event, events: Number(r.events), actors: Number(r.actors) }))
 }
 
 /** Headline numbers for one window, from the database's own counts. */
-async function windowNumbers(range: Range) {
+async function windowNumbers(range: Range, internal: boolean, internalIds: Set<string>) {
   const db = serviceClient()
   const from = range.from.toISOString()
   const to = range.to.toISOString()
-  const [s, claims, payments, usage, errors, settings] = await Promise.all([
-    summary(range.from, range.to),
-    db.from("report").select("id", { count: "exact", head: true }).gte("claimed_at", from).lt("claimed_at", to),
-    db.from("payment").select("amount_minor, currency").eq("status", "paid").gte("paid_at", from).lt("paid_at", to),
+  const [s, claimRows, paymentRows, usageRows, errors, settings] = await Promise.all([
+    summary(range.from, range.to, internal),
+    db.from("report").select("claimed_user_id").gte("claimed_at", from).lt("claimed_at", to),
+    db
+      .from("payment")
+      .select("user_id, amount_minor, currency")
+      .eq("status", "paid")
+      .gte("paid_at", from)
+      .lt("paid_at", to),
     db
       .from("ai_usage")
-      .select("provider, model, input_tokens, output_tokens, success")
+      .select("user_id, provider, model, input_tokens, output_tokens, success")
       .gte("created_at", from)
       .lt("created_at", to),
     db.from("error_report").select("id", { count: "exact", head: true }).gte("created_at", from).lt("created_at", to),
     getSettings(),
   ])
+  // Internal accounts' rows go unless the admin asked to include them.
+  const keep = <T>(rows: T[] | null, userOf: (row: T) => string | null) =>
+    internal ? (rows ?? []) : withoutInternal(rows ?? [], internalIds, userOf)
+  const claims = keep(claimRows.data, (r) => r.claimed_user_id).length
+  const payments = keep(paymentRows.data, (r) => r.user_id)
+  const usage = keep(usageRows.data, (r) => r.user_id)
   const revenue = new Map<string, number>()
-  for (const p of payments.data ?? []) revenue.set(p.currency, (revenue.get(p.currency) ?? 0) + p.amount_minor)
-  const ai = totals((usage.data ?? []) as UsageRow[], settings.model_prices)
+  for (const p of payments) revenue.set(p.currency, (revenue.get(p.currency) ?? 0) + p.amount_minor)
+  const ai = totals(usage as UsageRow[], settings.model_prices)
   return {
     accounts: count(s, "account_created"),
     reports: count(s, "report_emailed"),
-    claims: claims.count ?? 0,
+    claims,
     applies: count(s, "apply_clicked"),
     revenue:
       [...revenue].map(([currency, minor]) => `${currency} ${nf.format(Math.round(minor / 100))}`).join(", ") || "0",
@@ -69,14 +82,15 @@ const KPI_ROWS: [keyof Awaited<ReturnType<typeof windowNumbers>>, string][] = [
 export type TargetCount = { id: string; title: string; total: number; reasons: Record<string, number> }
 
 /** Everything the Overview page shows, for the selected range plus fixed today / 7 / 30 day columns. */
-export async function loadOverview(range: Range, now: Date) {
+export async function loadOverview(range: Range, now: Date, internal = false) {
   const db = serviceClient()
-  const args = { p_from: range.from.toISOString(), p_to: range.to.toISOString() }
+  const args = { p_from: range.from.toISOString(), p_to: range.to.toISOString(), p_include_internal: internal }
+  const internalIds = internal ? new Set<string>() : await internalUserIds()
   const [selected, today, week, month, byTarget, searches, review] = await Promise.all([
-    summary(range.from, range.to),
-    windowNumbers(presetRange("today", now)),
-    windowNumbers(presetRange("7d", now)),
-    windowNumbers(presetRange("30d", now)),
+    summary(range.from, range.to, internal),
+    windowNumbers(presetRange("today", now), internal, internalIds),
+    windowNumbers(presetRange("7d", now), internal, internalIds),
+    windowNumbers(presetRange("30d", now), internal, internalIds),
     db.rpc("activity_by_target", { ...args, p_events: ["programme_saved", "programme_dismissed", "apply_clicked"] }),
     db.rpc("search_summary", args),
     db.from("review_queue").select("id", { count: "exact", head: true }).eq("status", "pending"),

@@ -2,6 +2,7 @@ import { connection } from "next/server"
 
 import { RangeFilter } from "@/components/admin/range-filter"
 import { Card } from "@/components/ui/card"
+import { includeInternal } from "@/lib/admin/internal"
 import { parseRange } from "@/lib/admin/range"
 import { formatUsd } from "@/lib/admin/users"
 import { requireStaff } from "@/lib/auth/staff-page"
@@ -15,21 +16,26 @@ const lagosDay = (d: Date) => new Date(d.getTime() + 3_600_000).toISOString().sl
 export default async function Page({
   searchParams,
 }: {
-  searchParams: Promise<{ range?: string; from?: string; to?: string }>
+  searchParams: Promise<{ range?: string; from?: string; to?: string; internal?: string }>
 }) {
   await connection()
-  await requireStaff("ai")
-  const range = parseRange(await searchParams, new Date())
+  const { user } = await requireStaff("ai")
+  const params = await searchParams
+  const range = parseRange(params, new Date())
+  const internal = includeInternal(params, user)
   const db = serviceClient()
   const from = range.from.toISOString()
   const to = range.to.toISOString()
   const [daily, usage, guards, thumbs, settings] = await Promise.all([
-    db.rpc("activity_daily", { p_from: from, p_to: to, p_events: ["advisor_message", "advisor_guard_triggered"] }),
+    db.rpc("activity_daily", {
+      p_from: from,
+      p_to: to,
+      p_events: ["advisor_message", "advisor_guard_triggered"],
+      p_include_internal: internal,
+    }),
     db
-      .from("ai_usage_daily")
-      .select("day, provider, model, calls, failures, input_tokens, output_tokens")
+      .rpc("ai_usage_daily_summary", { p_since: lagosDay(range.from), p_include_internal: internal })
       .eq("task", "advisor")
-      .gte("day", lagosDay(range.from))
       .lt("day", lagosDay(range.to)) // range.to is the next midnight, so the end is exclusive
       .order("day"),
     db.from("advisor_guard_log").select("outcome").gte("created_at", from).lt("created_at", to),

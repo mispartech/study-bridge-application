@@ -6,6 +6,7 @@ import { z } from "zod"
 import { staffFromRequest } from "@/lib/auth/admin"
 import { STAFF_ROLES } from "@/lib/auth/roles"
 import { serviceClient } from "@/lib/db/service"
+import { sendQueuedRoleAlert } from "@/lib/security/role-alert"
 import { failureResponse } from "@/lib/server-errors"
 
 const body = z.object({ role: z.enum(["student", ...STAFF_ROLES]) })
@@ -33,6 +34,8 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       before: { role: roleOf(data.user) ?? "student" },
       after: { role: parsed.data.role },
     })
+    // The database queued an alert for every admin; send it now, naming who made the change.
+    await sendQueuedRoleAlert({ userId: id }, user.email ?? user.id)
     return NextResponse.json({ ok: true })
   } catch (err) {
     return failureResponse(err)
