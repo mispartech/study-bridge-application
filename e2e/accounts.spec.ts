@@ -3,7 +3,7 @@ import { createHmac } from "node:crypto"
 
 import { expect, test, type Page } from "@playwright/test"
 
-process.loadEnvFile(".env.local")
+// Settings come from .env.test.local (development project), loaded and checked by playwright.config.ts.
 
 const BASE = "http://localhost:3100"
 const admin = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, {

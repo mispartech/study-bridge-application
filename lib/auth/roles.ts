@@ -41,7 +41,7 @@ export const ROLE_LABEL: Record<StaffRole | "student", string> = {
   admin: "Admin",
 }
 
-type WithMetadata =
+export type WithMetadata =
   { app_metadata?: Record<string, unknown>; user_metadata?: Record<string, unknown> } | null | undefined
 
 export function roleOf(user: WithMetadata): StaffRole | null {

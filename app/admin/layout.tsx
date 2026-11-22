@@ -1,8 +1,10 @@
 import type { Metadata } from "next"
 import Link from "next/link"
 import { Suspense } from "react"
+import { cookies } from "next/headers"
 import { connection } from "next/server"
 
+import { markStaffDevice } from "@/lib/admin/internal"
 import { can, ROLE_LABEL, type Permission } from "@/lib/auth/roles"
 import { requireStaff } from "@/lib/auth/staff-page"
 
@@ -34,6 +36,7 @@ const LINKS: [href: string, label: string, permission: Permission][] = [
 async function StaffOnly({ children }: { children: React.ReactNode }) {
   await connection()
   const { user, role } = await requireStaff()
+  await markStaffDevice((await cookies()).toString())
   return (
     <>
       <nav aria-label="Admin" className="flex flex-wrap items-center gap-3 text-sm font-medium">

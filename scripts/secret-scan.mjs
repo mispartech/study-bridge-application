@@ -11,6 +11,10 @@ const RULES = [
   ["Slack token", /xox[baprs]-[0-9A-Za-z-]{10,}/],
   ["AI provider key", /sk-(?:ant|or|proj)-[0-9A-Za-z_-]{20,}/],
   ["JWT", /eyJ[0-9A-Za-z_-]{10,}\.[0-9A-Za-z_-]{10,}\.[0-9A-Za-z_-]{10,}/],
+  ["Supabase session cookie", /sb-[a-z0-9]{20}-auth-token(?:\.\d+)?=[A-Za-z0-9%_-]{20,}/],
+  ["Supabase secret key", /sb_secret_[0-9A-Za-z_-]{20,}/],
+  ["Resend key", /re_[0-9A-Za-z]{8}_[0-9A-Za-z]{16,}/],
+  ["Paystack secret key", /sk_(?:live|test)_[0-9a-f]{30,}/],
   ["Private key", /-----BEGIN [A-Z ]*PRIVATE KEY-----/],
   ["Database URL with password", /postgres(?:ql)?:\/\/[^:\s/]+:[^@\s]+@/],
 ]

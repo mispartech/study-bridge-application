@@ -107,7 +107,7 @@ export default async function Page() {
               >
                 {e.set ? "set" : "missing"}
               </span>
-              <span className="min-w-0 break-all font-mono text-xs">{e.name}</span>
+              <span className="min-w-0 font-mono text-xs break-all">{e.name}</span>
             </li>
           ))}
         </ul>

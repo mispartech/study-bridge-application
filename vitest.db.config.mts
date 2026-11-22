@@ -1,6 +1,10 @@
 import { defineConfig } from "vitest/config"
 
-// Tests that talk to the real Supabase database. Run with `npm run test:db` (needs .env.local).
+import { loadTestEnv } from "./tests/guard/supabase-guard.mjs"
+
+// Tests that talk to a real Supabase database: the development project in .env.test.local, never production.
+loadTestEnv()
+
 export default defineConfig({
   resolve: { tsconfigPaths: true },
   test: {

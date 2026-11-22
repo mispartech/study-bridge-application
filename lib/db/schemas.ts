@@ -517,6 +517,25 @@ export const cronRunRow = z.object({
   summary: json,
 })
 
+export const internalActorRow = z.object({
+  actor_id: z.string().min(1),
+  kind: z.enum(["user", "device"]),
+  reason: z.enum(["staff", "test"]),
+  created_at: timestamp,
+})
+
+export const roleChangeAlertRow = z.object({
+  id: z.number().int(),
+  created_at: timestamp,
+  user_id: z.uuid(),
+  email: z.string().nullable(),
+  before_role: z.string().min(1),
+  after_role: z.string().min(1),
+  sent_at: timestamp.nullable(),
+})
+
+export const alertEndpointRow = z.object({ id: z.literal(true), url: z.url() })
+
 export const rowSchemas = {
   student_profile: studentProfileRow,
   shortlist: shortlistRow,
@@ -550,6 +569,9 @@ export const rowSchemas = {
   staff_audit: staffAuditRow,
   blocked_email: blockedEmailRow,
   cron_run: cronRunRow,
+  internal_actor: internalActorRow,
+  role_change_alert: roleChangeAlertRow,
+  alert_endpoint: alertEndpointRow,
 } as const
 
 export type TableName = keyof Database["public"]["Tables"]

@@ -4,7 +4,10 @@ import { Suspense } from "react"
 
 import Link from "next/link"
 
+import { InternalToggle } from "@/components/admin/internal-toggle"
 import { Card } from "@/components/ui/card"
+import { includeInternal, internalUserIds, withoutInternal } from "@/lib/admin/internal"
+import { can } from "@/lib/auth/roles"
 import { formatUsd, totals, type UsageRow } from "@/lib/admin/users"
 import { serviceClient } from "@/lib/db/service"
 import { estimateCostUsd, getSettings } from "@/lib/settings"
@@ -20,14 +23,12 @@ function windowStart(days: number): string {
   return new Date(Date.now() - days * 86_400_000).toISOString().slice(0, 10)
 }
 
-async function UsageTables() {
+async function UsageTables({ params }: { params: Params }) {
   await connection() // per-request data; also keeps the service key out of the static build
-  await requireStaff("ai")
+  const { user } = await requireStaff("ai")
   const since = windowStart(DAYS)
   const { data, error } = await serviceClient()
-    .from("ai_usage_daily")
-    .select("*")
-    .gte("day", since)
+    .rpc("ai_usage_daily_summary", { p_since: since, p_include_internal: includeInternal(await params, user) })
     .order("day", { ascending: false })
     .order("task")
   if (error) return <p className="text-danger-strong">Could not load usage: {error.message}</p>
@@ -100,9 +101,11 @@ const RECENT = 50
 const TOP_USERS = 20
 
 /** Spend per account and the latest individual generations. Cost uses the prices set in Settings. */
-async function PerUser() {
+async function PerUser({ params }: { params: Params }) {
   await connection()
-  await requireStaff("ai")
+  const { user } = await requireStaff("ai")
+  const internal = includeInternal(await params, user)
+  const internalIds = internal ? new Set<string>() : await internalUserIds()
   const db = serviceClient()
   const since = new Date(Date.now() - DAYS * 86_400_000).toISOString()
   const [{ data: usage }, { data: recent }, { data: auth }, settings] = await Promise.all([
@@ -120,8 +123,10 @@ async function PerUser() {
   ])
   const emails = new Map((auth?.users ?? []).map((u) => [u.id, u.email ?? u.id]))
   const who = (id: string | null) => (id ? (emails.get(id) ?? id) : "system (ingestion, evals)")
-  const groups = Map.groupBy((usage ?? []) as UsageRow[], (r) => r.user_id)
-  const all = totals((usage ?? []) as UsageRow[], settings.model_prices)
+  // Staff and test accounts' spend is left out of the totals unless an admin includes it.
+  const counted = withoutInternal((usage ?? []) as UsageRow[], internalIds, (r) => r.user_id ?? null)
+  const groups = Map.groupBy(counted, (r) => r.user_id)
+  const all = totals(counted, settings.model_prices)
   const perUser = [...groups]
     .map(([id, rows]) => ({ id, ...totals(rows, settings.model_prices) }))
     .sort((a, b) => b.input_tokens + b.output_tokens - (a.input_tokens + a.output_tokens))
@@ -210,19 +215,31 @@ async function PerUser() {
   )
 }
 
-export default function AiUsagePage() {
+type Params = Promise<{ internal?: string }>
+
+async function Toggle({ params }: { params: Params }) {
+  await connection()
+  const { user } = await requireStaff("ai")
+  if (!can(user, "roles")) return null
+  return <InternalToggle path="/admin/ai-usage" query="" included={includeInternal(await params, user)} />
+}
+
+export default function AiUsagePage({ searchParams }: { searchParams: Params }) {
   return (
     <main className="mx-auto flex max-w-5xl flex-col gap-6 px-4 py-8">
       <header className="flex flex-col gap-1">
         <h1 className="text-2xl font-extrabold">AI usage</h1>
         <p className="text-muted-foreground">Daily totals per task for the last {DAYS} days (Lagos time).</p>
       </header>
+      <Suspense fallback={null}>
+        <Toggle params={searchParams} />
+      </Suspense>
       <Suspense fallback={<p className="text-muted-foreground">Loading…</p>}>
-        <PerUser />
+        <PerUser params={searchParams} />
       </Suspense>
       <h2 className="font-heading text-base font-bold">Daily totals per task</h2>
       <Suspense fallback={<p className="text-muted-foreground">Loading…</p>}>
-        <UsageTables />
+        <UsageTables params={searchParams} />
       </Suspense>
     </main>
   )
