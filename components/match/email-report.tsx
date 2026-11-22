@@ -21,7 +21,7 @@ export function EmailReport({ profile, signedIn }: { profile: MatchProfile; sign
   const [marketing, setMarketing] = React.useState(false)
   const [state, setState] = React.useState<"idle" | "sending" | "sent" | "failed">("idle")
   const [error, setError] = React.useState<string | null>(null)
-  const { box: captchaBox, ...captcha } = useTurnstile({ invisible: true, lazy: true })
+  const { box: captchaBox, ...captcha } = useTurnstile({ invisible: true, lazy: true, acceptsPass: true })
   const panel = React.useRef<HTMLDivElement>(null)
   React.useEffect(() => {
     if (open) panel.current?.scrollIntoView({ block: "nearest" })
@@ -31,19 +31,19 @@ export function EmailReport({ profile, signedIn }: { profile: MatchProfile; sign
     event.preventDefault()
     setState("sending")
     setError(null)
-    const token = await captcha.nextToken()
-    const res = await fetch("/api/report", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({
-        email,
-        profile,
-        reminders_consent: reminders,
-        marketing_consent: marketing,
-        ...(token && { turnstile_token: token }),
-      }),
-    }).catch(() => null)
-    captcha.reset() // a token works once
+    const res = await captcha.send((token) =>
+      fetch("/api/report", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          email,
+          profile,
+          reminders_consent: reminders,
+          marketing_consent: marketing,
+          ...(token && { turnstile_token: token }),
+        }),
+      }).catch(() => null)
+    )
     if (res?.ok) {
       track("report_emailed")
       setState("sent")
@@ -127,7 +127,7 @@ export function EmailReport({ profile, signedIn }: { profile: MatchProfile; sign
               Privacy notice
             </Link>
           </p>
-          {captcha.enabled && <div ref={captchaBox} data-testid="turnstile" />}
+          {captcha.enabled && <div ref={captchaBox} data-testid="turnstile" className={captcha.boxClassName} />}
           {error && (
             <p role="alert" className="text-danger-strong">
               {error}

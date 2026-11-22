@@ -5,6 +5,7 @@ import { envStatus } from "@/lib/admin/env"
 import { requireStaff } from "@/lib/auth/staff-page"
 import { serviceClient } from "@/lib/db/service"
 import { emailLive } from "@/lib/email/send"
+import { cn } from "@/lib/utils"
 
 const nf = new Intl.NumberFormat("en-GB")
 const time = (iso: string | null) => (iso ? iso.slice(0, 16).replace("T", " ") : "—")
@@ -94,11 +95,19 @@ export default async function Page() {
         <p className="text-xs text-muted-foreground">
           Names only; values are never shown. Change them in Vercel, then redeploy.
         </p>
-        <ul className="grid gap-1 text-sm sm:grid-cols-2">
+        {/* Status first, at a fixed width, so it can't be read as belonging to the next column's name. */}
+        <ul className="grid gap-x-8 gap-y-1 text-sm sm:grid-cols-2">
           {env.map((e) => (
-            <li key={e.name} className="flex justify-between gap-2">
-              <span className="font-mono text-xs">{e.name}</span>
-              <span className={e.set ? "text-success-strong" : "text-danger-strong"}>{e.set ? "set" : "missing"}</span>
+            <li key={e.name} data-testid="env-row" className="flex items-center gap-2">
+              <span
+                className={cn(
+                  "w-16 shrink-0 rounded-full px-2 py-0.5 text-center text-xs font-medium",
+                  e.set ? "bg-success/15 text-success-strong" : "bg-danger/15 text-danger-strong"
+                )}
+              >
+                {e.set ? "set" : "missing"}
+              </span>
+              <span className="min-w-0 break-all font-mono text-xs">{e.name}</span>
             </li>
           ))}
         </ul>

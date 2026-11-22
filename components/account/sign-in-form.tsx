@@ -1,12 +1,13 @@
 "use client"
 
 import Link from "next/link"
-import { useSearchParams } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import * as React from "react"
 
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { supabaseBrowser } from "@/lib/auth/client"
+import { hasSession } from "@/lib/match/profile-store"
 
 import { useTurnstile } from "./turnstile"
 
@@ -23,7 +24,7 @@ const REASONS: Record<string, { title: string; body: string }> = {
   },
   results: {
     title: "Save your results",
-    body: "Enter your email and we'll send a link to verify it. Opening it creates your free account, moves everything you've entered into it, and takes you to your dashboard to finish setting up.",
+    body: "Enter your email and we'll send a link to verify it. Opening it creates your free account, moves everything you've entered into it, and takes you to your dashboard to finish setting up. Open it on this phone, in this browser, so your answers come with you.",
   },
 }
 const DEFAULT_REASON = { title: "Sign in to StudyBridge", body: "New here? This creates your free account." }
@@ -43,15 +44,23 @@ export function SignInForm({ reasonKey, nextPath, skip }: SignInFormProps = {}) 
   const next = nextPath ?? params.get("next") ?? "/discover"
   const [email, setEmail] = React.useState("")
   const [state, setState] = React.useState<"idle" | "sending" | "sent" | "failed">("idle")
+  const router = useRouter()
+  // An optional step (save your results) has nothing to offer someone already signed in: carry on past it.
+  React.useEffect(() => {
+    if (skip && hasSession()) router.replace(skip.href)
+  }, [skip, router])
   const callback = () => `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`
-  const { box: captchaBox, ...captcha } = useTurnstile()
+  // Invisible: it loads when the form is touched, asks for a tap only if Cloudflare needs one, and folds away
+  // once passed, rather than leaving a box on screen.
+  const { box: captchaBox, ...captcha } = useTurnstile({ invisible: true, lazy: true })
 
   async function sendLink(event: React.FormEvent) {
     event.preventDefault()
     setState("sending")
+    const token = await captcha.nextToken()
     const { error } = await supabaseBrowser().auth.signInWithOtp({
       email,
-      options: { emailRedirectTo: callback(), ...(captcha.token && { captchaToken: captcha.token }) },
+      options: { emailRedirectTo: callback(), ...(token && { captchaToken: token }) },
     })
     // A token works once, so a failed attempt needs a fresh one.
     if (error) captcha.reset()
@@ -89,7 +98,7 @@ export function SignInForm({ reasonKey, nextPath, skip }: SignInFormProps = {}) 
         </p>
       )}
       <Card className="gap-3">
-        <form onSubmit={sendLink} className="flex flex-col gap-3">
+        <form onSubmit={sendLink} onFocus={captcha.start} onPointerDown={captcha.start} className="flex flex-col gap-3">
           <label className="flex flex-col gap-1 text-sm font-medium">
             Email address
             <input
@@ -101,13 +110,13 @@ export function SignInForm({ reasonKey, nextPath, skip }: SignInFormProps = {}) 
               className="h-11 w-full rounded-button border border-border bg-surface px-3 text-[0.9375rem]"
             />
           </label>
-          {captcha.enabled && <div ref={captchaBox} data-testid="turnstile" className="min-h-16" />}
+          {captcha.enabled && <div ref={captchaBox} data-testid="turnstile" className={captcha.boxClassName} />}
           {captcha.failed && (
             <p role="alert" className="text-sm text-danger-strong">
               The security check didn&apos;t load. Refresh the page, or use Google below.
             </p>
           )}
-          <Button type="submit" block loading={state === "sending"} disabled={captcha.enabled && !captcha.token}>
+          <Button type="submit" block loading={state === "sending"}>
             Email me a sign-in link
           </Button>
         </form>

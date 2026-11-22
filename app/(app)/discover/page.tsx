@@ -22,12 +22,14 @@ export const metadata: Metadata = { title: "Your matches" }
 
 const PREVIEW_CARDS = 3
 
-function NoProfile() {
+function NoProfile({ newAccount }: { newAccount: boolean }) {
   return (
-    <Card className="mx-auto max-w-lg">
-      <h1 className="text-2xl font-extrabold">Let&apos;s find your matches</h1>
+    <Card className="mx-auto max-w-lg" data-testid={newAccount ? "welcome-empty" : undefined}>
+      <h1 className="text-2xl font-extrabold">{newAccount ? "Your account is ready" : "Let's find your matches"}</h1>
       <p className="text-sm text-muted-foreground">
-        Tell us about your grades, tests and budget. It takes about five minutes.
+        {newAccount
+          ? "Your answers didn't come with the link, usually because it was opened in a different browser or app. Answer the questions once more and they'll be saved to your account."
+          : "Tell us about your grades, tests and budget. It takes about five minutes."}
       </p>
       <Button asChild block>
         <Link href="/onboarding">Start</Link>
@@ -48,17 +50,22 @@ function missingSetup(profile: MatchProfile): string[] {
   return missing
 }
 
-/** Shown once, straight after the email link: the account exists, and here's what's left to set up. */
-function Welcome({ missing }: { missing: string[] }) {
+/**
+ * Straight after sign-up: the account exists, and here's what's left to set up. Afterwards, the same checklist
+ * stays (without the welcome) until the setup is complete, whichever way the student signed up.
+ */
+function Welcome({ missing, fresh }: { missing: string[]; fresh: boolean }) {
   return (
-    <Card data-testid="welcome" className="mb-4 gap-2 border-success/40">
-      <h2 className="font-heading text-lg font-bold">Your account is ready</h2>
-      <p className="text-sm">Your email is verified and everything you entered is saved to your account.</p>
+    <Card data-testid={fresh ? "welcome" : "finish-setup"} className="mb-4 gap-2 border-success/40">
+      <h2 className="font-heading text-lg font-bold">{fresh ? "Your account is ready" : "Finish your setup"}</h2>
+      {fresh && <p className="text-sm">Your email is verified and everything you entered is saved to your account.</p>}
       {missing.length === 0 ? (
         <p className="text-sm text-muted-foreground">Your setup is complete. Your matches below use all of it.</p>
       ) : (
         <>
-          <p className="text-sm font-medium">Finish your setup for more precise matches:</p>
+          <p className="text-sm font-medium">
+            {fresh ? "Finish your setup for more precise matches:" : "For more precise matches, add:"}
+          </p>
           <ul className="list-disc pl-5 text-sm">
             {missing.map((m) => (
               <li key={m}>{m}</li>
@@ -79,7 +86,7 @@ async function Results({ welcome }: { welcome: boolean }) {
   const store = await cookies()
   const account = hasSessionCookie(store.getAll()) ? await loadAccount() : null
   const profile = account?.profile ?? parseProfileCookie(store.get(PROFILE_COOKIE)?.value)
-  if (!profile) return <NoProfile />
+  if (!profile) return <NoProfile newAccount={welcome && account !== null} />
   const score = account?.completeness ?? store.get(COMPLETENESS_COOKIE)?.value
   const demoMode = demoModeEnabled()
   const catalogue = await loadCatalogue(demoMode)
@@ -88,7 +95,9 @@ async function Results({ welcome }: { welcome: boolean }) {
   const previewCards = inCountries(view.ranked, profile.preferred_countries)
   return (
     <>
-      {welcome && account && <Welcome missing={missingSetup(profile)} />}
+      {account && (welcome || missingSetup(profile).length > 0) && (
+        <Welcome missing={missingSetup(profile)} fresh={welcome} />
+      )}
       <ResultsView
         initialProfile={profile}
         accountSaved={account?.saved ?? null}
