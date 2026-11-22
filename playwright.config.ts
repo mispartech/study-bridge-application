@@ -2,7 +2,8 @@ import { defineConfig, devices } from "@playwright/test"
 
 import { loadTestEnv } from "./tests/guard/supabase-guard.mjs"
 
-// Development Supabase only: stops here if the settings point at production. The test server inherits these.
+// One Supabase project: refused unless started on purpose with `npm run test:e2e` (never in CI). Test accounts
+// are flagged internal by the database and deleted by the global teardown after every run.
 loadTestEnv()
 
 const PORT = Number(process.env.PORT ?? 3100)
@@ -10,6 +11,7 @@ const PORT = Number(process.env.PORT ?? 3100)
 // Runs against a production build: dev mode is slower and behaves differently.
 export default defineConfig({
   testDir: "./e2e",
+  globalTeardown: "./e2e/global-teardown.ts",
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
