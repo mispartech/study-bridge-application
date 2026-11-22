@@ -13,9 +13,9 @@ import { supabaseServer } from "@/lib/auth/server"
 import { parseProfileCookie } from "@/lib/match/draft"
 import { demoModeEnabled, loadCatalogue } from "@/lib/match/catalogue"
 import { PROFILE_COOKIE } from "@/lib/match/profile-store"
-import { clientIp, LIMITS } from "@/lib/security/limits"
+import { LIMITS } from "@/lib/security/limits"
 import { clientFrom, hitBoth, refundBoth, withDeviceCookie } from "@/lib/security/rate-limit"
-import { verifyTurnstile } from "@/lib/security/turnstile"
+import { checkHuman, HUMAN_REQUIRED, withHumanPass } from "@/lib/security/human-pass"
 
 const MAX_MESSAGE_CHARS = 2000
 const MAX_HISTORY = 12
@@ -63,6 +63,7 @@ export async function POST(request: Request) {
   const demoMode = demoModeEnabled()
 
   let turn: Turn
+  let issuePass = false
   const client = clientFrom(request)
   if (user) {
     const { data: row } = await supabase.from("student_profile").select("*").maybeSingle()
@@ -90,9 +91,9 @@ export async function POST(request: Request) {
   } else {
     const profile = parseProfileCookie((await cookies()).get(PROFILE_COOKIE)?.value)
     if (!profile) return NextResponse.json({ error: "Profile needed" }, { status: 409 })
-    if (!(await verifyTurnstile(parsed.data.turnstile_token, clientIp(request.headers)))) {
-      return NextResponse.json({ error: "Security check failed. Refresh and try again." }, { status: 403 })
-    }
+    const human = await checkHuman(request, parsed.data.turnstile_token)
+    if (!human.human) return NextResponse.json(HUMAN_REQUIRED, { status: 403 })
+    issuePass = human.issue
     const limit = await hitBoth(LIMITS.advisorAnonymous, client)
     if (!limit.allowed) {
       const res = NextResponse.json(
@@ -119,7 +120,8 @@ export async function POST(request: Request) {
     actor: user ? { type: "student", id: user.id } : { type: "anonymous", id: client.deviceKey },
     properties: { anonymous: !user },
   })
-  return withDeviceCookie(stream(parsed.data.messages, turn), client)
+  const res = withDeviceCookie(stream(parsed.data.messages, turn), client)
+  return issuePass ? withHumanPass(res, client) : res
 }
 
 function stream(messages: z.infer<typeof body>["messages"], { ctx, shortlist, userId, quota, refund }: Turn) {

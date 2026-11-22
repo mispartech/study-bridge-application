@@ -10,6 +10,7 @@ import { MAX_COUNTRIES } from "@/lib/match/countries"
 import type { CountryCode } from "@/lib/match/countries"
 
 import { JourneySteps } from "@/components/journey/journey-steps"
+import { CityPicker } from "@/components/onboarding/city-picker"
 import { SavedNote } from "@/components/privacy/cookie-banner"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
@@ -23,11 +24,14 @@ import {
   hasSession,
   saveProfile,
   savedStore,
+  takeQuickCarry,
   toMatchProfile,
+  type QuickCarry,
   type Draft,
   type TestKey,
   type TestState,
 } from "@/lib/match/draft"
+import { countryName, FIRST_COUNTRIES, OTHER_COUNTRIES } from "@/lib/geo/countries"
 import { ACCOMMODATION_LABEL, BAND_LABEL, FIELDS, nextCycle, TERM_LABEL } from "@/lib/match/labels"
 import { cn } from "@/lib/utils"
 
@@ -107,10 +111,51 @@ function Options({
 
 const noSubscription = () => () => undefined
 
+/** A country dropdown: the countries StudyBridge serves first, then everyone else A to Z. */
+function CountrySelect({ value, onChange }: { value: string; onChange: (code: string) => void }) {
+  return (
+    <select className={control} value={value} onChange={(e) => onChange(e.target.value)}>
+      <option value="">Choose a country</option>
+      <optgroup label="Most common">
+        {FIRST_COUNTRIES.map((code) => (
+          <option key={code} value={code}>
+            {countryName(code)}
+          </option>
+        ))}
+      </optgroup>
+      <optgroup label="All countries">
+        {OTHER_COUNTRIES.map(({ code, name }) => (
+          <option key={code} value={code}>
+            {name}
+          </option>
+        ))}
+      </optgroup>
+    </select>
+  )
+}
+
+/** Fixed lists for answers with a known range, so nobody has to type them on a phone keyboard. */
+const range = (from: number, to: number, step = 1) =>
+  Array.from({ length: Math.round((to - from) / step) + 1 }, (_, i) => +(from + i * step).toFixed(1))
+const asOptions = (values: number[], label = (v: number) => String(v)) =>
+  Object.fromEntries(values.map((v) => [String(v), label(v)]))
+const WORK_YEARS = asOptions(range(0, 15), (v) =>
+  v === 0 ? "None yet" : v === 15 ? "15 or more" : `${v} year${v === 1 ? "" : "s"}`
+)
+const DEPENDANTS = asOptions(range(0, 6), (v) => (v === 0 ? "None, just me" : v === 6 ? "6 or more" : String(v)))
+const SCORE_OPTIONS: Partial<Record<TestKey, Record<string, string>>> = {
+  ielts: asOptions(range(4, 9, 0.5).reverse(), (v) => v.toFixed(1)),
+  duolingo: asOptions(range(60, 160, 5).reverse()),
+}
+const TOEFL_ESSENTIALS = asOptions(range(1, 6, 0.5).reverse(), (v) => v.toFixed(1))
+
 export function Wizard() {
   const router = useRouter()
   // Each script fetched on the last tap costs a full round trip on a slow network, so load the route now.
-  React.useEffect(() => router.prefetch("/discover"), [router])
+  React.useEffect(() => {
+    router.prefetch("/discover")
+    router.prefetch("/onboarding/save")
+  }, [router])
   const draft = React.useSyncExternalStore(draftStore.subscribe, draftStore.get, draftStore.getServer)
   // Every answer saves as it's typed, so progress survives a refresh or a dropped connection.
   const update = (patch: Partial<Draft>) => draftStore.set({ ...draftStore.get(), ...patch })
@@ -132,13 +177,22 @@ export function Wizard() {
       .map((cycle) => [cycle, cycle])
   )
 
-  // Reopening on a signed-in device brings the saved answers back.
+  // Answers from a quick search just run, applied on top of where the wizard starts. Read once per mount.
+  const carry = React.useRef<QuickCarry | null | undefined>(undefined)
+  const [carried, setCarried] = React.useState(false)
+  // A signed-in student starts from their account, so a quick search never wipes answers they saved before.
   React.useEffect(() => {
-    if (!hasSession() || draftStore.get() !== emptyDraft) return
+    carry.current ??= takeQuickCarry()
+    const quick = carry.current ?? {}
+    if (carry.current) setCarried(true)
+    if (!hasSession() || draftStore.get() !== emptyDraft) {
+      if (carry.current) draftStore.set({ ...draftStore.get(), ...quick })
+      return
+    }
     void fetch("/api/account/profile")
       .then((res) => (res.ok ? (res.json() as Promise<{ draft: Partial<Draft> | null }>) : null))
       .then((body) => {
-        if (body?.draft) draftStore.set({ ...emptyDraft, ...body.draft, step: 0 })
+        if (body?.draft || carry.current) draftStore.set({ ...emptyDraft, ...body?.draft, ...quick, step: 0 })
       })
   }, [])
 
@@ -170,16 +224,30 @@ export function Wizard() {
     }
   }
 
+  // Graduation years run to next year (final-year students). Read in the browser: the page is prerendered.
+  const thisYear = React.useSyncExternalStore(
+    noSubscription,
+    () => new Date().getFullYear(),
+    () => 0
+  )
+  const years = thisYear ? asOptions(range(thisYear - 40, thisYear + 1).reverse()) : {}
+  const scoreOptions = (key: TestKey) =>
+    key === "toefl" ? (draft.toefl_scale === "1-6" ? TOEFL_ESSENTIALS : undefined) : SCORE_OPTIONS[key]
+  const places = draft.cities
+    .split(",")
+    .map((c) => c.trim())
+    .filter(Boolean)
+
   const steps = [
     <>
-      <Field label="Nationality (2-letter code, e.g. NG)">
-        <input className={control} maxLength={2} autoCapitalize="characters" {...text("nationality")} />
+      <Field label="Nationality">
+        <CountrySelect value={draft.nationality} onChange={(nationality) => update({ nationality })} />
       </Field>
       <Field label="Country you live in">
-        <input className={control} maxLength={2} autoCapitalize="characters" {...text("residence")} />
+        <CountrySelect value={draft.residence} onChange={(residence) => update({ residence })} />
       </Field>
       <Field label="Passport or travel document country">
-        <input className={control} maxLength={2} autoCapitalize="characters" {...text("travel_document")} />
+        <CountrySelect value={draft.travel_document} onChange={(travel_document) => update({ travel_document })} />
       </Field>
     </>,
     <>
@@ -236,10 +304,14 @@ export function Wizard() {
       </Field>
       <div className="grid grid-cols-2 gap-2">
         <Field label="Graduation year">
-          <input className={control} inputMode="numeric" {...text("graduation_year")} />
+          <Options
+            value={draft.graduation_year}
+            onChange={(graduation_year) => update({ graduation_year })}
+            options={years}
+          />
         </Field>
         <Field label="Years of work">
-          <input className={control} inputMode="decimal" {...text("work_years")} />
+          <Options value={draft.work_years} onChange={(work_years) => update({ work_years })} options={WORK_YEARS} />
         </Field>
       </div>
     </>,
@@ -260,14 +332,30 @@ export function Wizard() {
             </div>
             {answer.state === "taken" && (
               <div className="mt-1 flex gap-2">
-                <input
-                  aria-label={`${label} score`}
-                  placeholder="Score"
-                  inputMode="decimal"
-                  className={control}
-                  value={answer.score}
-                  onChange={(e) => setTest({ score: e.target.value })}
-                />
+                {scoreOptions(key) ? (
+                  <select
+                    aria-label={`${label} score`}
+                    className={control}
+                    value={answer.score}
+                    onChange={(e) => setTest({ score: e.target.value })}
+                  >
+                    <option value="">Score</option>
+                    {Object.entries(scoreOptions(key)!).map(([v, l]) => (
+                      <option key={v} value={v}>
+                        {l}
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <input
+                    aria-label={`${label} score`}
+                    placeholder="Score"
+                    inputMode="decimal"
+                    className={control}
+                    value={answer.score}
+                    onChange={(e) => setTest({ score: e.target.value })}
+                  />
+                )}
                 {key === "toefl" && (
                   <select
                     aria-label="TOEFL scale"
@@ -334,14 +422,19 @@ export function Wizard() {
       <CountryChips
         legend="Where would you like to study?"
         selected={draft.countries as CountryCode[]}
-        onChange={(countries) => update({ countries })}
+        onChange={(countries) =>
+          // Dropping a country drops its places; adding one keeps what was chosen.
+          update(countries.length < draft.countries.length ? { countries, cities: "" } : { countries })
+        }
         nationality={draft.nationality || null}
         travelDocument={draft.travel_document || null}
         max={MAX_COUNTRIES}
       />
-      <Field label="Cities or regions you like (comma separated)">
-        <input className={control} {...text("cities")} />
-      </Field>
+      <CityPicker
+        countries={draft.countries as CountryCode[]}
+        selected={places}
+        onChange={(next) => update({ cities: next.join(", ") })}
+      />
       <Field label="Campus or city life">
         <Options
           value={draft.campus_or_city}
@@ -377,7 +470,7 @@ export function Wizard() {
         />
       </Field>
       <Field label="Dependants coming with you">
-        <input className={control} inputMode="numeric" {...text("dependants")} />
+        <Options value={draft.dependants} onChange={(dependants) => update({ dependants })} options={DEPENDANTS} />
       </Field>
     </>,
   ]
@@ -388,7 +481,6 @@ export function Wizard() {
     hasSession,
     () => false
   )
-  const carried = Boolean(draft.field && draft.cgpa && draft.budget_millions)
 
   return (
     <div className="mx-auto flex w-full max-w-lg flex-col gap-4">

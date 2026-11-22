@@ -22,6 +22,13 @@ async function moveToAccount(accepted: boolean) {
   return res.ok
 }
 
+function withWelcome(next: string) {
+  const url = new URL(next, "https://studybridge.invalid")
+  if (url.pathname !== "/discover") return next
+  url.searchParams.set("welcome", "1")
+  return `${url.pathname}${url.search}`
+}
+
 export function ConsentForm({ next, alreadyConsented }: { next: string; alreadyConsented: boolean }) {
   const router = useRouter()
   const [agreed, setAgreed] = React.useState(false)
@@ -41,7 +48,8 @@ export function ConsentForm({ next, alreadyConsented }: { next: string; alreadyC
 
   async function accept() {
     setState("saving")
-    if (await moveToAccount(true)) router.replace(next)
+    // A brand-new account lands on its results with the welcome and the setup checklist, however it signed up.
+    if (await moveToAccount(true)) router.replace(withWelcome(next))
     else setState("failed")
   }
 

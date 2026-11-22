@@ -10,9 +10,9 @@ import { demoModeEnabled, loadCatalogue } from "@/lib/match/catalogue"
 import { presentResult } from "@/lib/match/present"
 import { REPORT_CONSENT_VERSION } from "@/lib/report/consent"
 import { deliverReport } from "@/lib/report/send"
-import { clientIp, LIMITS, REPORT_PER_EMAIL } from "@/lib/security/limits"
+import { LIMITS, REPORT_PER_EMAIL } from "@/lib/security/limits"
 import { clientFrom, hashKey, hit, hitBoth, withDeviceCookie } from "@/lib/security/rate-limit"
-import { verifyTurnstile } from "@/lib/security/turnstile"
+import { checkHuman, HUMAN_REQUIRED, withHumanPass } from "@/lib/security/human-pass"
 import { failureResponse } from "@/lib/server-errors"
 
 const SNAPSHOT_MATCHES = 10
@@ -44,8 +44,8 @@ export async function POST(request: Request) {
     .eq("email_hash", emailHash)
     .maybeSingle()
   if (blocked) return NextResponse.json({ error: "We can't send reports to this address." }, { status: 422 })
-  const human = await verifyTurnstile(parsed.data.turnstile_token, clientIp(request.headers))
-  if (!human) return NextResponse.json({ error: "Security check failed. Refresh and try again." }, { status: 403 })
+  const human = await checkHuman(request, parsed.data.turnstile_token)
+  if (!human.human) return NextResponse.json(HUMAN_REQUIRED, { status: 403 })
   const [visitor, address] = await Promise.all([hitBoth(LIMITS.report, client), hit(REPORT_PER_EMAIL, emailHash)])
   if (!visitor.allowed || !address.allowed) {
     const res = NextResponse.json(
@@ -93,7 +93,8 @@ export async function POST(request: Request) {
       })
       await deliverReport({ reportId: data.id, email, origin, profile: profile.data, result, view, catalogue, now })
     })
-    return withDeviceCookie(NextResponse.json({ ok: true }, { status: 202 }), client)
+    const res = withDeviceCookie(NextResponse.json({ ok: true }, { status: 202 }), client)
+    return human.issue ? withHumanPass(res, client) : res
   } catch (err) {
     return failureResponse(err)
   }

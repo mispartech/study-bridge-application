@@ -14,7 +14,7 @@ import { track } from "@/lib/analytics/track"
 import { MAX_COUNTRIES, type CountryCode } from "@/lib/match/countries"
 import { COUNTRY_LABEL, FIELDS, fieldLabel, nextCycle } from "@/lib/match/labels"
 import type { MatchView } from "@/lib/match/present"
-import { draftStore } from "@/lib/match/profile-store"
+import { carryQuickSearch, draftStore, hasSession } from "@/lib/match/profile-store"
 import type { Suggestion } from "@/lib/match/suggest"
 import { formatShort } from "@/lib/money"
 
@@ -55,7 +55,7 @@ export function QuickMatch() {
   const results = React.useRef<HTMLElement>(null)
   // Invisible bot check. It loads once the page is idle (or the form is touched), so the first paint stays
   // fast and a token is usually ready by the time the student taps.
-  const { box: captchaBox, ...captcha } = useTurnstile({ invisible: true, lazy: true })
+  const { box: captchaBox, ...captcha } = useTurnstile({ invisible: true, lazy: true, acceptsPass: true })
   const startCaptcha = captcha.start
   React.useEffect(() => {
     if ("requestIdleCallback" in window) {
@@ -84,38 +84,40 @@ export function QuickMatch() {
     setLoading(true)
     setFailed(false)
     try {
-      const token = await captcha.nextToken()
-      const res = await fetch("/api/match", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({
-          quick_match: true,
-          nationality: QUICK_NATIONALITY,
-          field: search.field,
-          cgpa: Number(cgpa),
-          cgpa_scale: Number(scale),
-          budget_total_minor: Number(search.budget) * MILLION_KOBO,
-          target_cycle: nextCycle(new Date()),
-          accommodation_pref: "university_halls", // same basis as the full results, so prices match
-          preferred_countries: search.countries,
-          ...(token && { turnstile_token: token }),
-        }),
-      })
-      captcha.reset() // a token works once
-      if (!res.ok) throw new Error("match failed")
+      const res = await captcha.send((token) =>
+        fetch("/api/match", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({
+            quick_match: true,
+            nationality: QUICK_NATIONALITY,
+            field: search.field,
+            cgpa: Number(cgpa),
+            cgpa_scale: Number(scale),
+            budget_total_minor: Number(search.budget) * MILLION_KOBO,
+            target_cycle: nextCycle(new Date()),
+            accommodation_pref: "university_halls", // same basis as the full results, so prices match
+            preferred_countries: search.countries,
+            ...(token && { turnstile_token: token }),
+          }),
+        })
+      )
+      if (!res?.ok) throw new Error("match failed")
       const result = (await res.json()) as QuickView
       setView(result)
       setSearched(search)
       logActivity("quick_match_run", { properties: { results: Math.min(100, result.ranked.length) } })
-      // Carried into the deep search, so the student never answers these twice.
-      draftStore.set({
-        ...draftStore.get(),
+      // Carried into the deep search, so the student never answers these twice. A signed-in student's wizard
+      // starts from their account and takes these on top; a visitor's draft takes them now.
+      const carry = {
         field: search.field,
         cgpa,
         cgpa_scale: scale,
         budget_millions: search.budget,
         countries: search.countries,
-      })
+      }
+      carryQuickSearch(carry)
+      if (!hasSession()) draftStore.set({ ...draftStore.get(), ...carry })
       requestAnimationFrame(() => results.current?.scrollIntoView({ block: "start", behavior: "smooth" }))
     } catch {
       setFailed(true)
@@ -190,7 +192,7 @@ export function QuickMatch() {
             emptyHint={`Choose 1 or ${MAX_COUNTRIES}.`}
             error={countryError}
           />
-          {captcha.enabled && <div ref={captchaBox} data-testid="turnstile" />}
+          {captcha.enabled && <div ref={captchaBox} data-testid="turnstile" className={captcha.boxClassName} />}
           <Button type="submit" variant="accent" size="lg" block loading={loading}>
             See my matches
           </Button>

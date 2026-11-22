@@ -8,9 +8,9 @@ import { currentUser, hasSessionCookie } from "@/lib/auth/server"
 import { presentResult } from "@/lib/match/present"
 import { suggest } from "@/lib/match/suggest"
 import { logSearch, searchLogRow } from "@/lib/match/search-log"
-import { clientIp, LIMITS } from "@/lib/security/limits"
+import { LIMITS } from "@/lib/security/limits"
 import { clientFrom, hitBoth, withDeviceCookie } from "@/lib/security/rate-limit"
-import { verifyTurnstile } from "@/lib/security/turnstile"
+import { checkHuman, HUMAN_REQUIRED, withHumanPass } from "@/lib/security/human-pass"
 import { failureResponse } from "@/lib/server-errors"
 
 const QUICK_RESULTS = 3
@@ -28,14 +28,14 @@ export async function POST(request: Request) {
   // The limit, the bot check and the catalogue load run side by side, so protection adds no wait.
   const [limit, human, catalogue] = await Promise.all([
     hitBoth(quick ? LIMITS.quickMatch : LIMITS.match, client),
-    quick ? verifyTurnstile(token, clientIp(request.headers)) : Promise.resolve(true),
+    quick ? checkHuman(request, token) : Promise.resolve({ human: true, issue: false }),
     loadCatalogue(demoMode).catch((err: unknown) => failureResponse(err)),
   ])
   if (!limit.allowed) {
     const res = NextResponse.json({ error: "Too many searches. Try again in a little while." }, { status: 429 })
     return withDeviceCookie(res, client)
   }
-  if (!human) return NextResponse.json({ error: "Security check failed. Refresh and try again." }, { status: 403 })
+  if (!human.human) return NextResponse.json(HUMAN_REQUIRED, { status: 403 })
   if (catalogue instanceof NextResponse) return catalogue
 
   const now = new Date()
@@ -55,7 +55,7 @@ export async function POST(request: Request) {
   const shown = inCountries(ranked, chosen)
   // Nothing fits: say exactly what would change that, rather than a dead end.
   const suggestions = shown.length === 0 ? suggest(parsed.data, catalogue, { now, demoMode }) : []
-  return withDeviceCookie(
+  const res = withDeviceCookie(
     NextResponse.json({
       ...view,
       ranked: shown.slice(0, QUICK_RESULTS),
@@ -68,4 +68,5 @@ export async function POST(request: Request) {
     }),
     client
   )
+  return human.issue ? withHumanPass(res, client) : res
 }

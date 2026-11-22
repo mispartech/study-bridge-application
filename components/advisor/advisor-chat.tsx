@@ -130,7 +130,7 @@ export function AdvisorChat({
   const [showSources, setShowSources] = React.useState(false)
   const [limited, setLimited] = React.useState(limit !== null && initialUsed >= limit)
   const remaining = limit === null ? null : Math.max(0, limit - used)
-  const { box: captchaBox, ...captcha } = useTurnstile({ invisible: true, lazy: !anonymous })
+  const { box: captchaBox, ...captcha } = useTurnstile({ invisible: true, lazy: !anonymous, acceptsPass: true })
 
   const patchLast = (patch: (message: Message) => Message) =>
     setMessages((list) => [...list.slice(0, -1), patch(list.at(-1)!)])
@@ -150,13 +150,14 @@ export function AdvisorChat({
       { role: "assistant", text: "", programmes: [], sources: [], id: crypto.randomUUID() },
     ])
     try {
-      const token = anonymous ? await captcha.nextToken() : null
-      const res = await fetch("/api/advisor", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ messages: history, ...(token && { turnstile_token: token }) }),
-      })
-      if (anonymous) captcha.reset() // a token works once
+      const post = (token: string | null) =>
+        fetch("/api/advisor", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ messages: history, ...(token && { turnstile_token: token }) }),
+        })
+      const res = anonymous ? await captcha.send(post) : await post(null)
+      if (!res) throw new Error("no response")
       if (res.status === 429) {
         setLimited(true)
         setMessages((list) => list.slice(0, -2))
@@ -303,7 +304,9 @@ export function AdvisorChat({
         ))}
       </ul>
 
-      {anonymous && captcha.enabled && <div ref={captchaBox} data-testid="turnstile" />}
+      {anonymous && captcha.enabled && (
+        <div ref={captchaBox} data-testid="turnstile" className={captcha.boxClassName} />
+      )}
       {limited && anonymous ? (
         <Card data-testid="limit-message" className="gap-2">
           <h2 className="font-heading text-lg font-bold">Want to keep asking?</h2>

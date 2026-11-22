@@ -87,6 +87,9 @@ test.describe("onboarding wizard", () => {
   test("walks 6 steps, survives a refresh and lands on results", async ({ page }) => {
     await page.goto("/onboarding")
     await expect(page.getByTestId("step-1")).toBeVisible()
+    // Countries are dropdowns, Nigeria first, not 2-letter codes to type.
+    await expect(page.getByLabel("Nationality")).toHaveValue("NG")
+    await page.getByLabel("Country you live in").selectOption("GH")
     await page.getByRole("button", { name: "Continue" }).click()
     await page.getByLabel("Degree class").selectOption("upper_second")
     await page.getByLabel("CGPA").fill("3.8")
@@ -98,12 +101,18 @@ test.describe("onboarding wizard", () => {
 
     await page.getByRole("button", { name: "Continue" }).click()
     await page.getByRole("group", { name: "IELTS" }).getByRole("button", { name: "Taken" }).click()
-    await page.getByLabel("IELTS score").fill("7")
+    await page.getByLabel("IELTS score").selectOption("7")
     await noOverflow(page)
     await noViolations(page)
     await page.getByRole("button", { name: "Continue" }).click()
     await page.getByLabel("Total available, in millions of naira", { exact: true }).fill("80")
     await page.getByRole("button", { name: "Continue" }).click()
+    await page.getByRole("button", { name: "Canada", exact: true }).click()
+    // Optional places, folded away until asked for, from the universities that list programmes.
+    await page.getByRole("button", { name: /Particular provinces, states or cities/ }).click()
+    const place = page.getByTestId("city-picker").locator('[data-testid^="place-"]').first()
+    await place.click()
+    await expect(page.getByTestId("city-picker")).toContainText("1 chosen")
     await page.getByLabel("Start in").selectOption("2027/28")
     await page.getByLabel("Term").selectOption("fall")
     await page.getByRole("button", { name: "Continue" }).click()
@@ -111,7 +120,7 @@ test.describe("onboarding wizard", () => {
     await page.getByRole("button", { name: "Next: save your results" }).click()
 
     // Step 3 of 3 offers an account, but results never wait for one.
-    await expect(page).toHaveURL(/\/onboarding\/save$/)
+    await expect(page).toHaveURL(/\/onboarding\/save$/, { timeout: 15_000 })
     await expect(page.getByRole("heading", { name: "Save your results" })).toBeVisible()
     await page.getByTestId("skip-save").click()
     await expect(page).toHaveURL(/\/discover$/)

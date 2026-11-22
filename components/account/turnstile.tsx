@@ -2,6 +2,8 @@
 
 import * as React from "react"
 
+import { forgetHumanPass, humanPassLikely } from "@/lib/security/human-hint"
+
 declare global {
   interface Window {
     turnstile?: {
@@ -35,17 +37,22 @@ type Options = {
   invisible?: boolean
   /** Wait for start() before loading, so pages that may never need it don't pay for the script. */
   lazy?: boolean
+  /**
+   * The route accepts the 30-minute pass a passed check earns (quick search, report, advisor). While it's
+   * valid, nothing loads and no token is needed. Supabase sign-in can't use it, so it leaves this off.
+   */
+  acceptsPass?: boolean
 }
 
 /**
  * Cloudflare Turnstile. Loaded only where it is used, and only when a site key is set. Tokens are single use:
  * call reset() after each request, and nextToken() to wait for the following one.
  */
-export function useTurnstile({ invisible = false, lazy = false }: Options = {}) {
+export function useTurnstile({ invisible = false, lazy = false, acceptsPass = false }: Options = {}) {
   const siteKey = turnstileSiteKey()
   // A callback ref: the widget renders once its box is on the page.
   const [box, setBox] = React.useState<HTMLDivElement | null>(null)
-  const [active, setActive] = React.useState(!lazy)
+  const [active, setActive] = React.useState(() => !lazy && !(acceptsPass && humanPassLikely()))
   const widget = React.useRef<string | null>(null)
   const latest = React.useRef<string | null>(null)
   const waiters = React.useRef<((token: string | null) => void)[]>([])
@@ -83,7 +90,9 @@ export function useTurnstile({ invisible = false, lazy = false }: Options = {}) 
     }
   }, [siteKey, box, active, invisible, setToken])
 
-  const start = React.useCallback(() => setActive(true), [])
+  const start = React.useCallback(() => {
+    if (!(acceptsPass && humanPassLikely())) setActive(true)
+  }, [acceptsPass])
 
   const reset = React.useCallback(() => {
     setToken(null)
@@ -92,14 +101,47 @@ export function useTurnstile({ invisible = false, lazy = false }: Options = {}) 
 
   /** The current token, or the next one once Cloudflare issues it. Null when off, failed or too slow. */
   const nextToken = React.useCallback((): Promise<string | null> => {
-    if (!siteKey) return Promise.resolve(null)
+    if (!siteKey || (acceptsPass && humanPassLikely())) return Promise.resolve(null)
     setActive(true)
     if (latest.current) return Promise.resolve(latest.current)
     return new Promise((resolve) => {
       waiters.current.push(resolve)
       setTimeout(() => resolve(latest.current), TOKEN_WAIT_MS)
     })
-  }, [siteKey])
+  }, [siteKey, acceptsPass])
 
-  return { enabled: siteKey !== null, token, failed, reset, start, nextToken, box: setBox }
+  /** The server refused the pass (expired, or another device): drop the hint so the next try gets a token. */
+  const forget = React.useCallback(() => {
+    forgetHumanPass()
+    setActive(true)
+  }, [])
+
+  /**
+   * Sends a protected request with a token, or with none while the pass is valid. If the server refuses the
+   * pass, it fetches a token and tries once more, so an expired pass never shows the student an error.
+   */
+  const send = React.useCallback(
+    async (request: (token: string | null) => Promise<Response | null>): Promise<Response | null> => {
+      const token = await nextToken()
+      const res = await request(token)
+      reset() // a token works once
+      if (token || res?.status !== 403) return res
+      const body = (await res
+        .clone()
+        .json()
+        .catch(() => null)) as { code?: string } | null
+      if (body?.code !== "human_required") return res
+      forget()
+      const retry = await request(await nextToken())
+      reset()
+      return retry
+    },
+    [nextToken, reset, forget]
+  )
+
+  // Once verified, an invisible check folds away instead of leaving Cloudflare's "Success" box on screen. It
+  // stays in the page (not display:none), so it can still ask again if a later token needs a tap.
+  const boxClassName = invisible && token ? "h-0 overflow-hidden" : undefined
+
+  return { enabled: siteKey !== null, token, failed, reset, start, nextToken, send, boxClassName, box: setBox }
 }

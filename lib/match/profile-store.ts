@@ -182,12 +182,37 @@ export const savedStore = {
   },
 }
 
+const QUICK_KEY = "sb-quick"
+/** The answers the landing quick search asks, carried into the deep search so nobody answers twice. */
+export type QuickCarry = Pick<Draft, "field" | "cgpa" | "cgpa_scale" | "budget_millions" | "countries">
+
+export function carryQuickSearch(carry: QuickCarry) {
+  try {
+    answerStorage()?.setItem(QUICK_KEY, JSON.stringify(carry))
+  } catch {
+    // The deep search just starts without them.
+  }
+}
+
+/** Reads and removes the carried answers: they apply once, on top of whatever the wizard starts from. */
+export function takeQuickCarry(): QuickCarry | null {
+  try {
+    const storage = answerStorage()
+    const raw = storage?.getItem(QUICK_KEY) ?? null
+    storage?.removeItem(QUICK_KEY)
+    return raw ? (JSON.parse(raw) as QuickCarry) : null
+  } catch {
+    return null
+  }
+}
+
 /** After sign-up the account holds everything, so nothing personal stays in this browser. */
 export function clearBrowserProfile() {
   try {
     for (const store of [localStorage, sessionStorage]) {
       store.removeItem(DRAFT_KEY)
       store.removeItem(SAVED_KEY)
+      store.removeItem(QUICK_KEY)
     }
   } catch {
     // Nothing was stored, then.
