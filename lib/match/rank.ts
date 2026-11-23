@@ -129,10 +129,10 @@ export function rank(profile: MatchProfile, catalogue: Catalogue, options: Match
     } else if (outcome.status === "needs_english") {
       result.needs_english.push({ bundle, tests_planned: outcome.tests_planned, cost: outcome.cost })
     } else {
-      const scores = fitScore(bundle, outcome, profile, academics, catalogue, options)
+      const { goal_signals, ...scores } = fitScore(bundle, outcome, profile, academics, catalogue, options)
       const { cost, intake, next_deadline, reach, flags } = outcome
       const group = groupFor(scores.fit, reach, cost)
-      passed.push({ bundle, scores, group, reach, cost, intake, next_deadline, flags })
+      passed.push({ bundle, scores, group, reach, cost, intake, next_deadline, flags, goal_signals })
     }
   }
 

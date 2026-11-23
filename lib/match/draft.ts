@@ -1,5 +1,6 @@
 import { nextCycle } from "./labels"
 import { DEFAULT_BUDGET_MILLIONS, type Draft, type TestKey } from "./profile-store"
+import { pathwayKey } from "./pathways"
 import { matchProfile, type MatchProfile } from "./types"
 
 export * from "./profile-store"
@@ -43,6 +44,7 @@ export function toMatchProfile(draft: Draft, now: Date): MatchProfile {
     accommodation_pref: draft.accommodation || null,
     dependants: number(draft.dependants) ?? 0,
     post_study_work: draft.post_study_work || null,
+    goals: (draft.goals ?? []).filter((g) => pathwayKey.safeParse(g).success).slice(0, 5),
   })
 }
 

@@ -11,6 +11,7 @@ import type { CountryCode } from "@/lib/match/countries"
 
 import { JourneySteps } from "@/components/journey/journey-steps"
 import { CityPicker } from "@/components/onboarding/city-picker"
+import { GoalPicker } from "@/components/onboarding/goal-picker"
 import { SavedNote } from "@/components/privacy/cookie-banner"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
@@ -43,7 +44,7 @@ const STEPS = [
   { title: "Your tests", hint: "Not taken one yet? Mark it planned and we'll still show you options." },
   { title: "Your budget", hint: "Count savings and sponsors. We'll work in naira." },
   { title: "Your preferences", hint: "Where you'd like to be and when you'd like to start." },
-  { title: "Your goals", hint: "Last step. This shapes your career score." },
+  { title: "Your goals", hint: "Last step. Tell us what you want after studying and we'll tailor your results." },
 ]
 
 const TESTS: { key: TestKey; label: string }[] = [
@@ -459,6 +460,11 @@ export function Wizard() {
       </div>
     </>,
     <>
+      {/* Several buttons, so a fieldset rather than a label that would click the first one. */}
+      <fieldset className="flex flex-col gap-2">
+        <legend className="mb-1 text-sm font-medium">What do you want after you study? Tick any that fit.</legend>
+        <GoalPicker selected={draft.goals ?? []} onChange={(goals) => update({ goals })} />
+      </fieldset>
       <Field label="What job do you want after this?">
         <input className={control} {...text("career_goal")} />
       </Field>

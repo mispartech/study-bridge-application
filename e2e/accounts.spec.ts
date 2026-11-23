@@ -810,6 +810,45 @@ test.describe("staff roles and two-factor", () => {
     }
   })
 
+  test("an admin adds a pathway, and the change is audited", async ({ page }) => {
+    test.setTimeout(120_000)
+    const userId = await staffAccount(page, "admin")
+    await signInAs(page, userId)
+    // Switched off, so no real student is offered it while the test runs.
+    const key = `etoe_${userId.slice(0, 8).replace(/[^a-z]/g, "x")}`
+    try {
+      await page.goto("/admin/pathways")
+      await expect(page.getByTestId("pathway-preview")).toBeVisible({ timeout: 20_000 })
+      const form = page.getByTestId("pathway-new")
+      await form.getByLabel("Key (lowercase, underscores)").fill(key)
+      await form.getByLabel("Label students see").fill("E2E pathway")
+      await form.getByLabel("Students can choose it").uncheck()
+      await form.getByLabel("Weight for Matches your course").fill("60")
+      await form.getByLabel("Weight for Work placement or co-op").fill("40")
+      await form.getByRole("button", { name: "Add pathway" }).click()
+      await expect(form.getByRole("status")).toContainText("Saved", { timeout: 20_000 })
+      await expect(page.getByTestId(`pathway-${key}`)).toContainText("Switched off", { timeout: 20_000 })
+
+      const { data: signals } = await admin.from("pathway_signal").select("signal, weight").eq("pathway_key", key)
+      expect(signals?.sort((a, b) => a.signal.localeCompare(b.signal))).toEqual([
+        { signal: "field_match", weight: 60 },
+        { signal: "placement", weight: 40 },
+      ])
+      const { data: audited } = await admin
+        .from("staff_audit")
+        .select("action, after")
+        .eq("target_id", key)
+        .eq("action", "pathway_changed")
+        .single()
+      expect(audited?.after).toMatchObject({ key, active: false })
+      // Not offered to students.
+      const offered = await page.request.get("/api/pathways")
+      expect(JSON.stringify(await offered.json())).not.toContain(key)
+    } finally {
+      await admin.from("pathway").delete().eq("key", key)
+    }
+  })
+
   test("the phone menu opens, moves between pages and closes", async ({ page }, info) => {
     test.skip(info.project.name !== "mobile-360", "phone layout only")
     test.setTimeout(90_000)
@@ -847,6 +886,7 @@ const ADMIN_PAGES = [
   ["/admin/ai-usage", "AI usage"],
   ["/admin/advisor", "Advisor monitor"],
   ["/admin/settings", "Settings"],
+  ["/admin/pathways", "Pathways"],
   ["/admin/audit", "Audit log"],
   ["/admin/system", "System"],
   ["/admin/diagnostics", "Diagnostics"],

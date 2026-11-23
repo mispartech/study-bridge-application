@@ -1,8 +1,10 @@
 import Link from "next/link"
+import { Suspense } from "react"
 
 import { DataTable, type Column } from "@/components/admin/data-table"
 import { KpiGrid, KpiTile } from "@/components/admin/kpi-tile"
 import { PageHeader } from "@/components/admin/page-header"
+import { LoadingSkeleton } from "@/components/admin/states"
 import { StatusBadge, toneFor } from "@/components/admin/status-badge"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
@@ -45,7 +47,33 @@ const PROBLEMS: Column<Problem>[] = [
 ]
 
 /** The support home: find a user, new sign-ups, report emails that didn't arrive, and suspended accounts. */
-export async function SupportHome({ params, now }: { params: SearchParams; now: Date }) {
+export function SupportHome({ params, now }: { params: SearchParams; now: Date }) {
+  return (
+    <>
+      <PageHeader title="Support desk" description="Find a student, and see who may need help." />
+      <Card className="gap-2">
+        <form
+          method="get"
+          action="/admin/users"
+          className="flex flex-wrap items-end gap-2 text-sm"
+          aria-label="Find a user"
+        >
+          <label className="flex min-w-0 flex-1 flex-col gap-1">
+            Email or id
+            <input name="q" className="min-h-11 rounded-button border border-border bg-surface px-3" />
+          </label>
+          <Button type="submit">Find</Button>
+        </form>
+      </Card>
+      {/* The search works straight away; the lists stream in after. */}
+      <Suspense fallback={<LoadingSkeleton rows={4} label="Loading the support desk" />}>
+        <SupportData params={params} now={now} />
+      </Suspense>
+    </>
+  )
+}
+
+async function SupportData({ params, now }: { params: SearchParams; now: Date }) {
   const db = serviceClient()
   const weekAgo = new Date(now.getTime() - 7 * DAY_MS).toISOString()
   const monthAgo = new Date(now.getTime() - 30 * DAY_MS).toISOString()
@@ -72,21 +100,6 @@ export async function SupportHome({ params, now }: { params: SearchParams; now: 
 
   return (
     <>
-      <PageHeader title="Support desk" description="Find a student, and see who may need help." />
-      <Card className="gap-2">
-        <form
-          method="get"
-          action="/admin/users"
-          className="flex flex-wrap items-end gap-2 text-sm"
-          aria-label="Find a user"
-        >
-          <label className="flex min-w-0 flex-1 flex-col gap-1">
-            Email or id
-            <input name="q" className="min-h-11 rounded-button border border-border bg-surface px-3" />
-          </label>
-          <Button type="submit">Find</Button>
-        </form>
-      </Card>
       <KpiGrid columns={3}>
         <KpiTile label="Signed up in 7 days" value={nf.format(signups.length)} testId="home-signups" />
         <KpiTile

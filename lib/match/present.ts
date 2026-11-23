@@ -3,6 +3,7 @@ import type { Currency, FxRates } from "@/lib/money"
 import { averageConfidence, dataConfidence } from "./data-confidence"
 import { fieldLabel } from "./labels"
 import { isOfficialUrl } from "./official-url"
+import { SIGNALS } from "./pathways"
 import type { Bundle, Catalogue, Cost, MatchProfile, MatchResult, RankedProgramme } from "./types"
 
 const DAY_MS = 86_400_000
@@ -55,6 +56,8 @@ export type CardView = ProgrammeSummary & {
   fit: number
   group: RankedProgramme["group"]
   flags: RankedProgramme["flags"]
+  /** Why it ranked higher for the student's goals, in words ("Work placement or co-op"). */
+  goal_reasons: string[]
   start_term: string
   start_month: string | null
   next_deadline: { label: string; date: string }
@@ -165,6 +168,7 @@ function presentCard(r: RankedProgramme, catalogue: Catalogue, now: Date, schola
     fit: r.scores.fit,
     group: r.group,
     flags: r.flags,
+    goal_reasons: (r.goal_signals ?? []).slice(0, 3).map((s) => SIGNALS[s].label),
     start_term: r.intake.start_term,
     start_month: r.intake.start_month,
     next_deadline: r.next_deadline,

@@ -44,6 +44,8 @@ describe("schemas match the generated database types", () => {
       internal_actor: true,
       role_change_alert: true,
       alert_endpoint: true,
+      pathway: true,
+      pathway_signal: true,
     }
     expect(Object.keys(rowSchemas).sort()).toEqual(Object.keys(tables).sort())
   })

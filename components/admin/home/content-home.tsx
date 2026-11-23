@@ -1,8 +1,10 @@
 import Link from "next/link"
+import { Suspense } from "react"
 
 import { DataTable, type Column } from "@/components/admin/data-table"
 import { KpiGrid, KpiTile } from "@/components/admin/kpi-tile"
 import { PageHeader } from "@/components/admin/page-header"
+import { LoadingSkeleton } from "@/components/admin/states"
 import { Card } from "@/components/ui/card"
 import type { SearchParams } from "@/lib/admin/table"
 import { serviceClient } from "@/lib/db/service"
@@ -49,7 +51,18 @@ const COLUMNS: Column<Freshness>[] = [
 ]
 
 /** The data editor's home: what is waiting for review, open error reports, and records about to age. */
-export async function ContentHome({ params, now }: { params: SearchParams; now: Date }) {
+export function ContentHome({ params, now }: { params: SearchParams; now: Date }) {
+  return (
+    <>
+      <PageHeader title="Content desk" description="What needs a data editor today." />
+      <Suspense fallback={<LoadingSkeleton rows={4} label="Loading the content desk" />}>
+        <ContentData params={params} now={now} />
+      </Suspense>
+    </>
+  )
+}
+
+async function ContentData({ params, now }: { params: SearchParams; now: Date }) {
   const db = serviceClient()
   const agingFrom = new Date(now.getTime() - FRESH_DAYS * DAY_MS).toISOString()
   const soonFrom = new Date(now.getTime() - (FRESH_DAYS - SOON_DAYS) * DAY_MS).toISOString()
@@ -81,7 +94,6 @@ export async function ContentHome({ params, now }: { params: SearchParams; now: 
 
   return (
     <>
-      <PageHeader title="Content desk" description="What needs a data editor today." />
       <KpiGrid columns={3}>
         <KpiTile
           label="Waiting for review"

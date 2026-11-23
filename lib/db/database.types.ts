@@ -728,6 +728,67 @@ export type Database = {
         }
         Relationships: []
       }
+      pathway: {
+        Row: {
+          active: boolean
+          created_at: string
+          description: string
+          key: string
+          label: string
+          sort_order: number
+          updated_at: string
+          updated_by: string | null
+        }
+        ComputedFields: never
+        Insert: {
+          active?: boolean
+          created_at?: string
+          description?: string
+          key: string
+          label: string
+          sort_order?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          description?: string
+          key?: string
+          label?: string
+          sort_order?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
+      pathway_signal: {
+        Row: {
+          pathway_key: string
+          signal: string
+          weight: number
+        }
+        ComputedFields: never
+        Insert: {
+          pathway_key: string
+          signal: string
+          weight: number
+        }
+        Update: {
+          pathway_key?: string
+          signal?: string
+          weight?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pathway_signal_pathway_key_fkey"
+            columns: ["pathway_key"]
+            isOneToOne: false
+            referencedRelation: "pathway"
+            referencedColumns: ["key"]
+          },
+        ]
+      }
       payment: {
         Row: {
           amount_minor: number
@@ -1399,6 +1460,7 @@ export type Database = {
           field: Database["public"]["Enums"]["field_code"] | null
           funding_source: string | null
           gmat: number | null
+          goals: string[]
           graduation_year: number | null
           gre: number | null
           hnd_pgd: boolean
@@ -1448,6 +1510,7 @@ export type Database = {
           field?: Database["public"]["Enums"]["field_code"] | null
           funding_source?: string | null
           gmat?: number | null
+          goals?: string[]
           graduation_year?: number | null
           gre?: number | null
           hnd_pgd?: boolean
@@ -1496,6 +1559,7 @@ export type Database = {
           field?: Database["public"]["Enums"]["field_code"] | null
           funding_source?: string | null
           gmat?: number | null
+          goals?: string[]
           graduation_year?: number | null
           gre?: number | null
           hnd_pgd?: boolean
@@ -1781,6 +1845,18 @@ export type Database = {
       refund_rate_limit: {
         Args: { p_bucket: string; p_key_hash: string; p_offset_seconds?: number; p_window_seconds: number }
         Returns: number
+      }
+      save_pathway: {
+        Args: {
+          p_active: boolean
+          p_description: string
+          p_key: string
+          p_label: string
+          p_signals: Json
+          p_sort_order: number
+          p_staff: string
+        }
+        Returns: undefined
       }
       search_summary: {
         Args: { p_from: string; p_include_internal?: boolean; p_to: string }

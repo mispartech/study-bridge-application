@@ -91,6 +91,7 @@ export const studentProfileRow = z.object({
   weights: fitWeights,
   completeness: z.number().int().min(0).max(100),
   post_study_work: z.enum(["low", "medium", "high"]).nullable(),
+  goals: z.array(z.string().regex(/^[a-z][a-z_]{1,39}$/)).max(5),
   professional_registration: z.enum(["none", "nurse", "other"]),
   campus_or_city: z.enum(["campus", "city", "either"]).nullable(),
   include_related_fields: z.boolean(),
@@ -536,6 +537,33 @@ export const roleChangeAlertRow = z.object({
 
 export const alertEndpointRow = z.object({ id: z.literal(true), url: z.url() })
 
+export const pathwayRow = z.object({
+  key: z.string().regex(/^[a-z][a-z_]{1,39}$/),
+  label: z.string().min(2).max(60),
+  description: z.string().max(280),
+  active: z.boolean(),
+  sort_order: z.number().int(),
+  updated_by: z.uuid().nullable(),
+  updated_at: timestamp,
+  created_at: timestamp,
+})
+
+export const pathwaySignalRow = z.object({
+  pathway_key: z.string().regex(/^[a-z][a-z_]{1,39}$/),
+  signal: z.enum([
+    "field_match",
+    "placement",
+    "post_study_work",
+    "funding",
+    "work_permit_route",
+    "in_demand",
+    "licensing_path",
+    "research",
+    "entrepreneurship",
+  ]),
+  weight: z.number().int().min(0).max(100),
+})
+
 export const rowSchemas = {
   student_profile: studentProfileRow,
   shortlist: shortlistRow,
@@ -572,6 +600,8 @@ export const rowSchemas = {
   internal_actor: internalActorRow,
   role_change_alert: roleChangeAlertRow,
   alert_endpoint: alertEndpointRow,
+  pathway: pathwayRow,
+  pathway_signal: pathwaySignalRow,
 } as const
 
 export type TableName = keyof Database["public"]["Tables"]

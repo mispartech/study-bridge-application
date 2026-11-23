@@ -20,6 +20,7 @@ import {
   Menu,
   MessageSquareText,
   Plane,
+  Route,
   ScrollText,
   Search,
   Server,
@@ -56,6 +57,7 @@ const ICONS: Record<NavIcon, LucideIcon> = {
   audit: ScrollText,
   system: Server,
   diagnostics: Stethoscope,
+  pathways: Route,
 }
 
 type Staff = { email: string; role: string }

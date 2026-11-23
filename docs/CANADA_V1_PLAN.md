@@ -15,6 +15,14 @@ wants to do after studying, such as:
 
 The student says why they are moving, and the suggestions, roadmap and opportunities follow that goal.
 
+**It works for every destination, not only Canada.** Pathways and signals are country-agnostic. Each signal is computed from that programme's own country records:
+- the UK Graduate Route and the Canadian PGWP, both as visa rules
+- UK and Canadian scholarships
+- in-demand lists such as the UK Immigration Salary List and Canadian provincial lists
+- UK and Canadian regulators
+
+So a student on a UK academic route gets the same tailoring as one going to a Canadian college. New countries plug in by adding data.
+
 **Nothing about this is hard-coded.**
 - Goals, what each goal favours, and how strongly, are records that admins manage in the console.
 - Students tick their own goals, and can change them, to get tailored results.
@@ -108,4 +116,10 @@ Admin Phases 2–3 (alerts, content hub), then 7–9.
 
 ## Status
 
+- Step B: built 23 Nov 2026:
+  - pathways and weights in the database, managed at `/admin/pathways` with a preview
+  - goals asked in the deep search
+  - career fit follows the chosen goals, with the reasons shown on results cards
+  - signals live now: course match, placement or co-op, work rights after study, funding
+  - work-permit route, in-demand, licensing, research and founder support count once their data arrives (Steps C–F)
 - Step A: done 23 Nov 2026. See `docs/CANADA_V1_SOURCES.md`, including the five points still to confirm before Step C.

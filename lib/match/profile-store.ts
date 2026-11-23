@@ -46,6 +46,8 @@ export type Draft = {
   target_term: string
   career_goal: string
   post_study_work: string
+  /** Pathway keys: what the student wants after studying. */
+  goals: string[]
   dependants: string
 }
 
@@ -82,6 +84,7 @@ export const emptyDraft: Draft = {
   target_term: "",
   career_goal: "",
   post_study_work: "",
+  goals: [],
   dependants: "",
 }
 

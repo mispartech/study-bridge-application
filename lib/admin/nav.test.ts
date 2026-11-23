@@ -14,7 +14,7 @@ describe("admin navigation per role", () => {
       "Content and data": ["Review queue", "Error reports", "Visa rules", "Exchange rates", "Flights and health"],
       Money: ["Payments"],
       AI: ["AI usage", "Advisor monitor"],
-      System: ["Settings", "Audit log", "System", "Diagnostics"],
+      System: ["Settings", "Pathways", "Audit log", "System", "Diagnostics"],
     })
     expect(navFor(as("admin"))[0]!.items[0]).toMatchObject({ href: "/admin", label: "Overview" })
   })

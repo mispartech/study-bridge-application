@@ -82,6 +82,12 @@ export function MatchCard({
         </span>
       </p>
 
+      {card.goal_reasons?.length > 0 && (
+        <p data-testid="goal-reasons" className="text-sm text-primary-strong">
+          Ranked up for your goals: {card.goal_reasons.join(" · ")}
+        </p>
+      )}
+
       <div className="flex flex-wrap gap-1.5">
         {card.open_to_international === "no" && (
           <VisaStatusChip status="suspended" size="sm" label="Not open to international students" />

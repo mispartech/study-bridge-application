@@ -27,6 +27,7 @@ const PAGES = [
   ["/admin/ai-usage", "ai-usage"],
   ["/admin/advisor", "advisor"],
   ["/admin/settings", "settings"],
+  ["/admin/pathways", "pathways"],
   ["/admin/audit", "audit"],
   ["/admin/system", "system"],
   ["/admin/diagnostics", "diagnostics"],

@@ -1,5 +1,7 @@
 import { z } from "zod"
 
+import { pathwayKey, type Pathway, type SignalKey } from "./pathways"
+
 import type { Tables } from "@/lib/db/database.types"
 
 /** Every course a student can pick. Must match the field_code enum in the database. */
@@ -82,6 +84,8 @@ export const matchProfile = z
       .default(null),
     dependants: z.number().int().min(0).default(0),
     post_study_work: z.enum(["low", "medium", "high"]).nullable().default(null),
+    /** Pathway keys the student chose (lib/match/pathways.ts). Unknown or inactive keys are ignored. */
+    goals: z.array(pathwayKey).max(5).default([]),
     professional_registration: z.enum(["none", "nurse", "other"]).default("none"),
     weights: weights.default(DEFAULT_WEIGHTS),
   })
@@ -102,6 +106,8 @@ export type Catalogue = {
   gradeMappings: Tables<"grade_mapping">[]
   fxRates: Tables<"fx_rate">[]
   costEstimates: Tables<"cost_estimate">[]
+  /** Active pathways and their signal weights, managed in the admin. Absent in older fixtures. */
+  pathways?: Pathway[]
 }
 
 export type MatchOptions = { now: Date; demoMode: boolean }
@@ -168,6 +174,8 @@ export type RankedProgramme = {
   intake: Tables<"intake">
   next_deadline: { label: string; date: string }
   flags: MatchFlag[]
+  /** Signals that raised this programme for the student's goals, for "ranked up for your goals". */
+  goal_signals?: SignalKey[]
 }
 
 export type RestrictedProgramme = { bundle: Bundle; reason: string; source_url: string; review_due: string | null }

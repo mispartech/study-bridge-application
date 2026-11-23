@@ -1,12 +1,15 @@
-import { bandIndex } from "./academics"
+import { bandIndex, normaliseAcademics } from "./academics"
 import { ruleOn, toNgn, visaApplicationDate } from "./cost"
 import type { Tables } from "@/lib/db/database.types"
+import { goalFit, type SignalKey, type SignalValues } from "./pathways"
 import type { Academics, Band, Bundle, Catalogue, Cost, MatchOptions, MatchProfile, ScoreBreakdown } from "./types"
 
 const round1 = (n: number) => Math.round(n * 10) / 10
 const OUTCOMES_UNKNOWN = 0.5
 const UNKNOWN_WORK_RULE = 0.5
-// Career fit's three parts always add up to 1. The student's post-study work priority moves weight towards it.
+// Career fit for students who haven't chosen a goal: three parts that always add up to 1, with the student's
+// post-study work priority moving weight towards work rights. Students with goals use the pathway weights
+// managed in the admin instead (lib/match/pathways.ts).
 const CAREER_WEIGHTS = {
   low: { field: 0.7, placement: 0.2, work: 0.1 },
   medium: { field: 0.6, placement: 0.2, work: 0.2 },
@@ -34,7 +37,19 @@ export function careerFit(
   profile: MatchProfile,
   catalogue: Catalogue,
   o: MatchOptions
-) {
+): number {
+  return careerFitDetail(bundle, intake, profile, catalogue, o).score
+}
+
+/** Career fit, and for students with goals, the signals that raised it. */
+export function careerFitDetail(
+  bundle: Bundle,
+  intake: Tables<"intake">,
+  profile: MatchProfile,
+  catalogue: Catalogue,
+  o: MatchOptions,
+  academics?: Academics
+): { score: number; reasons: SignalKey[] } {
   const { programme, university } = bundle
   const date = visaApplicationDate(intake)
   const workMonths = (country: string) => {
@@ -50,12 +65,32 @@ export function careerFit(
   const unknown = months === 0 && priority !== null
   const work = unknown ? UNKNOWN_WORK_RULE : longest > 0 ? months / longest : 0
   const stem = university.country === "US" && programme.stem_designated
+  const placement = stem || programme.has_coop_or_placement
+  const fieldMatches = programme.field === profile.field
+
+  if (profile.goals.length > 0 && catalogue.pathways?.length) {
+    const values: SignalValues = {
+      field_match: fieldMatches ? 1 : 0,
+      placement: placement ? 1 : 0,
+      // No rule held for this destination yet: unknown, so left out rather than counted as none.
+      post_study_work: months === 0 && longest === 0 ? null : longest > 0 ? months / longest : 0,
+      funding: scholarshipFit(
+        bundle,
+        profile,
+        academics ?? normaliseAcademics(profile, catalogue.gradeMappings),
+        catalogue,
+        o
+      ),
+    }
+    const fit = goalFit(values, catalogue.pathways, profile.goals)
+    if (fit) return fit
+  }
+
   const weight = CAREER_WEIGHTS[priority ?? "medium"]
-  return (
-    (programme.field === profile.field ? weight.field : 0) +
-    (stem || programme.has_coop_or_placement ? weight.placement : 0) +
-    weight.work * work
-  )
+  return {
+    score: (fieldMatches ? weight.field : 0) + (placement ? weight.placement : 0) + weight.work * work,
+    reasons: [],
+  }
 }
 
 function locationFit(bundle: Bundle, cost: Cost, profile: MatchProfile) {
@@ -124,11 +159,12 @@ export function fitScore(
   academics: Academics,
   catalogue: Catalogue,
   options: MatchOptions
-): ScoreBreakdown {
+): ScoreBreakdown & { goal_signals: SignalKey[] } {
+  const career = careerFitDetail(bundle, outcome.intake, profile, catalogue, options, academics)
   const components = {
     A: academicFit(outcome.headroom, outcome.reach),
     B: budgetFit(outcome.cost.total_ngn.market, profile.budget_total_minor),
-    C: careerFit(bundle, outcome.intake, profile, catalogue, options),
+    C: career.score,
     L: locationFit(bundle, outcome.cost, profile),
     S: scholarshipFit(bundle, profile, academics, catalogue, options),
     O: RANKING_SCORE[bundle.university.ranking_band ?? ""] ?? OUTCOMES_UNKNOWN,
@@ -149,5 +185,6 @@ export function fitScore(
     S: Math.round(components.S * 100) / 100,
     O: components.O,
     fit: round1(fit),
+    goal_signals: career.reasons,
   }
 }
