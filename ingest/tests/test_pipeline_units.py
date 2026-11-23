@@ -422,3 +422,31 @@ def test_clean_html_keeps_page_when_wrapper_has_nav_like_class():
 
     html = '<html class="has-nav"><body class="navbar-open"><main><p>Tuition fee: £30,000</p></main></body></html>'
     assert "Tuition fee: £30,000" in clean_html(html)
+
+
+PROGRAMME_TEXT = "Cybersecurity graduate certificate. Two semesters. Tuition for international students. " * 20
+
+
+def test_clean_keeps_main_content_marked_with_a_footer_role():
+    """Centennial marks its programme tabs role="contentinfo"; that must not empty the page."""
+    html = (f"<html><body><header>Menu</header><main><section role='contentinfo' class='pdbTabs'>"
+            f"<p>{PROGRAMME_TEXT}</p></section></main><footer>Contact us</footer></body></html>")
+    text = clean_html(html)
+    assert "Two semesters" in text
+    assert "Menu" not in text and "Contact us" not in text
+
+
+def test_clean_keeps_a_page_wrapped_in_one_form():
+    """ASP.NET sites (NSCC) wrap the whole page in a <form>; small forms (search boxes) still go."""
+    html = (f"<html><body><form id='form1'><nav>Programs Admissions</nav><div><h1>Full Stack</h1>"
+            f"<p>{PROGRAMME_TEXT}</p></div></form><form class='search'>Search the site</form></body></html>")
+    text = clean_html(html)
+    assert "Full Stack" in text and "Two semesters" in text
+    assert "Search the site" not in text and "Programs Admissions" not in text
+
+
+def test_clean_still_drops_cookie_banners_and_menus():
+    html = (f"<html><body><div class='cookie-banner'>We use cookies</div><nav>Menu</nav>"
+            f"<main><p>{PROGRAMME_TEXT}</p></main></body></html>")
+    text = clean_html(html)
+    assert "cookies" not in text and "Menu" not in text and "Two semesters" in text

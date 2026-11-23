@@ -1,0 +1,94 @@
+{
+  "cycle": "2027/28",
+  "note": "Step C (docs/CANADA_V1_PLAN.md): graduate certificates at public colleges in the pilot cities. Programme pages were checked by hand on 23 Nov 2026. Institution facts come from the colleges' own sites; DLI numbers and PGWP eligibility stay for the reviewer to check on the IRCC DLI list.",
+  "registers": {
+    "CA": "https://www.canada.ca/en/immigration-refugees-citizenship/services/study-canada/study-permit/prepare/designated-learning-institutions-list.html"
+  },
+  "universities": {
+    "senecapolytechnic.ca": {
+      "name": "Seneca Polytechnic",
+      "country": "CA",
+      "city": "Toronto",
+      "region": "Ontario",
+      "is_public": true,
+      "institution_type": "public_college"
+    },
+    "centennialcollege.ca": {
+      "name": "Centennial College",
+      "country": "CA",
+      "city": "Toronto",
+      "region": "Ontario",
+      "is_public": true,
+      "institution_type": "public_college"
+    },
+    "nscc.ca": {
+      "name": "Nova Scotia Community College",
+      "country": "CA",
+      "city": "Halifax",
+      "region": "Nova Scotia",
+      "is_public": true,
+      "institution_type": "public_college"
+    }
+  },
+  "programmes": [
+    {
+      "field": "computer_data_science",
+      "domain": "senecapolytechnic.ca",
+      "target_title": "Data Analytics",
+      "urls": [
+        "https://www.senecapolytechnic.ca/programs/fulltime/DAS.html",
+        "https://www.senecapolytechnic.ca/programs/fulltime/DAS/admission-requirements.html",
+        "https://www.senecapolytechnic.ca/programs/fulltime/DAS/costs.html"
+      ]
+    },
+    {
+      "field": "project_management",
+      "domain": "senecapolytechnic.ca",
+      "target_title": "Project Management",
+      "urls": [
+        "https://www.senecapolytechnic.ca/programs/fulltime/PMC.html",
+        "https://www.senecapolytechnic.ca/programs/fulltime/PMC/admission-requirements.html",
+        "https://www.senecapolytechnic.ca/programs/fulltime/PMC/costs.html"
+      ]
+    },
+    {
+      "field": "computer_data_science",
+      "domain": "centennialcollege.ca",
+      "target_title": "Cybersecurity",
+      "urls": ["https://www.centennialcollege.ca/programs-courses/full-time/cybersecurity"]
+    },
+    {
+      "field": "computer_data_science",
+      "domain": "centennialcollege.ca",
+      "target_title": "Mobile Applications Development",
+      "urls": ["https://www.centennialcollege.ca/programs-courses/full-time/mobile-applications-development"]
+    },
+    {
+      "field": "public_health",
+      "domain": "centennialcollege.ca",
+      "target_title": "Occupational Health and Safety Management",
+      "urls": ["https://www.centennialcollege.ca/programs-courses/full-time/occupational-health-and-safety-management"]
+    },
+    {
+      "field": "computer_data_science",
+      "domain": "nscc.ca",
+      "target_title": "Business Intelligence and Analytics",
+      "urls": ["https://www.nscc.ca/programs-and-courses/programs/plandescr.aspx/business-intelligence-and-analytics"]
+    },
+    {
+      "field": "computer_data_science",
+      "domain": "nscc.ca",
+      "target_title": "Full Stack Application Development",
+      "urls": [
+        "https://www.nscc.ca/programs-and-courses/programs/plandescr.aspx/full-stack-application-development",
+        "https://www.nscc.ca/programs-and-courses/programs/programfees/program.aspx?pfid=112"
+      ]
+    },
+    {
+      "field": "business_finance",
+      "domain": "nscc.ca",
+      "target_title": "Business Analysis",
+      "urls": ["https://www.nscc.ca/programs-and-courses/programs/plandescr.aspx?prg=BSAN&pln=BUSNANALYS"]
+    }
+  ]
+}

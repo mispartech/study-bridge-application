@@ -17,16 +17,40 @@ BLOCK_TAGS = {"p", "div", "section", "article", "li", "tr", "h1", "h2", "h3", "h
               "table", "ul", "ol", "main", "summary", "details", "caption"}
 
 
+# Never code: removed outright, before measuring how much text the page has.
+CODE_TAGS = ["script", "style", "noscript", "template", "svg"]
+# A chrome rule never removes an element holding more than this share of the page's text. Some sites wrap the
+# whole page in one <form> (ASP.NET) or mark their main content with a footer role; dropping those empties the page.
+MAX_DROP_SHARE = 0.5
+
+
+def _text_len(node) -> int:
+    return len(node.text(separator=" ").strip())
+
+
 def clean_html(html: str) -> str:
     tree = HTMLParser(html)
-    for tag in DROP_TAGS:
+    for tag in CODE_TAGS:
         for node in tree.css(tag):
             node.decompose()
+    page = tree.body or tree.root
+    total = _text_len(page) if page is not None else 0
+
+    def droppable(node) -> bool:
+        return total == 0 or _text_len(node) <= total * MAX_DROP_SHARE
+
+    for tag in DROP_TAGS:
+        if tag in CODE_TAGS:
+            continue
+        for node in tree.css(tag):
+            if droppable(node):
+                node.decompose()
     for node in tree.css("[id], [class], [role], [aria-label]"):
         attrs = " ".join(filter(None, (node.attributes.get(a) for a in ("id", "class", "role", "aria-label"))))
         if node.tag in ("html", "body", "main"):
             continue  # page-level wrappers sometimes carry "nav"-like classes; never drop the whole page
-        if CHROME.search(attrs) or node.attributes.get("role") in ("navigation", "banner", "contentinfo"):
+        chrome = CHROME.search(attrs) or node.attributes.get("role") in ("navigation", "banner", "contentinfo")
+        if chrome and droppable(node):
             node.decompose()
 
     root = tree.css_first("main") or tree.body or tree.root
