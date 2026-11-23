@@ -49,6 +49,7 @@ export const draftSchema = z.object({
   career_goal: short,
   post_study_work: short,
   goals: z.array(z.string().max(40)).max(5).default([]),
+  level_preference: z.string().max(20).default(""),
   dependants: short,
 }) satisfies z.ZodType<Draft>
 
@@ -105,6 +106,7 @@ export function draftToRow(draft: Draft, now: Date): Omit<TablesInsert<"student_
     career_goal: draft.career_goal || null,
     post_study_work: p.post_study_work,
     goals: p.goals,
+    level_preference: p.level_preference,
     campus_or_city: oneOf(draft.campus_or_city, ["campus", "city", "either"]),
     completeness: completeness(draft),
     wizard_answers: draft,
@@ -143,6 +145,7 @@ export function profileToRow(p: MatchProfile): Omit<TablesInsert<"student_profil
     dependants: p.dependants,
     post_study_work: p.post_study_work,
     goals: p.goals,
+    level_preference: p.level_preference,
     weights: p.weights,
   }
 }
@@ -180,6 +183,7 @@ export function rowToProfile(row: Tables<"student_profile">, now: Date): MatchPr
     dependants: row.dependants,
     post_study_work: row.post_study_work,
     goals: row.goals ?? [],
+    level_preference: row.level_preference ?? "masters",
     weights: weights ?? DEFAULT_WEIGHTS,
   })
 }

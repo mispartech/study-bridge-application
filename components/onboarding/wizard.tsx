@@ -12,6 +12,7 @@ import type { CountryCode } from "@/lib/match/countries"
 import { JourneySteps } from "@/components/journey/journey-steps"
 import { CityPicker } from "@/components/onboarding/city-picker"
 import { GoalPicker } from "@/components/onboarding/goal-picker"
+import { PREFERENCE_LABEL } from "@/lib/match/levels"
 import { SavedNote } from "@/components/privacy/cookie-banner"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
@@ -294,6 +295,13 @@ export function Wizard() {
           value={draft.professional_registration || "none"}
           onChange={(professional_registration) => update({ professional_registration })}
           options={{ none: "None", nurse: "Registered nurse", other: "Another health or care registration" }}
+        />
+      </Field>
+      <Field label="What do you want to study?">
+        <Options
+          value={draft.level_preference ?? ""}
+          onChange={(level_preference) => update({ level_preference })}
+          options={PREFERENCE_LABEL}
         />
       </Field>
       <Field label="Field you want to study">

@@ -3,6 +3,7 @@ import type { Currency, FxRates } from "@/lib/money"
 import { averageConfidence, dataConfidence } from "./data-confidence"
 import { fieldLabel } from "./labels"
 import { isOfficialUrl } from "./official-url"
+import { LEVEL_LABEL, levelOf, type Level } from "./levels"
 import { SIGNALS } from "./pathways"
 import type { Bundle, Catalogue, Cost, MatchProfile, MatchResult, RankedProgramme } from "./types"
 
@@ -29,6 +30,9 @@ export type CostView = {
 }
 
 export type ProgrammeSummary = {
+  /** Master's or a college credential, so a certificate is never mistaken for a degree. */
+  level: Level
+  level_label: string
   id: string
   title: string
   university: string
@@ -143,6 +147,8 @@ export function presentProgramme(bundle: Bundle, catalogue: Catalogue, now: Date
     city: university.city,
     country: university.country,
     degree: programme.degree_type,
+    level: levelOf(programme),
+    level_label: LEVEL_LABEL[levelOf(programme)],
     field: fieldLabel(programme.field),
     duration_months: programme.duration_months,
     has_coop: programme.has_coop_or_placement,

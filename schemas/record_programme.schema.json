@@ -85,6 +85,24 @@
             "Other"
           ]
         },
+        "level": {
+          "enum": [
+            "masters",
+            "postgraduate_certificate",
+            "graduate_diploma",
+            "diploma",
+            null
+          ],
+          "description": "Master's degree, or the college credential the page names (e.g. Ontario College Graduate Certificate = postgraduate_certificate). Null when the page doesn't say."
+        },
+        "cip_code": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^\\d{2}\\.\\d{4}$",
+          "description": "The programme's 6-digit CIP code (NN.NNNN) only when the pages print it."
+        },
         "field": {
           "enum": [
             "computer_data_science",
@@ -188,6 +206,15 @@
           ],
           "minimum": 0,
           "maximum": 4
+        },
+        "min_prior_education": {
+          "enum": [
+            "secondary",
+            "diploma",
+            "degree",
+            null
+          ],
+          "description": "The qualification a college programme needs first (e.g. 'a university degree' = degree). Null when not stated."
         },
         "considers_lower_with_experience": {
           "type": [

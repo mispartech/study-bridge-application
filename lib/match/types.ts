@@ -86,6 +86,8 @@ export const matchProfile = z
     post_study_work: z.enum(["low", "medium", "high"]).nullable().default(null),
     /** Pathway keys the student chose (lib/match/pathways.ts). Unknown or inactive keys are ignored. */
     goals: z.array(pathwayKey).max(5).default([]),
+    /** Master's only (the default, so existing profiles don't change), college credentials, or either. */
+    level_preference: z.enum(["masters", "certificate", "either"]).default("masters"),
     professional_registration: z.enum(["none", "nurse", "other"]).default("none"),
     weights: weights.default(DEFAULT_WEIGHTS),
   })

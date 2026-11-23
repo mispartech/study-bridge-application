@@ -832,6 +832,7 @@ export type Database = {
       programme: {
         Row: {
           apply_url: string
+          cip_code: string | null
           confidence: Database["public"]["Enums"]["confidence_level"]
           created_at: string
           degree_type: Database["public"]["Enums"]["degree_type"]
@@ -843,6 +844,7 @@ export type Database = {
           id: string
           is_demo: boolean
           last_verified_at: string
+          level: Database["public"]["Enums"]["programme_level"]
           programme_url: string
           source_url: string
           stem_designated: boolean
@@ -854,6 +856,7 @@ export type Database = {
         ComputedFields: never
         Insert: {
           apply_url: string
+          cip_code?: string | null
           confidence: Database["public"]["Enums"]["confidence_level"]
           created_at?: string
           degree_type: Database["public"]["Enums"]["degree_type"]
@@ -865,6 +868,7 @@ export type Database = {
           id?: string
           is_demo?: boolean
           last_verified_at: string
+          level?: Database["public"]["Enums"]["programme_level"]
           programme_url: string
           source_url: string
           stem_designated?: boolean
@@ -875,6 +879,7 @@ export type Database = {
         }
         Update: {
           apply_url?: string
+          cip_code?: string | null
           confidence?: Database["public"]["Enums"]["confidence_level"]
           created_at?: string
           degree_type?: Database["public"]["Enums"]["degree_type"]
@@ -886,6 +891,7 @@ export type Database = {
           id?: string
           is_demo?: boolean
           last_verified_at?: string
+          level?: Database["public"]["Enums"]["programme_level"]
           programme_url?: string
           source_url?: string
           stem_designated?: boolean
@@ -1035,6 +1041,7 @@ export type Database = {
           last_verified_at: string
           leads_to_registration: string | null
           min_gpa4: number | null
+          min_prior_education: string | null
           min_uk_class: Database["public"]["Enums"]["uk_class_band"] | null
           min_work_years: number
           nigeria_rule: string | null
@@ -1067,6 +1074,7 @@ export type Database = {
           last_verified_at: string
           leads_to_registration?: string | null
           min_gpa4?: number | null
+          min_prior_education?: string | null
           min_uk_class?: Database["public"]["Enums"]["uk_class_band"] | null
           min_work_years?: number
           nigeria_rule?: string | null
@@ -1098,6 +1106,7 @@ export type Database = {
           last_verified_at?: string
           leads_to_registration?: string | null
           min_gpa4?: number | null
+          min_prior_education?: string | null
           min_uk_class?: Database["public"]["Enums"]["uk_class_band"] | null
           min_work_years?: number
           nigeria_rule?: string | null
@@ -1469,6 +1478,7 @@ export type Database = {
           include_related_fields: boolean
           institution_type: string | null
           intake_target: string | null
+          level_preference: string
           nationality: string | null
           post_study_work: string | null
           preferred_cities: string[]
@@ -1519,6 +1529,7 @@ export type Database = {
           include_related_fields?: boolean
           institution_type?: string | null
           intake_target?: string | null
+          level_preference?: string
           nationality?: string | null
           post_study_work?: string | null
           preferred_cities?: string[]
@@ -1568,6 +1579,7 @@ export type Database = {
           include_related_fields?: boolean
           institution_type?: string | null
           intake_target?: string | null
+          level_preference?: string
           nationality?: string | null
           post_study_work?: string | null
           preferred_cities?: string[]
@@ -1624,12 +1636,16 @@ export type Database = {
           created_at: string
           dli_number: string | null
           id: string
+          institution_type: string
           intl_office_url: string | null
           is_demo: boolean
           is_public: boolean
           last_verified_at: string
           name: string
           official_domains: string[]
+          pgwp_checked_at: string | null
+          pgwp_eligible: string
+          pgwp_source_url: string | null
           ranking_band: string | null
           region: string
           sevp_certified: boolean
@@ -1645,12 +1661,16 @@ export type Database = {
           created_at?: string
           dli_number?: string | null
           id?: string
+          institution_type?: string
           intl_office_url?: string | null
           is_demo?: boolean
           is_public: boolean
           last_verified_at: string
           name: string
           official_domains: string[]
+          pgwp_checked_at?: string | null
+          pgwp_eligible?: string
+          pgwp_source_url?: string | null
           ranking_band?: string | null
           region: string
           sevp_certified?: boolean
@@ -1665,12 +1685,16 @@ export type Database = {
           created_at?: string
           dli_number?: string | null
           id?: string
+          institution_type?: string
           intl_office_url?: string | null
           is_demo?: boolean
           is_public?: boolean
           last_verified_at?: string
           name?: string
           official_domains?: string[]
+          pgwp_checked_at?: string | null
+          pgwp_eligible?: string
+          pgwp_source_url?: string | null
           ranking_band?: string | null
           region?: string
           sevp_certified?: boolean
@@ -1885,6 +1909,7 @@ export type Database = {
         | "mental_health"
       intake_term: "fall" | "winter" | "spring" | "summer"
       plan_tier: "free" | "plus"
+      programme_level: "masters" | "postgraduate_certificate" | "graduate_diploma" | "diploma"
       study_mode: "full_time" | "part_time" | "online" | "blended"
       test_status: "required" | "one_of_required" | "optional" | "not_required"
       tracker_stage:
@@ -2024,6 +2049,7 @@ export const Constants = {
       ],
       intake_term: ["fall", "winter", "spring", "summer"],
       plan_tier: ["free", "plus"],
+      programme_level: ["masters", "postgraduate_certificate", "graduate_diploma", "diploma"],
       study_mode: ["full_time", "part_time", "online", "blended"],
       test_status: ["required", "one_of_required", "optional", "not_required"],
       tracker_stage: [

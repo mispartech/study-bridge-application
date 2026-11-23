@@ -93,10 +93,39 @@ This is the "Leads to a work permit" signal (plan step E).
 
 **What this means:** the accountant's point stands for colleges being cheaper with simpler entry. But funding for international students is mostly small entrance awards, or awards available only after starting. Funding records must state `open_to_international` (yes / limited / no) and when the student becomes eligible (on admission, or after starting). "Funded" should mean money the student can count on before arriving.
 
-## Still to confirm before Step C
+## The five checks before Step C (23 Nov 2026)
 
-1. That a public college postgraduate certificate is classed as a "college program" for the PGWP (CLB 5 and field of study), on a pilot college's own PGWP page.
-2. The full list of programmes that give a spouse an open work permit.
-3. The proof-of-funds table itself, not a summary.
-4. Each pilot college's PGWP eligibility, and that none is a curriculum-licensing campus.
-5. Off-campus work-hour limits during study (not checked yet).
+| # | Check | Result | Source |
+|---|---|---|---|
+| 1 | Is a public college graduate certificate a "college program" for the PGWP? | **Confirmed.** Seneca: "CLB5 for graduates of certificate, diploma, advanced diplomas, or graduate certificates", and the program must meet "the field of study requirements". IRCC's categories agree but don't name graduate certificates. Conestoga lists Ontario College Graduate Certificates with their CIP codes as "PGWP-aligned". | [Seneca PGWP](https://www.senecapolytechnic.ca/international/support/pgwp.html) (updated 8 Jul 2025), [IRCC who can apply](https://www.canada.ca/en/immigration-refugees-citizenship/services/study-canada/work/after-graduation/eligibility.html), [Conestoga](https://www.conestogac.on.ca/international/apply-to-conestoga/pgwp-aligned-programs) |
+| 2 | Which programmes give a spouse an open work permit? | **Confirmed** (page date 2026-02-03). See the list below. | [Help your spouse work](https://www.canada.ca/en/immigration-refugees-citizenship/services/study-canada/work/help-your-spouse-common-law-partner-work-canada.html) |
+| 3 | Proof-of-funds table | **Confirmed** (page date 2026-08-28). See the table below. | [Proof of financial support](https://www.canada.ca/en/immigration-refugees-citizenship/services/study-canada/study-permit/get-documents/financial-support.html) |
+| 4 | Pilot colleges: PGWP-eligible, and not a curriculum-licensing campus? | **Not verifiable from public pages by script.** IRCC's DLI table and its curriculum-licensing campus list load dynamically. George Brown and Humber block automated reading. Seneca says it has "85+ PGWP-eligible programs"; Centennial lists "PGWP aligned" programmes; NSCC states nothing. | [IRCC DLI list](https://www.canada.ca/en/immigration-refugees-citizenship/services/study-canada/study-permit/prepare/designated-learning-institutions-list.html) |
+| 5 | Off-campus work during study | **Confirmed** (page date 2026-04-15). See below. | [Work off campus](https://www.canada.ca/en/immigration-refugees-citizenship/services/study-canada/work/work-off-campus.html) |
+
+**What check 4 means for the data model:**
+- PGWP eligibility is recorded **per institution**, as `unknown` until a data editor checks the IRCC DLI search in a browser and records the DLI number, the source and the date. Programmes from an institution still marked `unknown` never show "Leads to a work permit".
+- Same for curriculum-licensing campuses: only the public college's own campus is recorded, and a campus run by a private partner is a separate institution record.
+
+**Spouse open work permit** (from 21 Jan 2025):
+- **Qualifies:**
+  - a master's of 16 months or longer
+  - a doctorate
+  - named professional degrees: DDS/DMD, LLB/JD/BCL, MD, OD, pharmacy, DVM, BScN/BSN/BNSc/BN, BEd, BEng/BE/BASc
+  - named pilots, such as the Ontario Supervised Practice Experience Partnership and Langara's post-degree nursing diploma
+- **Doesn't qualify:** college graduate certificates and diplomas.
+- **Validity:** usually the same as the student's study permit.
+
+**Proof of funds**, per year, excluding tuition and travel, outside Quebec, for applications from 1 Sept 2026 (CAD):
+
+| Family members | 1 | 2 | 3 | 4 | 5 | 6 | 7 | Each more |
+|---|---|---|---|---|---|---|---|---|
+| Amount | 23,448 | 29,192 | 35,888 | 43,572 | 49,419 | 55,736 | 62,054 | 6,318 |
+
+The previous table (1 Jan 2025 – 31 Aug 2026) started at 22,895. Quebec sets its own amounts.
+
+**Off-campus work:**
+- During term: up to 24 hours a week, even where the permit says 20.
+- During scheduled breaks: unlimited.
+- Conditions: a full-time student at a DLI, in a programme of at least 6 months leading to a degree, diploma or certificate, with a SIN.
+- Work for an employer outside Canada doesn't count.

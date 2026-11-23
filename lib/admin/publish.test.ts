@@ -130,7 +130,7 @@ describe("toRows", () => {
   it("needs a degree class or a GPA minimum", () => {
     const none = record() as unknown as { requirement: Record<string, unknown> }
     none.requirement.min_uk_class = null
-    expect(() => toRows(none)).toThrow(/minimum degree class \(UK\) or a minimum GPA/)
+    expect(() => toRows(none)).toThrow(/minimum degree class \(UK\), a minimum GPA/)
   })
 
   it("works out the cycle from the start month", () => {

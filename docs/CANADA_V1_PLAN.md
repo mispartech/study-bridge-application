@@ -116,6 +116,16 @@ Admin Phases 2–3 (alerts, content hub), then 7–9.
 
 ## Status
 
+- Step C: code built 23 Nov 2026; data pending.
+  - **Built:**
+    - programme `level` and `cip_code`; institution type; per-institution PGWP eligibility (unknown until checked, with source and date)
+    - college entry by prior qualification
+    - a "Master's / certificate / either" question in the deep search; Master's stays the default, so nothing changes for existing students
+    - certificates labelled on results cards
+    - work rights per programme, from the visa rule's own data (`non_degree`, `min_programme_months`)
+    - the extractor and the approval path carry the new fields
+  - **Before any college programme goes live:** an editor adds `"non_degree": "programme_length", "min_programme_months": 8` to Canada's post-study work rule, with the IRCC "About the PGWP" page as its source.
+  - **Data still to collect:** 20 reviewed programmes from 5 public colleges. This needs extraction runs, which spend AI credit.
 - Step B: built 23 Nov 2026:
   - pathways and weights in the database, managed at `/admin/pathways` with a preview
   - goals asked in the deep search

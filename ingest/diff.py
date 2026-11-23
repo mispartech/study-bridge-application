@@ -39,6 +39,7 @@ def project_extraction(record: ProgrammeRecord) -> dict[str, Any]:
         else {
             "min_uk_class": req.min_uk_class,
             "min_gpa4": req.min_gpa4,
+            "min_prior_education": req.min_prior_education,
             "nigeria_rule": norm_text(req.nigeria_rule),
             "ielts_min": tests.get("IELTS"),
             "toefl": toefl,
@@ -68,6 +69,7 @@ def project_stored(fees: list[dict], intakes: list[dict], requirement: dict | No
         else {
             "min_uk_class": requirement["min_uk_class"],
             "min_gpa4": num(requirement["min_gpa4"]),
+            "min_prior_education": requirement.get("min_prior_education"),
             "nigeria_rule": norm_text(requirement["nigeria_rule"]),
             "ielts_min": num(requirement["ielts_min"]),
             "toefl": sorted((e["scale"], float(e["overall_min"]), float(e.get("subscore_min") or 0))

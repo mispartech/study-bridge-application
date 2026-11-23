@@ -12,6 +12,8 @@ const university = z.object({
   official_domain: z.string().min(3),
   region: z.string().min(1, "University region is missing"),
   is_public: z.boolean("Say whether the university is public"),
+  /** College or university: from the register, like is_public. Defaults to a university. */
+  institution_type: z.enum(["university", "public_college", "private_college"]).nullish(),
   intl_office_url: z.url().nullish(),
   register_url: z.url("Register link is missing"),
   dli_number: z.string().nullish(),
@@ -31,6 +33,12 @@ const record = z
     programme: z.object({
       title: z.string().min(3),
       degree_type: z.string(),
+      /** Master's unless the page says it is a college credential. */
+      level: z.enum(["masters", "postgraduate_certificate", "graduate_diploma", "diploma"]).nullish(),
+      cip_code: z
+        .string()
+        .regex(/^\d{2}\.\d{4}$/, "CIP code must look like 11.0701")
+        .nullish(),
       field: z.string(),
       duration_months: z.number("Duration is missing").int().min(6).max(36),
       study_mode: z.string().nullish(),
@@ -44,6 +52,8 @@ const record = z
     requirement: z.object({
       min_uk_class: z.string().nullish(),
       min_gpa4: z.number().nullish(),
+      /** College entry: the qualification needed first, when no class or GPA is stated. */
+      min_prior_education: z.enum(["secondary", "diploma", "degree"]).nullish(),
       nigeria_rule: z.string().nullish(),
       considers_lower_with_experience: z.boolean().nullish(),
       english_tests: z.array(englishTest),
@@ -85,8 +95,9 @@ const record = z
       .min(1, "At least one fee is needed"),
     source_urls: z.array(z.url()).min(1),
   })
-  .refine((r) => r.requirement.min_uk_class || r.requirement.min_gpa4 != null, {
-    message: "Give a minimum degree class (UK) or a minimum GPA out of 4 (Canada)",
+  .refine((r) => r.requirement.min_uk_class || r.requirement.min_gpa4 != null || r.requirement.min_prior_education, {
+    message:
+      "Give a minimum degree class (UK), a minimum GPA out of 4 (Canada), or the qualification a college programme needs first",
     path: ["requirement", "min_uk_class"],
   })
 
@@ -143,6 +154,7 @@ export function toRows(input: unknown) {
       city: r.university.city,
       region: r.university.region,
       is_public: r.university.is_public,
+      institution_type: r.university.institution_type ?? "university",
       dli_number: r.university.dli_number ?? null,
       sponsor_licence: r.university.sponsor_licence ?? false,
       sevp_certified: r.university.sevp_certified ?? false,
@@ -154,6 +166,8 @@ export function toRows(input: unknown) {
     programme: {
       ...r.programme,
       apply_url: r.programme.apply_url ?? r.programme.programme_url,
+      level: r.programme.level ?? "masters",
+      cip_code: r.programme.cip_code ?? null,
       study_mode: r.programme.study_mode ?? "full_time",
       stem_designated: r.programme.stem_designated ?? false,
       has_coop_or_placement: r.programme.has_coop_or_placement ?? false,
@@ -162,6 +176,7 @@ export function toRows(input: unknown) {
     requirement: {
       min_uk_class: r.requirement.min_uk_class ?? null,
       min_gpa4: r.requirement.min_gpa4 ?? null,
+      min_prior_education: r.requirement.min_prior_education ?? null,
       nigeria_rule: r.requirement.nigeria_rule ?? null,
       considers_lower_with_experience: r.requirement.considers_lower_with_experience ?? false,
       ielts_min: score("IELTS"),

@@ -95,6 +95,11 @@ export function MatchCard({
         {card.open_to_international === "limited" && (
           <VisaStatusChip status="conditional" size="sm" label="Limited places for international students" />
         )}
+        {card.level && card.level !== "masters" && (
+          <Chip size="sm" variant="primary" data-testid="level-chip">
+            {card.level_label}
+          </Chip>
+        )}
         {card.has_coop && <Chip size="sm">Co-op or placement</Chip>}
         {card.flags.includes("related_field") && <Chip size="sm">Related field</Chip>}
         {card.flags.includes("check_test_requirement") && <Chip size="sm">Check test requirement</Chip>}

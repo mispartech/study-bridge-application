@@ -45,6 +45,7 @@ export function toMatchProfile(draft: Draft, now: Date): MatchProfile {
     dependants: number(draft.dependants) ?? 0,
     post_study_work: draft.post_study_work || null,
     goals: (draft.goals ?? []).filter((g) => pathwayKey.safeParse(g).success).slice(0, 5),
+    level_preference: (["certificate", "either"] as const).find((l) => l === draft.level_preference) ?? "masters",
   })
 }
 

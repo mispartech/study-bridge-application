@@ -92,6 +92,7 @@ export const studentProfileRow = z.object({
   completeness: z.number().int().min(0).max(100),
   post_study_work: z.enum(["low", "medium", "high"]).nullable(),
   goals: z.array(z.string().regex(/^[a-z][a-z_]{1,39}$/)).max(5),
+  level_preference: z.enum(["masters", "certificate", "either"]),
   professional_registration: z.enum(["none", "nurse", "other"]),
   campus_or_city: z.enum(["campus", "city", "either"]).nullable(),
   include_related_fields: z.boolean(),
@@ -139,6 +140,10 @@ export const universityRow = z.object({
   region: z.string().min(1),
   is_public: z.boolean(),
   dli_number: z.string().nullable(),
+  institution_type: z.enum(["university", "public_college", "private_college"]),
+  pgwp_eligible: z.enum(["yes", "no", "unknown"]),
+  pgwp_source_url: z.url().nullable(),
+  pgwp_checked_at: timestamp.nullable(),
   sponsor_licence: z.boolean(),
   sevp_certified: z.boolean(),
   ranking_band: z.string().nullable(),
@@ -153,6 +158,11 @@ export const programmeRow = z.object({
   university_id: uuid,
   title: z.string().min(1),
   degree_type: degreeType,
+  level: z.enum(["masters", "postgraduate_certificate", "graduate_diploma", "diploma"]),
+  cip_code: z
+    .string()
+    .regex(/^\d{2}\.\d{4}$/)
+    .nullable(),
   field: fieldCode,
   duration_months: z.number().int().min(1).max(60),
   study_mode: studyMode,
@@ -194,6 +204,7 @@ export const requirementRow = z.object({
   clinical_placement: z.boolean(),
   open_to_international: z.enum(["yes", "limited", "no"]).nullable(),
   checks_required: z.array(z.enum(["police", "health", "immunisation"])),
+  min_prior_education: z.enum(["secondary", "diploma", "degree"]).nullable(),
   pte_min: z.number().min(10).max(90).nullable(),
   gre_status: testStatus.nullable(),
   gmat_status: testStatus.nullable(),

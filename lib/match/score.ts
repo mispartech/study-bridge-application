@@ -1,6 +1,7 @@
 import { bandIndex, normaliseAcademics } from "./academics"
 import { ruleOn, toNgn, visaApplicationDate } from "./cost"
 import type { Tables } from "@/lib/db/database.types"
+import { workMonthsFor } from "./levels"
 import { goalFit, type SignalKey, type SignalValues } from "./pathways"
 import type { Academics, Band, Bundle, Catalogue, Cost, MatchOptions, MatchProfile, ScoreBreakdown } from "./types"
 
@@ -52,14 +53,16 @@ export function careerFitDetail(
 ): { score: number; reasons: SignalKey[] } {
   const { programme, university } = bundle
   const date = visaApplicationDate(intake)
+  const ruleFor = (country: string) =>
+    ruleOn(catalogue.visaRules, { country, type: "post_study_work", demoMode: o.demoMode }, date)
   const workMonths = (country: string) => {
-    const rule = ruleOn(catalogue.visaRules, { country, type: "post_study_work", demoMode: o.demoMode }, date)
-    const months = (rule?.value as { months?: unknown } | undefined)?.months
+    const months = (ruleFor(country)?.value as { months?: unknown } | undefined)?.months
     return typeof months === "number" ? months : 0
   }
   const countries = profile.preferred_countries.length ? profile.preferred_countries : ["UK", "CA", "US"]
   const longest = Math.max(...countries.map(workMonths))
-  const months = workMonths(university.country)
+  // This programme's own work rights: a college certificate can earn less than a Master's in the same country.
+  const months = workMonthsFor(ruleFor(university.country)?.value, programme)
   const priority = profile.post_study_work
   // A student who has told us this matters gets a fair score where we hold no rule yet: unknown isn't zero.
   const unknown = months === 0 && priority !== null
