@@ -1,8 +1,14 @@
 import Link from "next/link"
 import { connection } from "next/server"
 
-import { Card } from "@/components/ui/card"
-import { filterUsers, formatUsd, summariseUsers } from "@/lib/admin/users"
+import { DataTable, type Column } from "@/components/admin/data-table"
+import { FilterBar, type FilterChip } from "@/components/admin/filter-bar"
+import { KpiGrid, KpiTile } from "@/components/admin/kpi-tile"
+import { PageHeader } from "@/components/admin/page-header"
+import { ErrorState } from "@/components/admin/states"
+import { StatusBadge } from "@/components/admin/status-badge"
+import { tableHref, type SearchParams } from "@/lib/admin/table"
+import { filterUsers, formatUsd, summariseUsers, type UserSummary } from "@/lib/admin/users"
 import { ROLE_LABEL } from "@/lib/auth/roles"
 import { serviceClient } from "@/lib/db/service"
 import { getSettings } from "@/lib/settings"
@@ -13,16 +19,72 @@ const nf = new Intl.NumberFormat("en-GB")
 const day = (iso: string | null) => (iso ? iso.slice(0, 10) : "never")
 /** ISO time `days` ago. Read per request, after connection(). */
 const daysAgo = (days: number) => new Date(Date.now() - days * 86_400_000).toISOString()
+const one = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v)
 
 const input = "min-h-11 rounded-button border border-border bg-surface px-3 text-sm"
 
-export default async function Page({
-  searchParams,
-}: {
-  searchParams: Promise<{ q?: string; role?: string; plan?: string; status?: string }>
-}) {
+const COLUMNS: Column<UserSummary>[] = [
+  {
+    key: "email",
+    header: "Email",
+    sort: (r) => r.email ?? r.id,
+    cell: (r) => (
+      <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
+        <Link href={`/admin/users/${r.id}`} className="break-all underline underline-offset-4">
+          {r.email ?? r.id}
+        </Link>
+        {r.role !== "student" && <StatusBadge tone="info">{ROLE_LABEL[r.role]}</StatusBadge>}
+        {r.suspended && <StatusBadge tone="danger">suspended</StatusBadge>}
+        {r.internal && (
+          <StatusBadge data-testid="internal-badge" tone="neutral">
+            internal
+          </StatusBadge>
+        )}
+      </span>
+    ),
+  },
+  { key: "created", header: "Signed up", nowrap: true, sort: (r) => r.created_at, cell: (r) => day(r.created_at) },
+  {
+    key: "last",
+    header: "Last sign-in",
+    nowrap: true,
+    sort: (r) => r.last_sign_in_at,
+    cell: (r) => day(r.last_sign_in_at),
+  },
+  { key: "plan", header: "Plan", sort: (r) => r.plan, cell: (r) => r.plan },
+  { key: "searches", header: "Searches", align: "right", sort: (r) => r.searches, cell: (r) => nf.format(r.searches) },
+  {
+    key: "ai",
+    header: "AI calls",
+    align: "right",
+    sort: (r) => r.ai_calls,
+    cell: (r) => (
+      <>
+        {nf.format(r.ai_calls)}
+        {r.ai_failures > 0 && <span className="text-danger-strong"> ({r.ai_failures} failed)</span>}
+      </>
+    ),
+  },
+  {
+    key: "tokens",
+    header: "Tokens",
+    align: "right",
+    sort: (r) => r.input_tokens + r.output_tokens,
+    cell: (r) => nf.format(r.input_tokens + r.output_tokens),
+  },
+  {
+    key: "cost",
+    header: "AI cost",
+    align: "right",
+    sort: (r) => r.cost_usd,
+    cell: (r) => (r.ai_calls ? formatUsd(r.cost_usd) : "—"),
+  },
+]
+
+export default async function Page({ searchParams }: { searchParams: Promise<SearchParams> }) {
   await connection()
-  const filter = await searchParams
+  const params = await searchParams
+  const filter = { q: one(params.q), role: one(params.role), plan: one(params.plan), status: one(params.status) }
   await requireStaff("users.read")
   const db = serviceClient()
   const since = daysAgo(DAYS)
@@ -37,7 +99,7 @@ export default async function Page({
     db.from("subscription").select("user_id, plan, current_period_end"),
     getSettings(),
   ])
-  if (error) return <p className="text-danger-strong">Could not load users: {error.message}</p>
+  if (error) return <ErrorState title="Could not load users" message={error.message} />
   const all = summariseUsers(
     auth.users,
     usage.data ?? [],
@@ -50,104 +112,82 @@ export default async function Page({
   const weekAgo = daysAgo(7)
   const signedUpThisWeek = all.filter((r) => r.created_at >= weekAgo).length
   const activeThisWeek = all.filter((r) => (r.last_sign_in_at ?? "") >= weekAgo).length
+  const chips: FilterChip[] = (
+    [
+      ["q", filter.q && `“${filter.q}”`],
+      ["role", filter.role && ROLE_LABEL[filter.role as keyof typeof ROLE_LABEL]],
+      ["plan", filter.plan],
+      ["status", filter.status],
+    ] as const
+  ).flatMap(([key, label]) =>
+    label ? [{ label, removeHref: tableHref("/admin/users", params, { [key]: null, page: null }) }] : []
+  )
+
   return (
-    <div className="flex flex-col gap-4">
-      <h1 className="font-heading text-xl font-bold">Users</h1>
-      <section className="grid gap-3 sm:grid-cols-4">
-        {[
-          ["Accounts", all.length],
-          ["Signed up in 7 days", signedUpThisWeek],
-          ["Signed in within 7 days", activeThisWeek],
-          ["On Plus", all.filter((r) => r.plan === "plus").length],
-        ].map(([label, value]) => (
-          <Card key={label} className="gap-1">
-            <h2 className="text-sm text-muted-foreground">{label}</h2>
-            <p className="font-heading text-2xl font-extrabold tabular-nums">{nf.format(Number(value))}</p>
-          </Card>
-        ))}
-      </section>
-      <form method="get" className="flex flex-wrap items-end gap-2 text-sm" aria-label="Find users">
-        <label className="flex flex-col gap-1">
-          Email or id
-          <input name="q" defaultValue={filter.q} className={input} />
-        </label>
-        <label className="flex flex-col gap-1">
-          Role
-          <select name="role" defaultValue={filter.role ?? ""} className={input}>
-            <option value="">Any</option>
-            {(Object.keys(ROLE_LABEL) as (keyof typeof ROLE_LABEL)[]).map((r) => (
-              <option key={r} value={r}>
-                {ROLE_LABEL[r]}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="flex flex-col gap-1">
-          Plan
-          <select name="plan" defaultValue={filter.plan ?? ""} className={input}>
-            <option value="">Any</option>
-            <option value="free">Free</option>
-            <option value="plus">Plus</option>
-          </select>
-        </label>
-        <label className="flex flex-col gap-1">
-          Status
-          <select name="status" defaultValue={filter.status ?? ""} className={input}>
-            <option value="">Any</option>
-            <option value="active">Active</option>
-            <option value="suspended">Suspended</option>
-          </select>
-        </label>
-        <button type="submit" className={`${input} font-medium`}>
-          Search
-        </button>
-      </form>
-      <p className="text-xs text-muted-foreground">
-        {rows.length} of {all.length} accounts. Searches and AI use cover the last {DAYS} days.
-      </p>
-      <div className="overflow-x-auto" tabIndex={0} role="region" aria-label="Users">
-        <table className="w-full min-w-[48rem] text-left text-sm tabular-nums">
-          <thead className="text-muted-foreground">
-            <tr>
-              {["Email", "Signed up", "Last sign-in", "Plan", "Searches", "AI calls", "Tokens", "AI cost"].map((h) => (
-                <th key={h} scope="col" className="py-2 pr-4 font-medium">
-                  {h}
-                </th>
+    <>
+      <PageHeader
+        title="Users"
+        description={`Accounts and their activity. Searches and AI use cover the last ${DAYS} days.`}
+      />
+      <KpiGrid>
+        <KpiTile label="Accounts" value={nf.format(all.length)} />
+        <KpiTile label="Signed up in 7 days" value={nf.format(signedUpThisWeek)} />
+        <KpiTile label="Signed in within 7 days" value={nf.format(activeThisWeek)} />
+        <KpiTile label="On Plus" value={nf.format(all.filter((r) => r.plan === "plus").length)} />
+      </KpiGrid>
+      <FilterBar chips={chips} resetHref="/admin/users">
+        <form method="get" className="flex flex-wrap items-end gap-2 text-sm" aria-label="Find users">
+          <label className="flex flex-col gap-1">
+            Email or id
+            <input name="q" defaultValue={filter.q} className={input} />
+          </label>
+          <label className="flex flex-col gap-1">
+            Role
+            <select name="role" defaultValue={filter.role ?? ""} className={input}>
+              <option value="">Any</option>
+              {(Object.keys(ROLE_LABEL) as (keyof typeof ROLE_LABEL)[]).map((r) => (
+                <option key={r} value={r}>
+                  {ROLE_LABEL[r]}
+                </option>
               ))}
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((r) => (
-              <tr key={r.id} data-testid="user-row" className="border-t border-border">
-                <td className="py-2 pr-4">
-                  <Link href={`/admin/users/${r.id}`} className="underline underline-offset-4">
-                    {r.email ?? r.id}
-                  </Link>
-                  {r.role !== "student" && (
-                    <span className="ml-2 text-xs font-semibold text-primary">{ROLE_LABEL[r.role]}</span>
-                  )}
-                  {r.suspended && <span className="ml-2 text-xs font-semibold text-danger-strong">suspended</span>}
-                  {r.internal && (
-                    <span data-testid="internal-badge" className="ml-2 text-xs font-semibold text-muted-foreground">
-                      internal
-                    </span>
-                  )}
-                </td>
-                <td className="py-2 pr-4 whitespace-nowrap">{day(r.created_at)}</td>
-                <td className="py-2 pr-4 whitespace-nowrap">{day(r.last_sign_in_at)}</td>
-                <td className="py-2 pr-4">{r.plan}</td>
-                <td className="py-2 pr-4">{nf.format(r.searches)}</td>
-                <td className="py-2 pr-4">
-                  {nf.format(r.ai_calls)}
-                  {r.ai_failures > 0 && <span className="text-danger-strong"> ({r.ai_failures} failed)</span>}
-                </td>
-                <td className="py-2 pr-4">{nf.format(r.input_tokens + r.output_tokens)}</td>
-                <td className="py-2 pr-4">{r.ai_calls ? formatUsd(r.cost_usd) : "—"}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
+            </select>
+          </label>
+          <label className="flex flex-col gap-1">
+            Plan
+            <select name="plan" defaultValue={filter.plan ?? ""} className={input}>
+              <option value="">Any</option>
+              <option value="free">Free</option>
+              <option value="plus">Plus</option>
+            </select>
+          </label>
+          <label className="flex flex-col gap-1">
+            Status
+            <select name="status" defaultValue={filter.status ?? ""} className={input}>
+              <option value="">Any</option>
+              <option value="active">Active</option>
+              <option value="suspended">Suspended</option>
+            </select>
+          </label>
+          <button type="submit" className={`${input} font-medium`}>
+            Search
+          </button>
+        </form>
+      </FilterBar>
+      <p className="text-xs text-muted-foreground">
+        {rows.length} of {all.length} accounts.
+      </p>
+      <DataTable
+        label="Users"
+        columns={COLUMNS}
+        rows={rows}
+        rowKey={(r) => r.id}
+        rowProps={() => ({ "data-testid": "user-row" })}
+        path="/admin/users"
+        params={params}
+        defaultSort="created"
+        minWidth="48rem"
+        empty="No accounts match."
+      />
+    </>
   )
 }

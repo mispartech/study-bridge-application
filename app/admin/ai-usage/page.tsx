@@ -4,9 +4,15 @@ import { Suspense } from "react"
 
 import Link from "next/link"
 
+import { DataTable, type Column } from "@/components/admin/data-table"
 import { InternalToggle } from "@/components/admin/internal-toggle"
+import { KpiGrid, KpiTile } from "@/components/admin/kpi-tile"
+import { PageHeader } from "@/components/admin/page-header"
+import { ErrorState, LoadingSkeleton } from "@/components/admin/states"
+import { StatusBadge } from "@/components/admin/status-badge"
 import { Card } from "@/components/ui/card"
 import { includeInternal, internalUserIds, withoutInternal } from "@/lib/admin/internal"
+import type { SearchParams } from "@/lib/admin/table"
 import { can } from "@/lib/auth/roles"
 import { formatUsd, totals, type UsageRow } from "@/lib/admin/users"
 import { serviceClient } from "@/lib/db/service"
@@ -17,82 +23,111 @@ export const metadata: Metadata = { title: "AI usage", robots: { index: false, f
 
 const DAYS = 30
 const nf = new Intl.NumberFormat("en-GB")
+const one = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v)
+
+/** ISO time `days` ago. Read per request, after connection(). */
+const daysAgoIso = (days: number) => new Date(Date.now() - days * 86_400_000).toISOString()
 
 /** First day of the reporting window (YYYY-MM-DD). Read per request, after connection(). */
 function windowStart(days: number): string {
   return new Date(Date.now() - days * 86_400_000).toISOString().slice(0, 10)
 }
 
+type Daily = {
+  day: string
+  task: string
+  provider: string
+  model: string
+  calls: number
+  failures: number
+  input_tokens: number
+  output_tokens: number
+  avg_latency_ms: number
+}
+
+const DAILY: Column<Daily>[] = [
+  { key: "day", header: "Day", nowrap: true, sort: (r) => r.day, cell: (r) => r.day },
+  { key: "task", header: "Task", sort: (r) => r.task, cell: (r) => r.task },
+  {
+    key: "model",
+    header: "Model",
+    sort: (r) => `${r.provider}:${r.model}`,
+    cell: (r) => <span className="font-mono text-xs">{`${r.provider}:${r.model}`}</span>,
+  },
+  { key: "calls", header: "Calls", align: "right", sort: (r) => r.calls, cell: (r) => nf.format(r.calls ?? 0) },
+  { key: "failed", header: "Failed", align: "right", sort: (r) => r.failures, cell: (r) => nf.format(r.failures ?? 0) },
+  {
+    key: "in",
+    header: "Input tokens",
+    align: "right",
+    sort: (r) => Number(r.input_tokens ?? 0),
+    cell: (r) => nf.format(Number(r.input_tokens ?? 0)),
+  },
+  {
+    key: "out",
+    header: "Output tokens",
+    align: "right",
+    sort: (r) => Number(r.output_tokens ?? 0),
+    cell: (r) => nf.format(Number(r.output_tokens ?? 0)),
+  },
+  {
+    key: "latency",
+    header: "Avg latency",
+    align: "right",
+    sort: (r) => r.avg_latency_ms,
+    cell: (r) => `${nf.format(r.avg_latency_ms ?? 0)} ms`,
+  },
+]
+
 async function UsageTables({ params }: { params: Params }) {
   await connection() // per-request data; also keeps the service key out of the static build
   const { user } = await requireStaff("ai")
+  const p = await params
   const since = windowStart(DAYS)
   const { data, error } = await serviceClient()
-    .rpc("ai_usage_daily_summary", { p_since: since, p_include_internal: includeInternal(await params, user) })
+    .rpc("ai_usage_daily_summary", {
+      p_since: since,
+      p_include_internal: includeInternal({ internal: one(p.internal) }, user),
+    })
     .order("day", { ascending: false })
     .order("task")
-  if (error) return <p className="text-danger-strong">Could not load usage: {error.message}</p>
+  if (error) return <ErrorState title="Could not load usage" message={error.message} />
   const rows = data ?? []
 
-  const totals = new Map<string, { calls: number; failures: number; input: number; output: number }>()
+  const byTask = new Map<string, { calls: number; failures: number; input: number; output: number }>()
   for (const r of rows) {
-    const t = totals.get(r.task ?? "") ?? { calls: 0, failures: 0, input: 0, output: 0 }
+    const t = byTask.get(r.task ?? "") ?? { calls: 0, failures: 0, input: 0, output: 0 }
     t.calls += r.calls ?? 0
     t.failures += r.failures ?? 0
     t.input += Number(r.input_tokens ?? 0)
     t.output += Number(r.output_tokens ?? 0)
-    totals.set(r.task ?? "", t)
+    byTask.set(r.task ?? "", t)
   }
 
   return (
     <>
-      <section className="grid gap-3 sm:grid-cols-3">
-        {[...totals].map(([task, t]) => (
-          <Card key={task} className="gap-1">
-            <h2 className="text-sm font-semibold text-muted-foreground">{task}</h2>
-            <p className="font-heading money text-2xl font-extrabold">{nf.format(t.calls)} calls</p>
-            <p className="money text-sm text-muted-foreground">
-              {nf.format(t.input)} in · {nf.format(t.output)} out · {nf.format(t.failures)} failed
-            </p>
-          </Card>
+      <KpiGrid columns={3}>
+        {[...byTask].map(([task, t]) => (
+          <KpiTile
+            key={task}
+            label={task}
+            value={`${nf.format(t.calls)} calls`}
+            detail={`${nf.format(t.input)} in · ${nf.format(t.output)} out · ${nf.format(t.failures)} failed`}
+          />
         ))}
-        {totals.size === 0 && <p className="text-muted-foreground">No AI calls in the last {DAYS} days.</p>}
-      </section>
-
-      {rows.length > 0 && (
-        <div className="overflow-x-auto" tabIndex={0} role="region" aria-label="Daily AI usage per task">
-          <table className="w-full min-w-[40rem] money text-sm">
-            <caption className="sr-only">Daily AI usage per task, last {DAYS} days (Lagos time)</caption>
-            <thead className="text-left text-muted-foreground">
-              <tr>
-                {["Day", "Task", "Model", "Calls", "Failed", "Input tokens", "Output tokens", "Avg latency"].map(
-                  (h) => (
-                    <th key={h} scope="col" className="py-2 pr-4 font-medium">
-                      {h}
-                    </th>
-                  )
-                )}
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((r) => (
-                <tr key={`${r.day}-${r.task}-${r.provider}-${r.model}`} className="border-t border-border">
-                  <td className="py-2 pr-4 whitespace-nowrap">{r.day}</td>
-                  <td className="py-2 pr-4">{r.task}</td>
-                  <td className="py-2 pr-4 whitespace-nowrap">
-                    {r.provider}:{r.model}
-                  </td>
-                  <td className="py-2 pr-4">{nf.format(r.calls ?? 0)}</td>
-                  <td className="py-2 pr-4">{nf.format(r.failures ?? 0)}</td>
-                  <td className="py-2 pr-4">{nf.format(Number(r.input_tokens ?? 0))}</td>
-                  <td className="py-2 pr-4">{nf.format(Number(r.output_tokens ?? 0))}</td>
-                  <td className="py-2 pr-4">{nf.format(r.avg_latency_ms ?? 0)} ms</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+      </KpiGrid>
+      <DataTable
+        label="Daily AI usage per task"
+        caption={`Daily AI usage per task, last ${DAYS} days (Lagos time)`}
+        columns={DAILY}
+        rows={rows}
+        rowKey={(r) => `${r.day}-${r.task}-${r.provider}-${r.model}`}
+        path="/admin/ai-usage"
+        params={p}
+        prefix="d."
+        minWidth="40rem"
+        empty={`No AI calls in the last ${DAYS} days.`}
+      />
     </>
   )
 }
@@ -100,14 +135,35 @@ async function UsageTables({ params }: { params: Params }) {
 const RECENT = 50
 const TOP_USERS = 20
 
+type Spender = {
+  id: string | null
+  ai_calls: number
+  ai_failures: number
+  input_tokens: number
+  output_tokens: number
+  cost_usd: number | null
+}
+type Generation = {
+  id: string
+  created_at: string
+  user_id: string | null
+  task: string
+  provider: string
+  model: string
+  input_tokens: number | null
+  output_tokens: number | null
+  success: boolean
+}
+
 /** Spend per account and the latest individual generations. Cost uses the prices set in Settings. */
 async function PerUser({ params }: { params: Params }) {
   await connection()
   const { user } = await requireStaff("ai")
-  const internal = includeInternal(await params, user)
+  const p = await params
+  const internal = includeInternal({ internal: one(p.internal) }, user)
   const internalIds = internal ? new Set<string>() : await internalUserIds()
   const db = serviceClient()
-  const since = new Date(Date.now() - DAYS * 86_400_000).toISOString()
+  const since = daysAgoIso(DAYS)
   const [{ data: usage }, { data: recent }, { data: auth }, settings] = await Promise.all([
     db
       .from("ai_usage")
@@ -127,120 +183,146 @@ async function PerUser({ params }: { params: Params }) {
   const counted = withoutInternal((usage ?? []) as UsageRow[], internalIds, (r) => r.user_id ?? null)
   const groups = Map.groupBy(counted, (r) => r.user_id)
   const all = totals(counted, settings.model_prices)
-  const perUser = [...groups]
-    .map(([id, rows]) => ({ id, ...totals(rows, settings.model_prices) }))
+  const perUser: Spender[] = [...groups]
+    .map(([id, rows]) => ({ id: id ?? null, ...totals(rows, settings.model_prices) }))
     .sort((a, b) => b.input_tokens + b.output_tokens - (a.input_tokens + a.output_tokens))
     .slice(0, TOP_USERS)
-  const th = (h: string) => (
-    <th key={h} scope="col" className="py-2 pr-4 font-medium">
-      {h}
-    </th>
-  )
+  const cost = (c: Generation) =>
+    estimateCostUsd(settings.model_prices, c.provider, c.model, c.input_tokens ?? 0, c.output_tokens ?? 0)
+
+  const spenders: Column<Spender>[] = [
+    {
+      key: "user",
+      header: "User",
+      sort: (u) => who(u.id),
+      cell: (u) =>
+        u.id ? (
+          <Link href={`/admin/users/${u.id}`} className="break-all underline underline-offset-4">
+            {who(u.id)}
+          </Link>
+        ) : (
+          who(null)
+        ),
+    },
+    { key: "calls", header: "Calls", align: "right", sort: (u) => u.ai_calls, cell: (u) => nf.format(u.ai_calls) },
+    {
+      key: "failed",
+      header: "Failed",
+      align: "right",
+      sort: (u) => u.ai_failures,
+      cell: (u) => nf.format(u.ai_failures),
+    },
+    {
+      key: "tokens",
+      header: "Tokens",
+      align: "right",
+      sort: (u) => u.input_tokens + u.output_tokens,
+      cell: (u) => nf.format(u.input_tokens + u.output_tokens),
+    },
+    { key: "cost", header: "Cost", align: "right", sort: (u) => u.cost_usd, cell: (u) => formatUsd(u.cost_usd) },
+  ]
+  const generations: Column<Generation>[] = [
+    {
+      key: "when",
+      header: "When",
+      nowrap: true,
+      sort: (c) => c.created_at,
+      cell: (c) => c.created_at.slice(0, 16).replace("T", " "),
+    },
+    { key: "user", header: "User", cell: (c) => <span className="break-all">{who(c.user_id)}</span> },
+    { key: "task", header: "Task", sort: (c) => c.task, cell: (c) => c.task },
+    { key: "model", header: "Model", cell: (c) => <span className="font-mono text-xs">{c.model}</span> },
+    {
+      key: "tokens",
+      header: "Tokens",
+      align: "right",
+      sort: (c) => (c.input_tokens ?? 0) + (c.output_tokens ?? 0),
+      cell: (c) => nf.format((c.input_tokens ?? 0) + (c.output_tokens ?? 0)),
+    },
+    { key: "cost", header: "Cost", align: "right", sort: cost, cell: (c) => formatUsd(cost(c)) },
+    {
+      key: "result",
+      header: "Result",
+      cell: (c) => <StatusBadge tone={c.success ? "success" : "danger"}>{c.success ? "ok" : "failed"}</StatusBadge>,
+    },
+  ]
+
   return (
     <>
-      <Card className="gap-1">
-        <h2 className="text-sm font-semibold text-muted-foreground">Estimated spend, last {DAYS} days</h2>
-        <p className="font-heading text-2xl font-extrabold tabular-nums">{formatUsd(all.cost_usd)}</p>
-        {all.cost_usd === null && (
-          <p className="text-xs text-muted-foreground">
-            Add model prices in <Link href="/admin/settings">Settings</Link> to see costs.
-          </p>
-        )}
-      </Card>
-      <section className="flex flex-col gap-2">
+      <KpiGrid columns={3}>
+        <KpiTile
+          label={`Estimated spend, last ${DAYS} days`}
+          value={formatUsd(all.cost_usd)}
+          detail={
+            all.cost_usd === null ? (
+              <>
+                Add model prices in <Link href="/admin/settings">Settings</Link> to see costs.
+              </>
+            ) : undefined
+          }
+        />
+      </KpiGrid>
+      <Card className="gap-2">
         <h2 className="font-heading text-base font-bold">Spend by user</h2>
-        <div className="overflow-x-auto" tabIndex={0} role="region" aria-label="AI spend by user">
-          <table className="w-full min-w-[36rem] text-left text-sm tabular-nums">
-            <thead className="text-muted-foreground">
-              <tr>{["User", "Calls", "Failed", "Tokens", "Cost"].map(th)}</tr>
-            </thead>
-            <tbody>
-              {perUser.map((u) => (
-                <tr key={u.id ?? "system"} className="border-t border-border">
-                  <td className="py-2 pr-4">
-                    {u.id ? (
-                      <Link href={`/admin/users/${u.id}`} className="underline underline-offset-4">
-                        {who(u.id)}
-                      </Link>
-                    ) : (
-                      who(null)
-                    )}
-                  </td>
-                  <td className="py-2 pr-4">{nf.format(u.ai_calls)}</td>
-                  <td className="py-2 pr-4">{nf.format(u.ai_failures)}</td>
-                  <td className="py-2 pr-4">{nf.format(u.input_tokens + u.output_tokens)}</td>
-                  <td className="py-2 pr-4">{formatUsd(u.cost_usd)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </section>
-      <section className="flex flex-col gap-2">
+        <DataTable
+          label="AI spend by user"
+          columns={spenders}
+          rows={perUser}
+          rowKey={(u) => u.id ?? "system"}
+          path="/admin/ai-usage"
+          params={p}
+          prefix="u."
+          minWidth="36rem"
+          empty="No AI calls in this window."
+        />
+      </Card>
+      <Card className="gap-2">
         <h2 className="font-heading text-base font-bold">Latest {RECENT} generations</h2>
-        <div className="overflow-x-auto" tabIndex={0} role="region" aria-label="Latest AI generations">
-          <table className="w-full min-w-[44rem] text-left text-sm tabular-nums">
-            <thead className="text-muted-foreground">
-              <tr>{["When", "User", "Task", "Model", "Tokens", "Cost", "Result"].map(th)}</tr>
-            </thead>
-            <tbody>
-              {(recent ?? []).map((c) => (
-                <tr key={c.id} className="border-t border-border">
-                  <td className="py-2 pr-4 whitespace-nowrap">{c.created_at.slice(0, 16).replace("T", " ")}</td>
-                  <td className="py-2 pr-4 break-all">{who(c.user_id)}</td>
-                  <td className="py-2 pr-4">{c.task}</td>
-                  <td className="py-2 pr-4 font-mono text-xs">{c.model}</td>
-                  <td className="py-2 pr-4">{nf.format((c.input_tokens ?? 0) + (c.output_tokens ?? 0))}</td>
-                  <td className="py-2 pr-4">
-                    {formatUsd(
-                      estimateCostUsd(
-                        settings.model_prices,
-                        c.provider,
-                        c.model,
-                        c.input_tokens ?? 0,
-                        c.output_tokens ?? 0
-                      )
-                    )}
-                  </td>
-                  <td className={c.success ? "py-2 pr-4" : "py-2 pr-4 text-danger-strong"}>
-                    {c.success ? "ok" : "failed"}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </section>
+        <DataTable
+          label="Latest AI generations"
+          columns={generations}
+          rows={recent ?? []}
+          rowKey={(c) => c.id}
+          path="/admin/ai-usage"
+          params={p}
+          prefix="g."
+          minWidth="44rem"
+          empty="No generations yet."
+        />
+      </Card>
     </>
   )
 }
 
-type Params = Promise<{ internal?: string }>
+type Params = Promise<SearchParams>
 
 async function Toggle({ params }: { params: Params }) {
   await connection()
   const { user } = await requireStaff("ai")
   if (!can(user, "roles")) return null
-  return <InternalToggle path="/admin/ai-usage" query="" included={includeInternal(await params, user)} />
+  const p = await params
+  return (
+    <InternalToggle path="/admin/ai-usage" query="" included={includeInternal({ internal: one(p.internal) }, user)} />
+  )
 }
 
 export default function AiUsagePage({ searchParams }: { searchParams: Params }) {
   return (
-    <main className="mx-auto flex max-w-5xl flex-col gap-6 px-4 py-8">
-      <header className="flex flex-col gap-1">
-        <h1 className="text-2xl font-extrabold">AI usage</h1>
-        <p className="text-muted-foreground">Daily totals per task for the last {DAYS} days (Lagos time).</p>
-      </header>
+    <>
+      <PageHeader
+        title="AI usage"
+        description={`Spend per account and daily totals per task for the last ${DAYS} days (Lagos time).`}
+      />
       <Suspense fallback={null}>
         <Toggle params={searchParams} />
       </Suspense>
-      <Suspense fallback={<p className="text-muted-foreground">Loading…</p>}>
+      <Suspense fallback={<LoadingSkeleton label="Loading spend" />}>
         <PerUser params={searchParams} />
       </Suspense>
       <h2 className="font-heading text-base font-bold">Daily totals per task</h2>
-      <Suspense fallback={<p className="text-muted-foreground">Loading…</p>}>
+      <Suspense fallback={<LoadingSkeleton label="Loading daily totals" />}>
         <UsageTables params={searchParams} />
       </Suspense>
-    </main>
+    </>
   )
 }

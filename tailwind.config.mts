@@ -28,6 +28,25 @@ const config: Config = {
         muted: { DEFAULT: v("surface-subtle"), foreground: v("muted") },
         track: v("track"),
         scrim: v("scrim"),
+        // Admin console only (Phase 1 of the admin revamp)
+        chart: {
+          1: v("chart-1"),
+          2: v("chart-2"),
+          3: v("chart-3"),
+          4: v("chart-4"),
+          5: v("chart-5"),
+          6: v("chart-6"),
+          grid: v("chart-grid"),
+          previous: v("chart-previous"),
+        },
+        severity: {
+          info: v("severity-info"),
+          "info-tint": v("severity-info-tint"),
+          warning: v("severity-warning"),
+          "warning-tint": v("severity-warning-tint"),
+          critical: v("severity-critical"),
+          "critical-tint": v("severity-critical-tint"),
+        },
 
         // shadcn/ui semantic aliases, so components added with `shadcn add` pick up the theme
         background: v("canvas"),
@@ -54,6 +73,11 @@ const config: Config = {
       borderRadius: {
         card: "16px",
         button: "12px",
+      },
+      spacing: {
+        "admin-sidebar": v("admin-sidebar"),
+        "admin-topbar": v("admin-topbar"),
+        "admin-row": v("admin-row"),
       },
     },
   },

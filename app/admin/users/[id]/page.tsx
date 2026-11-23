@@ -1,11 +1,15 @@
-import Link from "next/link"
 import { notFound } from "next/navigation"
 import { connection } from "next/server"
 
+import { DataTable, type Column } from "@/components/admin/data-table"
+import { Breadcrumbs } from "@/components/admin/page-header"
 import { RoleSelect } from "@/components/admin/role-select"
+import { StatusBadge } from "@/components/admin/status-badge"
 import { UserActions } from "@/components/admin/user-actions"
 import { Card } from "@/components/ui/card"
+import type { SearchParams } from "@/lib/admin/table"
 import { formatUsd, totals } from "@/lib/admin/users"
+import type { Tables } from "@/lib/db/database.types"
 import { serviceClient } from "@/lib/db/service"
 import { fieldLabel } from "@/lib/match/labels"
 import { formatShort } from "@/lib/money"
@@ -20,10 +24,54 @@ const RECENT = 50
 /** Read per request, after connection(). */
 const isSuspended = (until: string | null | undefined) => Boolean(until && Date.parse(until) > Date.now())
 
-export default async function Page({ params }: { params: Promise<{ id: string }> }) {
+type Search = Tables<"search_log">
+type Call = Pick<
+  Tables<"ai_usage">,
+  | "id"
+  | "created_at"
+  | "task"
+  | "provider"
+  | "model"
+  | "input_tokens"
+  | "output_tokens"
+  | "latency_ms"
+  | "success"
+  | "error"
+>
+
+const SEARCHES: Column<Search>[] = [
+  { key: "when", header: "When", nowrap: true, sort: (s) => s.created_at, cell: (s) => time(s.created_at) },
+  { key: "course", header: "Course", cell: (s) => s.fields.map(fieldLabel).join(", ") || "any" },
+  { key: "countries", header: "Countries", cell: (s) => s.countries.join(", ") || "any" },
+  {
+    key: "budget",
+    header: "Budget",
+    align: "right",
+    sort: (s) => s.budget_ngn_minor,
+    cell: (s) => (s.budget_ngn_minor === null ? "not given" : formatShort(s.budget_ngn_minor, "NGN")),
+  },
+  { key: "matches", header: "Matches", align: "right", sort: (s) => s.ranked, cell: (s) => s.ranked },
+  { key: "closest", header: "Closest", align: "right", sort: (s) => s.near_misses, cell: (s) => s.near_misses },
+  {
+    key: "confidence",
+    header: "Data confidence",
+    align: "right",
+    sort: (s) => s.data_confidence,
+    cell: (s) => (s.data_confidence === null ? "—" : `${s.data_confidence}%`),
+  },
+]
+
+export default async function Page({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>
+  searchParams: Promise<SearchParams>
+}) {
   await connection()
   const viewer = await requireStaff("users.read")
   const { id } = await params
+  const query = await searchParams
   const db = serviceClient()
   const { data: auth } = await db.auth.admin.getUserById(id)
   const user = auth?.user
@@ -71,11 +119,47 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
   const suspended = isSuspended(user.banned_until)
   const calls = usage.data ?? []
   const sum = totals(calls, settings.model_prices)
+  const cost = (c: Call) =>
+    estimateCostUsd(settings.model_prices, c.provider, c.model, c.input_tokens ?? 0, c.output_tokens ?? 0)
+  const CALLS: Column<Call>[] = [
+    { key: "when", header: "When", nowrap: true, sort: (c) => c.created_at, cell: (c) => time(c.created_at) },
+    { key: "task", header: "Task", sort: (c) => c.task, cell: (c) => c.task },
+    { key: "model", header: "Model", cell: (c) => <span className="font-mono text-xs">{c.model}</span> },
+    {
+      key: "in",
+      header: "In",
+      align: "right",
+      sort: (c) => c.input_tokens,
+      cell: (c) => nf.format(c.input_tokens ?? 0),
+    },
+    {
+      key: "out",
+      header: "Out",
+      align: "right",
+      sort: (c) => c.output_tokens,
+      cell: (c) => nf.format(c.output_tokens ?? 0),
+    },
+    { key: "cost", header: "Cost", align: "right", sort: cost, cell: (c) => formatUsd(cost(c)) },
+    {
+      key: "time",
+      header: "Time",
+      align: "right",
+      sort: (c) => c.latency_ms,
+      cell: (c) => `${nf.format(c.latency_ms)} ms`,
+    },
+    {
+      key: "result",
+      header: "Result",
+      cell: (c) => (
+        <StatusBadge tone={c.success ? "success" : "danger"} title={c.error ?? undefined}>
+          {c.success ? "ok" : "failed"}
+        </StatusBadge>
+      ),
+    },
+  ]
   return (
-    <div className="flex flex-col gap-4">
-      <Link href="/admin/users" className="text-sm underline underline-offset-4">
-        All users
-      </Link>
+    <>
+      <Breadcrumbs items={[{ href: "/admin/users", label: "All users" }]} />
       <Card className="gap-2">
         <h1 className="font-heading text-xl font-bold break-all">{user.email ?? user.id}</h1>
         <p className="text-sm text-muted-foreground">
@@ -87,8 +171,10 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
           {formatUsd(sum.cost_usd)}
         </p>
         {suspended && (
-          <p data-testid="suspended" className="text-sm font-semibold text-danger-strong">
-            Suspended
+          <p>
+            <StatusBadge data-testid="suspended" tone="danger">
+              Suspended
+            </StatusBadge>
           </p>
         )}
         <p className="text-sm">
@@ -112,88 +198,32 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
 
       <Card className="gap-2">
         <h2 className="font-heading text-base font-bold">Searches</h2>
-        {(searches.data ?? []).length === 0 ? (
-          <p className="text-sm text-muted-foreground">No searches while signed in.</p>
-        ) : (
-          <div className="overflow-x-auto" tabIndex={0} role="region" aria-label="Searches">
-            <table className="w-full min-w-[40rem] text-left text-sm tabular-nums">
-              <thead className="text-muted-foreground">
-                <tr>
-                  {["When", "Course", "Countries", "Budget", "Matches", "Closest", "Data confidence"].map((h) => (
-                    <th key={h} scope="col" className="py-2 pr-4 font-medium">
-                      {h}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {(searches.data ?? []).map((s) => (
-                  <tr key={s.id} className="border-t border-border">
-                    <td className="py-2 pr-4 whitespace-nowrap">{time(s.created_at)}</td>
-                    <td className="py-2 pr-4">{s.fields.map(fieldLabel).join(", ") || "any"}</td>
-                    <td className="py-2 pr-4">{s.countries.join(", ") || "any"}</td>
-                    <td className="py-2 pr-4">
-                      {s.budget_ngn_minor === null ? "not given" : formatShort(s.budget_ngn_minor, "NGN")}
-                    </td>
-                    <td className="py-2 pr-4">{s.ranked}</td>
-                    <td className="py-2 pr-4">{s.near_misses}</td>
-                    <td className="py-2 pr-4">{s.data_confidence === null ? "—" : `${s.data_confidence}%`}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+        <DataTable
+          label="Searches"
+          columns={SEARCHES}
+          rows={searches.data ?? []}
+          rowKey={(r) => String(r.id)}
+          path={`/admin/users/${user.id}`}
+          params={query}
+          prefix="s."
+          minWidth="40rem"
+          empty="No searches while signed in."
+        />
       </Card>
 
       <Card className="gap-2">
         <h2 className="font-heading text-base font-bold">AI generations</h2>
-        {calls.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No AI calls.</p>
-        ) : (
-          <div className="overflow-x-auto" tabIndex={0} role="region" aria-label="AI generations">
-            <table className="w-full min-w-[44rem] text-left text-sm tabular-nums">
-              <thead className="text-muted-foreground">
-                <tr>
-                  {["When", "Task", "Model", "In", "Out", "Cost", "Time", "Result"].map((h) => (
-                    <th key={h} scope="col" className="py-2 pr-4 font-medium">
-                      {h}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {calls.map((c) => (
-                  <tr key={c.id} className="border-t border-border">
-                    <td className="py-2 pr-4 whitespace-nowrap">{time(c.created_at)}</td>
-                    <td className="py-2 pr-4">{c.task}</td>
-                    <td className="py-2 pr-4 font-mono text-xs">{c.model}</td>
-                    <td className="py-2 pr-4">{nf.format(c.input_tokens ?? 0)}</td>
-                    <td className="py-2 pr-4">{nf.format(c.output_tokens ?? 0)}</td>
-                    <td className="py-2 pr-4">
-                      {formatUsd(
-                        estimateCostUsd(
-                          settings.model_prices,
-                          c.provider,
-                          c.model,
-                          c.input_tokens ?? 0,
-                          c.output_tokens ?? 0
-                        )
-                      )}
-                    </td>
-                    <td className="py-2 pr-4">{nf.format(c.latency_ms)} ms</td>
-                    <td
-                      className={c.success ? "py-2 pr-4" : "py-2 pr-4 text-danger-strong"}
-                      title={c.error ?? undefined}
-                    >
-                      {c.success ? "ok" : "failed"}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+        <DataTable
+          label="AI generations"
+          columns={CALLS}
+          rows={calls}
+          rowKey={(c) => c.id}
+          path={`/admin/users/${user.id}`}
+          params={query}
+          prefix="a."
+          minWidth="44rem"
+          empty="No AI calls."
+        />
       </Card>
 
       <Card className="gap-2">
@@ -252,6 +282,6 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
           </ul>
         )}
       </Card>
-    </div>
+    </>
   )
 }

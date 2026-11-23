@@ -58,3 +58,6 @@ __pycache__/
 
 # Raw advisor eval answers; the summary in evals/advisor/report.md is committed
 evals/advisor/results*.jsonl
+
+# Admin screenshots show real data; kept local only (npm run screenshots:admin).
+/docs/screenshots/admin-revamp/

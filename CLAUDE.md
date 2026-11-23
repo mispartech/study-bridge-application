@@ -22,4 +22,5 @@ Headings Plus Jakarta Sans; body Inter with tabular numerals. Radius 16 cards, 1
 
 ## Conventions
 Strict TypeScript, Zod for every API boundary, server components by default, tests with Vitest + Playwright.
+Admin pages: `requireStaff("<permission>")` on every page and `staffFromRequest` in every admin API; the sidebar comes from `lib/admin/nav.ts`; build pages from `components/admin` (PageHeader, FilterBar, KpiTile, DataTable, DetailDrawer). `lib/admin/route-coverage.test.ts` enforces this and keeps admin code out of student pages.
 Never read, print or inspect values in .env files. Use .env.example for variable names only.

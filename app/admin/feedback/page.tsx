@@ -1,13 +1,20 @@
 import { connection } from "next/server"
 
+import { DataTable, type Column } from "@/components/admin/data-table"
+import { FilterBar } from "@/components/admin/filter-bar"
+import { PageHeader } from "@/components/admin/page-header"
 import { RangeFilter } from "@/components/admin/range-filter"
 import { Card } from "@/components/ui/card"
 import { DISMISS_LABEL, DISMISS_REASONS, THUMBS_LABEL } from "@/lib/activity/events"
 import { parseRange } from "@/lib/admin/range"
+import type { SearchParams } from "@/lib/admin/table"
 import { requireStaff } from "@/lib/auth/staff-page"
 import { serviceClient } from "@/lib/db/service"
 
 const nf = new Intl.NumberFormat("en-GB")
+const one = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v)
+const dismissedTotal = (r: { dismissed: Record<string, number> }) =>
+  Object.values(r.dismissed).reduce((x, y) => x + y, 0)
 
 type Row = {
   id: string
@@ -20,14 +27,11 @@ type Row = {
 }
 
 /** How students act on each suggestion, and what they say about explanations and advisor answers. */
-export default async function Page({
-  searchParams,
-}: {
-  searchParams: Promise<{ range?: string; from?: string; to?: string }>
-}) {
+export default async function Page({ searchParams }: { searchParams: Promise<SearchParams> }) {
   await connection()
   await requireStaff("overview")
-  const range = parseRange(await searchParams, new Date())
+  const params = await searchParams
+  const range = parseRange({ range: one(params.range), from: one(params.from), to: one(params.to) }, new Date())
   const db = serviceClient()
   const args = { p_from: range.from.toISOString(), p_to: range.to.toISOString() }
   const [byTarget, advisor] = await Promise.all([
@@ -72,12 +76,40 @@ export default async function Page({
     : { data: [] as { id: string; title: string }[] }
   for (const p of programmes ?? []) rows.get(p.id)!.title = p.title
   const table = [...rows.values()].sort(
-    (a, b) =>
-      b.saves +
-      b.applies +
-      Object.values(b.dismissed).reduce((x, y) => x + y, 0) -
-      (a.saves + a.applies + Object.values(a.dismissed).reduce((x, y) => x + y, 0))
+    (a, b) => b.saves + b.applies + dismissedTotal(b) - (a.saves + a.applies + dismissedTotal(a))
   )
+  const columns: Column<Row>[] = [
+    { key: "programme", header: "Programme", sort: (r) => r.title, cell: (r) => r.title || "Removed programme" },
+    { key: "saves", header: "Saves", align: "right", sort: (r) => r.saves, cell: (r) => nf.format(r.saves) },
+    {
+      key: "applies",
+      header: "Apply clicks",
+      align: "right",
+      sort: (r) => r.applies,
+      cell: (r) => nf.format(r.applies),
+    },
+    {
+      key: "helpful",
+      header: "Explanation 👍",
+      align: "right",
+      sort: (r) => r.helpful,
+      cell: (r) => nf.format(r.helpful),
+    },
+    {
+      key: "unhelpful",
+      header: "Explanation 👎",
+      align: "right",
+      sort: (r) => r.unhelpful,
+      cell: (r) => nf.format(r.unhelpful),
+    },
+    ...DISMISS_REASONS.map((reason): Column<Row> => ({
+      key: `dismissed-${reason}`,
+      header: `Not for me: ${DISMISS_LABEL[reason]}`,
+      align: "right",
+      sort: (r) => r.dismissed[reason] ?? 0,
+      cell: (r) => nf.format(r.dismissed[reason] ?? 0),
+    })),
+  ]
 
   const votes = (advisor.data ?? []).map((e) => e.properties as { up?: boolean; reason?: string })
   const up = votes.filter((v) => v.up).length
@@ -87,13 +119,18 @@ export default async function Page({
   }
 
   return (
-    <div className="flex flex-col gap-4">
-      <h1 className="font-heading text-xl font-bold">Suggestions and feedback</h1>
-      <RangeFilter
-        path="/admin/feedback"
-        range={range}
-        exportHref={`/api/admin/export?dataset=feedback&${range.query}`}
+    <>
+      <PageHeader
+        title="Suggestions and feedback"
+        description="How students act on each suggestion, and what they say about explanations and advisor answers."
       />
+      <FilterBar>
+        <RangeFilter
+          path="/admin/feedback"
+          range={range}
+          exportHref={`/api/admin/export?dataset=feedback&${range.query}`}
+        />
+      </FilterBar>
 
       <Card className="gap-2">
         <h2 className="font-heading text-base font-bold">Advisor answers</h2>
@@ -114,49 +151,20 @@ export default async function Page({
         </p>
       </Card>
 
-      {table.length === 0 ? (
-        <p className="text-sm text-muted-foreground">No feedback on programmes in this range.</p>
-      ) : (
-        <div className="overflow-x-auto" tabIndex={0} role="region" aria-label="Feedback per programme">
-          <table className="w-full min-w-[60rem] text-left text-sm tabular-nums">
-            <thead className="text-muted-foreground">
-              <tr>
-                {[
-                  "Programme",
-                  "Saves",
-                  "Apply clicks",
-                  "Explanation 👍",
-                  "Explanation 👎",
-                  ...DISMISS_REASONS.map((r) => `Not for me: ${DISMISS_LABEL[r]}`),
-                ].map((h) => (
-                  <th key={h} scope="col" className="py-2 pr-4 font-medium">
-                    {h}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {table.map((r) => (
-                <tr key={r.id} data-testid="feedback-row" className="border-t border-border">
-                  <td className="py-2 pr-4">{r.title || "Removed programme"}</td>
-                  <td className="py-2 pr-4">{nf.format(r.saves)}</td>
-                  <td className="py-2 pr-4">{nf.format(r.applies)}</td>
-                  <td className="py-2 pr-4">{nf.format(r.helpful)}</td>
-                  <td className="py-2 pr-4">{nf.format(r.unhelpful)}</td>
-                  {DISMISS_REASONS.map((reason) => (
-                    <td key={reason} className="py-2 pr-4">
-                      {nf.format(r.dismissed[reason] ?? 0)}
-                    </td>
-                  ))}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+      <DataTable
+        label="Feedback per programme"
+        columns={columns}
+        rows={table}
+        rowKey={(r) => r.id}
+        rowProps={() => ({ "data-testid": "feedback-row" })}
+        path="/admin/feedback"
+        params={params}
+        minWidth="60rem"
+        empty="No feedback on programmes in this range."
+      />
       <p className="text-xs text-muted-foreground">
         How often each programme is shown isn&apos;t recorded yet, so these are counts rather than rates.
       </p>
-    </div>
+    </>
   )
 }

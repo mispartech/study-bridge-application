@@ -1,13 +1,19 @@
-import { SentryTest } from "@/components/admin/sentry-test"
+import { connection } from "next/server"
 
-export default function Page() {
+import { PageHeader } from "@/components/admin/page-header"
+import { SentryTest } from "@/components/admin/sentry-test"
+import { requireStaff } from "@/lib/auth/staff-page"
+
+export default async function Page() {
+  await connection()
+  await requireStaff("settings")
   return (
-    <div className="flex flex-col gap-3">
-      <h1 className="font-heading text-lg font-bold">Diagnostics</h1>
-      <p className="text-sm text-muted-foreground">
-        Sends a test error from the server and from this browser. Both should appear in Sentry within a minute.
-      </p>
+    <>
+      <PageHeader
+        title="Diagnostics"
+        description="Sends a test error from the server and from this browser. Both should appear in Sentry within a minute."
+      />
       <SentryTest />
-    </div>
+    </>
   )
 }

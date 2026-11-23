@@ -485,4 +485,4 @@ Phases 4–6 deliver the Version 1 product additions. They come before ingestion
 
 ## Status
 
-Update this line as phases ship: `Phase 0: done 23 Nov 2026, decisions agreed (see docs/ADMIN_DECISIONS.md)`.
+Update this line as phases ship: `Phase 0: done 23 Nov 2026, decisions agreed (see docs/ADMIN_DECISIONS.md). Phase 1: done 23 Nov 2026 (row selection in DataTable moves to Phase 3, where bulk actions first use it).`
