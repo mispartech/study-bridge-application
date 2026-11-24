@@ -1,5 +1,6 @@
 import { z } from "zod"
 
+import type { Careers, CareerDemand } from "./careers"
 import { pathwayKey, type Pathway, type SignalKey } from "./pathways"
 
 import type { Tables } from "@/lib/db/database.types"
@@ -110,6 +111,8 @@ export type Catalogue = {
   costEstimates: Tables<"cost_estimate">[]
   /** Active pathways and their signal weights, managed in the admin. Absent in older fixtures. */
   pathways?: Pathway[]
+  /** Occupations, demand, work-permit fields and approved links. Absent in older fixtures. */
+  careers?: Careers
 }
 
 export type MatchOptions = { now: Date; demoMode: boolean }
@@ -180,6 +183,10 @@ export type RankedProgramme = {
   goal_signals?: SignalKey[]
   /** Funding this student can count on before arriving: "limited" when places for international students are few. */
   funding?: "yes" | "limited" | null
+  /** Current, reviewed demand for the careers it leads to, in its own region. */
+  demand?: CareerDemand[]
+  /** The official page, when current records show it leads to a post-study work permit. */
+  work_permit_source?: string | null
 }
 
 export type RestrictedProgramme = { bundle: Bundle; reason: string; source_url: string; review_due: string | null }

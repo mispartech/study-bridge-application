@@ -3,6 +3,7 @@ import type { Currency, FxRates } from "@/lib/money"
 import { averageConfidence, dataConfidence } from "./data-confidence"
 import { fieldLabel } from "./labels"
 import { isOfficialUrl } from "./official-url"
+import type { CareerDemand } from "./careers"
 import { LEVEL_LABEL, levelOf, type Level } from "./levels"
 import { SIGNALS } from "./pathways"
 import type { Bundle, Catalogue, Cost, MatchProfile, MatchResult, RankedProgramme } from "./types"
@@ -64,6 +65,9 @@ export type CardView = ProgrammeSummary & {
   goal_reasons: string[]
   /** Funding open to this student on admission; "limited" is labelled as such. */
   funding: "yes" | "limited" | null
+  /** The first current demand record; the programme page lists them all. */
+  demand: CareerDemand[]
+  work_permit_source: string | null
   start_term: string
   start_month: string | null
   next_deadline: { label: string; date: string }
@@ -178,6 +182,8 @@ function presentCard(r: RankedProgramme, catalogue: Catalogue, now: Date, schola
     flags: r.flags,
     goal_reasons: (r.goal_signals ?? []).slice(0, 3).map((s) => SIGNALS[s].label),
     funding: r.funding ?? null,
+    demand: (r.demand ?? []).slice(0, 1),
+    work_permit_source: r.work_permit_source ?? null,
     start_term: r.intake.start_term,
     start_month: r.intake.start_month,
     next_deadline: r.next_deadline,

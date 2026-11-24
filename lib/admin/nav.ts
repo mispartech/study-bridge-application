@@ -25,6 +25,8 @@ export type NavIcon =
   | "diagnostics"
   | "pathways"
   | "funding"
+  | "careers"
+  | "institutions"
 
 export type NavItem = { href: string; label: string; permission: Permission | null; icon: NavIcon }
 export type NavGroup = { key: string; label: string; items: NavItem[] }
@@ -59,6 +61,8 @@ export const NAV: readonly NavGroup[] = [
       { href: "/admin/review", label: "Review queue", permission: "content", icon: "review" },
       { href: "/admin/reports", label: "Error reports", permission: "content", icon: "flag" },
       { href: "/admin/funding", label: "Funding", permission: "content", icon: "funding" },
+      { href: "/admin/careers", label: "Careers and permits", permission: "content", icon: "careers" },
+      { href: "/admin/institutions", label: "Institutions", permission: "content", icon: "institutions" },
       { href: "/admin/visa-rules", label: "Visa rules", permission: "content", icon: "passport" },
       { href: "/admin/fx", label: "Exchange rates", permission: "content", icon: "currency" },
       { href: "/admin/estimates", label: "Flights and health", permission: "content", icon: "plane" },

@@ -20,7 +20,11 @@
       "confidence": "university_page",
       "is_demo": true,
       "created_at": "2026-11-07T11:42:14.273745+00:00",
-      "updated_at": "2026-11-07T11:42:14.273745+00:00"
+      "updated_at": "2026-11-07T11:42:14.273745+00:00",
+      "institution_type": "university",
+      "pgwp_eligible": "unknown",
+      "pgwp_source_url": null,
+      "pgwp_checked_at": null
     },
     {
       "id": "419977fd-6232-4336-a88e-8c637c573eef",
@@ -42,7 +46,11 @@
       "confidence": "university_page",
       "is_demo": true,
       "created_at": "2026-11-07T11:42:14.273745+00:00",
-      "updated_at": "2026-11-07T11:42:14.273745+00:00"
+      "updated_at": "2026-11-07T11:42:14.273745+00:00",
+      "institution_type": "university",
+      "pgwp_eligible": "unknown",
+      "pgwp_source_url": null,
+      "pgwp_checked_at": null
     },
     {
       "id": "6c66b8a3-9a98-4f63-a261-a46575fbf419",
@@ -64,7 +72,11 @@
       "confidence": "university_page",
       "is_demo": true,
       "created_at": "2026-11-07T11:42:14.273745+00:00",
-      "updated_at": "2026-11-07T11:42:14.273745+00:00"
+      "updated_at": "2026-11-07T11:42:14.273745+00:00",
+      "institution_type": "university",
+      "pgwp_eligible": "unknown",
+      "pgwp_source_url": null,
+      "pgwp_checked_at": null
     },
     {
       "id": "f46cdaec-155c-4d0b-8157-85da93378b29",
@@ -86,7 +98,11 @@
       "confidence": "university_page",
       "is_demo": true,
       "created_at": "2026-11-07T11:42:14.273745+00:00",
-      "updated_at": "2026-11-07T11:42:14.273745+00:00"
+      "updated_at": "2026-11-07T11:42:14.273745+00:00",
+      "institution_type": "university",
+      "pgwp_eligible": "unknown",
+      "pgwp_source_url": null,
+      "pgwp_checked_at": null
     },
     {
       "id": "be52551e-90b1-4149-973b-deb7f8eaddd2",
@@ -108,7 +124,11 @@
       "confidence": "university_page",
       "is_demo": true,
       "created_at": "2026-11-07T11:42:14.273745+00:00",
-      "updated_at": "2026-11-07T11:42:14.273745+00:00"
+      "updated_at": "2026-11-07T11:42:14.273745+00:00",
+      "institution_type": "university",
+      "pgwp_eligible": "unknown",
+      "pgwp_source_url": null,
+      "pgwp_checked_at": null
     },
     {
       "id": "ddc0a7db-f0a5-49ea-8ff2-8b128f90b1d1",
@@ -130,7 +150,11 @@
       "confidence": "university_page",
       "is_demo": true,
       "created_at": "2026-11-07T11:42:14.273745+00:00",
-      "updated_at": "2026-11-07T11:42:14.273745+00:00"
+      "updated_at": "2026-11-07T11:42:14.273745+00:00",
+      "institution_type": "university",
+      "pgwp_eligible": "unknown",
+      "pgwp_source_url": null,
+      "pgwp_checked_at": null
     },
     {
       "id": "b8054fe8-a5e9-4127-84af-c5a650622918",
@@ -152,7 +176,11 @@
       "confidence": "university_page",
       "is_demo": true,
       "created_at": "2026-11-07T11:42:14.273745+00:00",
-      "updated_at": "2026-11-07T11:42:14.273745+00:00"
+      "updated_at": "2026-11-07T11:42:14.273745+00:00",
+      "institution_type": "university",
+      "pgwp_eligible": "unknown",
+      "pgwp_source_url": null,
+      "pgwp_checked_at": null
     },
     {
       "id": "0f7a915c-2bdc-4838-a0f8-acb74c1fa207",
@@ -174,7 +202,11 @@
       "confidence": "university_page",
       "is_demo": true,
       "created_at": "2026-11-07T11:42:14.273745+00:00",
-      "updated_at": "2026-11-07T11:42:14.273745+00:00"
+      "updated_at": "2026-11-07T11:42:14.273745+00:00",
+      "institution_type": "university",
+      "pgwp_eligible": "unknown",
+      "pgwp_source_url": null,
+      "pgwp_checked_at": null
     },
     {
       "id": "c686c067-6e98-40c7-bf25-3c8f5ad1d74c",
@@ -196,7 +228,11 @@
       "confidence": "university_page",
       "is_demo": true,
       "created_at": "2026-11-07T11:42:14.273745+00:00",
-      "updated_at": "2026-11-07T11:42:14.273745+00:00"
+      "updated_at": "2026-11-07T11:42:14.273745+00:00",
+      "institution_type": "university",
+      "pgwp_eligible": "unknown",
+      "pgwp_source_url": null,
+      "pgwp_checked_at": null
     },
     {
       "id": "7974288c-59f7-42a5-a081-9dcc6911f69e",
@@ -218,7 +254,11 @@
       "confidence": "university_page",
       "is_demo": true,
       "created_at": "2026-11-07T11:42:14.273745+00:00",
-      "updated_at": "2026-11-07T11:42:14.273745+00:00"
+      "updated_at": "2026-11-07T11:42:14.273745+00:00",
+      "institution_type": "university",
+      "pgwp_eligible": "unknown",
+      "pgwp_source_url": null,
+      "pgwp_checked_at": null
     },
     {
       "id": "ec18dbe8-2f27-459e-a1d3-5dbca8d90037",
@@ -240,7 +280,11 @@
       "confidence": "university_page",
       "is_demo": true,
       "created_at": "2026-11-07T11:42:14.273745+00:00",
-      "updated_at": "2026-11-07T11:42:14.273745+00:00"
+      "updated_at": "2026-11-07T11:42:14.273745+00:00",
+      "institution_type": "university",
+      "pgwp_eligible": "unknown",
+      "pgwp_source_url": null,
+      "pgwp_checked_at": null
     },
     {
       "id": "34c8a042-06f3-4bfa-8c48-ce2de896b010",
@@ -262,7 +306,11 @@
       "confidence": "university_page",
       "is_demo": true,
       "created_at": "2026-11-07T11:42:14.273745+00:00",
-      "updated_at": "2026-11-07T11:42:14.273745+00:00"
+      "updated_at": "2026-11-07T11:42:14.273745+00:00",
+      "institution_type": "university",
+      "pgwp_eligible": "unknown",
+      "pgwp_source_url": null,
+      "pgwp_checked_at": null
     },
     {
       "id": "195a075d-c9af-4a90-875c-841efce67108",
@@ -284,7 +332,11 @@
       "confidence": "university_page",
       "is_demo": true,
       "created_at": "2026-11-07T11:42:14.273745+00:00",
-      "updated_at": "2026-11-07T11:42:14.273745+00:00"
+      "updated_at": "2026-11-07T11:42:14.273745+00:00",
+      "institution_type": "university",
+      "pgwp_eligible": "unknown",
+      "pgwp_source_url": null,
+      "pgwp_checked_at": null
     },
     {
       "id": "8526fac7-c8f6-4d56-949e-27748bc7d734",
@@ -306,7 +358,11 @@
       "confidence": "university_page",
       "is_demo": true,
       "created_at": "2026-11-07T11:42:14.273745+00:00",
-      "updated_at": "2026-11-07T11:42:14.273745+00:00"
+      "updated_at": "2026-11-07T11:42:14.273745+00:00",
+      "institution_type": "university",
+      "pgwp_eligible": "unknown",
+      "pgwp_source_url": null,
+      "pgwp_checked_at": null
     },
     {
       "id": "7ddbbab7-b7ee-49df-b7b1-3d8767b4161d",
@@ -328,7 +384,11 @@
       "confidence": "university_page",
       "is_demo": true,
       "created_at": "2026-11-07T11:42:14.273745+00:00",
-      "updated_at": "2026-11-07T11:42:14.273745+00:00"
+      "updated_at": "2026-11-07T11:42:14.273745+00:00",
+      "institution_type": "university",
+      "pgwp_eligible": "unknown",
+      "pgwp_source_url": null,
+      "pgwp_checked_at": null
     }
   ],
   "programmes": [
@@ -351,7 +411,9 @@
       "confidence": "university_page",
       "is_demo": true,
       "created_at": "2026-11-07T11:42:14.273745+00:00",
-      "updated_at": "2026-11-07T11:42:14.273745+00:00"
+      "updated_at": "2026-11-07T11:42:14.273745+00:00",
+      "level": "masters",
+      "cip_code": null
     },
     {
       "id": "2df4ece9-a1ab-49ca-b77e-86692cd38ab6",
@@ -372,7 +434,9 @@
       "confidence": "university_page",
       "is_demo": true,
       "created_at": "2026-11-07T11:42:14.273745+00:00",
-      "updated_at": "2026-11-07T11:42:14.273745+00:00"
+      "updated_at": "2026-11-07T11:42:14.273745+00:00",
+      "level": "masters",
+      "cip_code": null
     },
     {
       "id": "8ba0e999-92f5-4098-ba6d-e82323c799ff",
@@ -393,7 +457,9 @@
       "confidence": "university_page",
       "is_demo": true,
       "created_at": "2026-11-07T11:42:14.273745+00:00",
-      "updated_at": "2026-11-07T11:42:14.273745+00:00"
+      "updated_at": "2026-11-07T11:42:14.273745+00:00",
+      "level": "masters",
+      "cip_code": null
     },
     {
       "id": "59c1e4f0-d1dc-4e0b-98bb-bcd5477d7821",
@@ -414,7 +480,9 @@
       "confidence": "university_page",
       "is_demo": true,
       "created_at": "2026-11-07T11:42:14.273745+00:00",
-      "updated_at": "2026-11-07T11:42:14.273745+00:00"
+      "updated_at": "2026-11-07T11:42:14.273745+00:00",
+      "level": "masters",
+      "cip_code": null
     },
     {
       "id": "390b8ec5-71a3-4677-a9fd-8b621c90f3aa",
@@ -435,7 +503,9 @@
       "confidence": "university_page",
       "is_demo": true,
       "created_at": "2026-11-07T11:42:14.273745+00:00",
-      "updated_at": "2026-11-07T11:42:14.273745+00:00"
+      "updated_at": "2026-11-07T11:42:14.273745+00:00",
+      "level": "masters",
+      "cip_code": null
     },
     {
       "id": "1623ad1f-8dc1-4497-a396-e88a844410b4",
@@ -456,7 +526,9 @@
       "confidence": "university_page",
       "is_demo": true,
       "created_at": "2026-11-07T11:42:14.273745+00:00",
-      "updated_at": "2026-11-07T11:42:14.273745+00:00"
+      "updated_at": "2026-11-07T11:42:14.273745+00:00",
+      "level": "masters",
+      "cip_code": null
     },
     {
       "id": "85b94145-419e-4955-a92c-d21f6bfbacd7",
@@ -477,7 +549,9 @@
       "confidence": "university_page",
       "is_demo": true,
       "created_at": "2026-11-07T11:42:14.273745+00:00",
-      "updated_at": "2026-11-07T11:42:14.273745+00:00"
+      "updated_at": "2026-11-07T11:42:14.273745+00:00",
+      "level": "masters",
+      "cip_code": null
     },
     {
       "id": "4f0cc9c9-a875-405b-8434-2a527d3340f7",
@@ -498,7 +572,9 @@
       "confidence": "university_page",
       "is_demo": true,
       "created_at": "2026-11-07T11:42:14.273745+00:00",
-      "updated_at": "2026-11-07T11:42:14.273745+00:00"
+      "updated_at": "2026-11-07T11:42:14.273745+00:00",
+      "level": "masters",
+      "cip_code": null
     },
     {
       "id": "059c7ba1-e54c-4894-99d7-3a9b95eb1c08",
@@ -519,7 +595,9 @@
       "confidence": "university_page",
       "is_demo": true,
       "created_at": "2026-11-07T11:42:14.273745+00:00",
-      "updated_at": "2026-11-07T11:42:14.273745+00:00"
+      "updated_at": "2026-11-07T11:42:14.273745+00:00",
+      "level": "masters",
+      "cip_code": null
     },
     {
       "id": "58667375-7163-471c-88f9-609e626b26fd",
@@ -540,7 +618,9 @@
       "confidence": "university_page",
       "is_demo": true,
       "created_at": "2026-11-07T11:42:14.273745+00:00",
-      "updated_at": "2026-11-07T11:42:14.273745+00:00"
+      "updated_at": "2026-11-07T11:42:14.273745+00:00",
+      "level": "masters",
+      "cip_code": null
     },
     {
       "id": "bc6a0fb1-bbc3-4e21-960f-ccf17e7124a6",
@@ -561,7 +641,9 @@
       "confidence": "university_page",
       "is_demo": true,
       "created_at": "2026-11-07T11:42:14.273745+00:00",
-      "updated_at": "2026-11-07T11:42:14.273745+00:00"
+      "updated_at": "2026-11-07T11:42:14.273745+00:00",
+      "level": "masters",
+      "cip_code": null
     },
     {
       "id": "cc09110a-6109-4265-9cd1-78a813895544",
@@ -582,7 +664,9 @@
       "confidence": "university_page",
       "is_demo": true,
       "created_at": "2026-11-07T11:42:14.273745+00:00",
-      "updated_at": "2026-11-07T11:42:14.273745+00:00"
+      "updated_at": "2026-11-07T11:42:14.273745+00:00",
+      "level": "masters",
+      "cip_code": null
     },
     {
       "id": "580f4ef5-7550-449c-86f4-6282b0c4c543",
@@ -603,7 +687,9 @@
       "confidence": "university_page",
       "is_demo": true,
       "created_at": "2026-11-07T11:42:14.273745+00:00",
-      "updated_at": "2026-11-07T11:42:14.273745+00:00"
+      "updated_at": "2026-11-07T11:42:14.273745+00:00",
+      "level": "masters",
+      "cip_code": null
     },
     {
       "id": "22c5bed7-1062-44f8-8ba1-5bc7e8ba1091",
@@ -624,7 +710,9 @@
       "confidence": "university_page",
       "is_demo": true,
       "created_at": "2026-11-07T11:42:14.273745+00:00",
-      "updated_at": "2026-11-07T11:42:14.273745+00:00"
+      "updated_at": "2026-11-07T11:42:14.273745+00:00",
+      "level": "masters",
+      "cip_code": null
     },
     {
       "id": "380692b9-306a-45c7-bb70-afb60e488be0",
@@ -645,7 +733,9 @@
       "confidence": "university_page",
       "is_demo": true,
       "created_at": "2026-11-07T11:42:14.273745+00:00",
-      "updated_at": "2026-11-07T11:42:14.273745+00:00"
+      "updated_at": "2026-11-07T11:42:14.273745+00:00",
+      "level": "masters",
+      "cip_code": null
     },
     {
       "id": "631f9e8d-24d3-406a-9b56-a500db7b29e7",
@@ -666,7 +756,9 @@
       "confidence": "university_page",
       "is_demo": true,
       "created_at": "2026-11-07T11:42:14.273745+00:00",
-      "updated_at": "2026-11-07T11:42:14.273745+00:00"
+      "updated_at": "2026-11-07T11:42:14.273745+00:00",
+      "level": "masters",
+      "cip_code": null
     },
     {
       "id": "c8fbb4d7-8391-4e95-babb-b698585c3dc3",
@@ -687,7 +779,9 @@
       "confidence": "university_page",
       "is_demo": true,
       "created_at": "2026-11-07T11:42:14.273745+00:00",
-      "updated_at": "2026-11-07T11:42:14.273745+00:00"
+      "updated_at": "2026-11-07T11:42:14.273745+00:00",
+      "level": "masters",
+      "cip_code": null
     },
     {
       "id": "d8d19650-f83b-4eb7-8c56-20d2bbaaa239",
@@ -708,7 +802,9 @@
       "confidence": "university_page",
       "is_demo": true,
       "created_at": "2026-11-07T11:42:14.273745+00:00",
-      "updated_at": "2026-11-07T11:42:14.273745+00:00"
+      "updated_at": "2026-11-07T11:42:14.273745+00:00",
+      "level": "masters",
+      "cip_code": null
     },
     {
       "id": "4ee285b4-3b1c-438d-95d6-936500759d1a",
@@ -729,7 +825,9 @@
       "confidence": "university_page",
       "is_demo": true,
       "created_at": "2026-11-07T11:42:14.273745+00:00",
-      "updated_at": "2026-11-07T11:42:14.273745+00:00"
+      "updated_at": "2026-11-07T11:42:14.273745+00:00",
+      "level": "masters",
+      "cip_code": null
     },
     {
       "id": "73110c28-63ed-4972-91dc-6611b75fc21e",
@@ -750,7 +848,9 @@
       "confidence": "university_page",
       "is_demo": true,
       "created_at": "2026-11-07T11:42:14.273745+00:00",
-      "updated_at": "2026-11-07T11:42:14.273745+00:00"
+      "updated_at": "2026-11-07T11:42:14.273745+00:00",
+      "level": "masters",
+      "cip_code": null
     },
     {
       "id": "9540d421-5cfd-4dc9-9cbb-b84377fcb01e",
@@ -771,7 +871,9 @@
       "confidence": "university_page",
       "is_demo": true,
       "created_at": "2026-11-07T11:42:14.273745+00:00",
-      "updated_at": "2026-11-07T11:42:14.273745+00:00"
+      "updated_at": "2026-11-07T11:42:14.273745+00:00",
+      "level": "masters",
+      "cip_code": null
     },
     {
       "id": "7dd2bcc8-3ded-4882-8b68-02956498b3b4",
@@ -792,7 +894,9 @@
       "confidence": "university_page",
       "is_demo": true,
       "created_at": "2026-11-07T11:42:14.273745+00:00",
-      "updated_at": "2026-11-07T11:42:14.273745+00:00"
+      "updated_at": "2026-11-07T11:42:14.273745+00:00",
+      "level": "masters",
+      "cip_code": null
     },
     {
       "id": "086068c3-5683-4c4c-8802-d77d4365d497",
@@ -813,7 +917,9 @@
       "confidence": "university_page",
       "is_demo": true,
       "created_at": "2026-11-07T11:42:14.273745+00:00",
-      "updated_at": "2026-11-07T11:42:14.273745+00:00"
+      "updated_at": "2026-11-07T11:42:14.273745+00:00",
+      "level": "masters",
+      "cip_code": null
     },
     {
       "id": "e1691575-aff4-4c04-a3c5-5b259e6ccde0",
@@ -834,7 +940,9 @@
       "confidence": "university_page",
       "is_demo": true,
       "created_at": "2026-11-07T11:42:14.273745+00:00",
-      "updated_at": "2026-11-07T11:42:14.273745+00:00"
+      "updated_at": "2026-11-07T11:42:14.273745+00:00",
+      "level": "masters",
+      "cip_code": null
     },
     {
       "id": "3acc9775-7967-407a-adb2-320b4554ac5d",
@@ -855,7 +963,9 @@
       "confidence": "university_page",
       "is_demo": true,
       "created_at": "2026-11-07T11:42:14.273745+00:00",
-      "updated_at": "2026-11-07T11:42:14.273745+00:00"
+      "updated_at": "2026-11-07T11:42:14.273745+00:00",
+      "level": "masters",
+      "cip_code": null
     },
     {
       "id": "624ee96d-8e54-463b-a553-0f8ffda84516",
@@ -876,7 +986,9 @@
       "confidence": "university_page",
       "is_demo": true,
       "created_at": "2026-11-07T11:42:14.273745+00:00",
-      "updated_at": "2026-11-07T11:42:14.273745+00:00"
+      "updated_at": "2026-11-07T11:42:14.273745+00:00",
+      "level": "masters",
+      "cip_code": null
     },
     {
       "id": "b6f61226-dc95-4972-aab6-6bbe5cfd1d1d",
@@ -897,7 +1009,9 @@
       "confidence": "university_page",
       "is_demo": true,
       "created_at": "2026-11-07T11:42:14.273745+00:00",
-      "updated_at": "2026-11-07T11:42:14.273745+00:00"
+      "updated_at": "2026-11-07T11:42:14.273745+00:00",
+      "level": "masters",
+      "cip_code": null
     },
     {
       "id": "2142d0b9-8418-4f1e-b9ec-813a0ec59ec1",
@@ -918,7 +1032,9 @@
       "confidence": "university_page",
       "is_demo": true,
       "created_at": "2026-11-07T11:42:14.273745+00:00",
-      "updated_at": "2026-11-07T11:42:14.273745+00:00"
+      "updated_at": "2026-11-07T11:42:14.273745+00:00",
+      "level": "masters",
+      "cip_code": null
     },
     {
       "id": "85d6bc11-1ac9-441d-a91d-773f83ae0bf1",
@@ -939,7 +1055,9 @@
       "confidence": "university_page",
       "is_demo": true,
       "created_at": "2026-11-07T11:42:14.273745+00:00",
-      "updated_at": "2026-11-07T11:42:14.273745+00:00"
+      "updated_at": "2026-11-07T11:42:14.273745+00:00",
+      "level": "masters",
+      "cip_code": null
     },
     {
       "id": "32a9da6f-07b0-4a23-bd93-55d08f231955",
@@ -960,7 +1078,9 @@
       "confidence": "university_page",
       "is_demo": true,
       "created_at": "2026-11-07T11:42:14.273745+00:00",
-      "updated_at": "2026-11-07T11:42:14.273745+00:00"
+      "updated_at": "2026-11-07T11:42:14.273745+00:00",
+      "level": "masters",
+      "cip_code": null
     },
     {
       "id": "cdee11a4-5bfe-4b99-8ef6-93aa74150f49",
@@ -981,7 +1101,9 @@
       "confidence": "university_page",
       "is_demo": true,
       "created_at": "2026-11-07T11:42:14.273745+00:00",
-      "updated_at": "2026-11-07T11:42:14.273745+00:00"
+      "updated_at": "2026-11-07T11:42:14.273745+00:00",
+      "level": "masters",
+      "cip_code": null
     },
     {
       "id": "f821d1ef-09ad-4ad4-b8ac-b217b135b95f",
@@ -1002,7 +1124,9 @@
       "confidence": "university_page",
       "is_demo": true,
       "created_at": "2026-11-07T11:42:14.273745+00:00",
-      "updated_at": "2026-11-07T11:42:14.273745+00:00"
+      "updated_at": "2026-11-07T11:42:14.273745+00:00",
+      "level": "masters",
+      "cip_code": null
     },
     {
       "id": "31249090-2c48-491b-8633-fd49d1b1ede1",
@@ -1023,7 +1147,9 @@
       "confidence": "university_page",
       "is_demo": true,
       "created_at": "2026-11-07T11:42:14.273745+00:00",
-      "updated_at": "2026-11-07T11:42:14.273745+00:00"
+      "updated_at": "2026-11-07T11:42:14.273745+00:00",
+      "level": "masters",
+      "cip_code": null
     },
     {
       "id": "7ced0502-57d1-4df2-866a-1c9d2743ad50",
@@ -1044,7 +1170,9 @@
       "confidence": "university_page",
       "is_demo": true,
       "created_at": "2026-11-07T11:42:14.273745+00:00",
-      "updated_at": "2026-11-07T11:42:14.273745+00:00"
+      "updated_at": "2026-11-07T11:42:14.273745+00:00",
+      "level": "masters",
+      "cip_code": null
     },
     {
       "id": "b43fcc27-6c4e-4a0a-9834-5e66e414a646",
@@ -1065,7 +1193,9 @@
       "confidence": "university_page",
       "is_demo": true,
       "created_at": "2026-11-07T11:42:14.273745+00:00",
-      "updated_at": "2026-11-07T11:42:14.273745+00:00"
+      "updated_at": "2026-11-07T11:42:14.273745+00:00",
+      "level": "masters",
+      "cip_code": null
     },
     {
       "id": "1c150132-4c7c-479d-b4fd-f866496ada5f",
@@ -1086,7 +1216,9 @@
       "confidence": "university_page",
       "is_demo": true,
       "created_at": "2026-11-07T11:42:14.273745+00:00",
-      "updated_at": "2026-11-07T11:42:14.273745+00:00"
+      "updated_at": "2026-11-07T11:42:14.273745+00:00",
+      "level": "masters",
+      "cip_code": null
     },
     {
       "id": "01b61c8d-6b0d-46fc-8513-6f7b7d243829",
@@ -1107,7 +1239,9 @@
       "confidence": "university_page",
       "is_demo": true,
       "created_at": "2026-11-07T11:42:14.273745+00:00",
-      "updated_at": "2026-11-07T11:42:14.273745+00:00"
+      "updated_at": "2026-11-07T11:42:14.273745+00:00",
+      "level": "masters",
+      "cip_code": null
     },
     {
       "id": "e60ae847-3566-4fc6-82c4-5fd1972bc077",
@@ -1128,7 +1262,9 @@
       "confidence": "university_page",
       "is_demo": true,
       "created_at": "2026-11-07T11:42:14.273745+00:00",
-      "updated_at": "2026-11-07T11:42:14.273745+00:00"
+      "updated_at": "2026-11-07T11:42:14.273745+00:00",
+      "level": "masters",
+      "cip_code": null
     },
     {
       "id": "7fb602d8-05cb-4e6b-b978-b84e949df76c",
@@ -1149,7 +1285,9 @@
       "confidence": "university_page",
       "is_demo": true,
       "created_at": "2026-11-07T11:42:14.273745+00:00",
-      "updated_at": "2026-11-07T11:42:14.273745+00:00"
+      "updated_at": "2026-11-07T11:42:14.273745+00:00",
+      "level": "masters",
+      "cip_code": null
     },
     {
       "id": "ac7d4052-7275-4b1d-b9f4-f2baa1ff20a7",
@@ -1170,7 +1308,9 @@
       "confidence": "university_page",
       "is_demo": true,
       "created_at": "2026-11-07T11:42:14.273745+00:00",
-      "updated_at": "2026-11-07T11:42:14.273745+00:00"
+      "updated_at": "2026-11-07T11:42:14.273745+00:00",
+      "level": "masters",
+      "cip_code": null
     },
     {
       "id": "a57abe77-1665-4a9e-873e-e71046326678",
@@ -1191,7 +1331,9 @@
       "confidence": "university_page",
       "is_demo": true,
       "created_at": "2026-11-07T11:42:14.273745+00:00",
-      "updated_at": "2026-11-07T11:42:14.273745+00:00"
+      "updated_at": "2026-11-07T11:42:14.273745+00:00",
+      "level": "masters",
+      "cip_code": null
     }
   ],
   "requirements": [
@@ -1234,7 +1376,8 @@
       "leads_to_registration": null,
       "clinical_placement": false,
       "open_to_international": null,
-      "checks_required": []
+      "checks_required": [],
+      "min_prior_education": null
     },
     {
       "programme_id": "059c7ba1-e54c-4894-99d7-3a9b95eb1c08",
@@ -1275,7 +1418,8 @@
       "leads_to_registration": null,
       "clinical_placement": false,
       "open_to_international": null,
-      "checks_required": []
+      "checks_required": [],
+      "min_prior_education": null
     },
     {
       "programme_id": "086068c3-5683-4c4c-8802-d77d4365d497",
@@ -1316,7 +1460,8 @@
       "leads_to_registration": null,
       "clinical_placement": false,
       "open_to_international": null,
-      "checks_required": []
+      "checks_required": [],
+      "min_prior_education": null
     },
     {
       "programme_id": "1623ad1f-8dc1-4497-a396-e88a844410b4",
@@ -1357,7 +1502,8 @@
       "leads_to_registration": null,
       "clinical_placement": false,
       "open_to_international": null,
-      "checks_required": []
+      "checks_required": [],
+      "min_prior_education": null
     },
     {
       "programme_id": "1c150132-4c7c-479d-b4fd-f866496ada5f",
@@ -1398,7 +1544,8 @@
       "leads_to_registration": null,
       "clinical_placement": false,
       "open_to_international": null,
-      "checks_required": []
+      "checks_required": [],
+      "min_prior_education": null
     },
     {
       "programme_id": "2142d0b9-8418-4f1e-b9ec-813a0ec59ec1",
@@ -1439,7 +1586,8 @@
       "leads_to_registration": null,
       "clinical_placement": false,
       "open_to_international": null,
-      "checks_required": []
+      "checks_required": [],
+      "min_prior_education": null
     },
     {
       "programme_id": "22c5bed7-1062-44f8-8ba1-5bc7e8ba1091",
@@ -1480,7 +1628,8 @@
       "leads_to_registration": null,
       "clinical_placement": false,
       "open_to_international": null,
-      "checks_required": []
+      "checks_required": [],
+      "min_prior_education": null
     },
     {
       "programme_id": "2df4ece9-a1ab-49ca-b77e-86692cd38ab6",
@@ -1521,7 +1670,8 @@
       "leads_to_registration": null,
       "clinical_placement": false,
       "open_to_international": null,
-      "checks_required": []
+      "checks_required": [],
+      "min_prior_education": null
     },
     {
       "programme_id": "31249090-2c48-491b-8633-fd49d1b1ede1",
@@ -1562,7 +1712,8 @@
       "leads_to_registration": null,
       "clinical_placement": false,
       "open_to_international": null,
-      "checks_required": []
+      "checks_required": [],
+      "min_prior_education": null
     },
     {
       "programme_id": "32a9da6f-07b0-4a23-bd93-55d08f231955",
@@ -1603,7 +1754,8 @@
       "leads_to_registration": null,
       "clinical_placement": false,
       "open_to_international": null,
-      "checks_required": []
+      "checks_required": [],
+      "min_prior_education": null
     },
     {
       "programme_id": "380692b9-306a-45c7-bb70-afb60e488be0",
@@ -1644,7 +1796,8 @@
       "leads_to_registration": null,
       "clinical_placement": false,
       "open_to_international": null,
-      "checks_required": []
+      "checks_required": [],
+      "min_prior_education": null
     },
     {
       "programme_id": "390b8ec5-71a3-4677-a9fd-8b621c90f3aa",
@@ -1685,7 +1838,8 @@
       "leads_to_registration": null,
       "clinical_placement": false,
       "open_to_international": null,
-      "checks_required": []
+      "checks_required": [],
+      "min_prior_education": null
     },
     {
       "programme_id": "3acc9775-7967-407a-adb2-320b4554ac5d",
@@ -1726,7 +1880,8 @@
       "leads_to_registration": null,
       "clinical_placement": false,
       "open_to_international": null,
-      "checks_required": []
+      "checks_required": [],
+      "min_prior_education": null
     },
     {
       "programme_id": "4ee285b4-3b1c-438d-95d6-936500759d1a",
@@ -1767,7 +1922,8 @@
       "leads_to_registration": null,
       "clinical_placement": false,
       "open_to_international": null,
-      "checks_required": []
+      "checks_required": [],
+      "min_prior_education": null
     },
     {
       "programme_id": "4f0cc9c9-a875-405b-8434-2a527d3340f7",
@@ -1809,7 +1965,8 @@
       "leads_to_registration": null,
       "clinical_placement": false,
       "open_to_international": null,
-      "checks_required": []
+      "checks_required": [],
+      "min_prior_education": null
     },
     {
       "programme_id": "580f4ef5-7550-449c-86f4-6282b0c4c543",
@@ -1850,7 +2007,8 @@
       "leads_to_registration": null,
       "clinical_placement": false,
       "open_to_international": null,
-      "checks_required": []
+      "checks_required": [],
+      "min_prior_education": null
     },
     {
       "programme_id": "58667375-7163-471c-88f9-609e626b26fd",
@@ -1891,7 +2049,8 @@
       "leads_to_registration": null,
       "clinical_placement": false,
       "open_to_international": null,
-      "checks_required": []
+      "checks_required": [],
+      "min_prior_education": null
     },
     {
       "programme_id": "59c1e4f0-d1dc-4e0b-98bb-bcd5477d7821",
@@ -1932,7 +2091,8 @@
       "leads_to_registration": null,
       "clinical_placement": false,
       "open_to_international": null,
-      "checks_required": []
+      "checks_required": [],
+      "min_prior_education": null
     },
     {
       "programme_id": "624ee96d-8e54-463b-a553-0f8ffda84516",
@@ -1973,7 +2133,8 @@
       "leads_to_registration": null,
       "clinical_placement": false,
       "open_to_international": null,
-      "checks_required": []
+      "checks_required": [],
+      "min_prior_education": null
     },
     {
       "programme_id": "631f9e8d-24d3-406a-9b56-a500db7b29e7",
@@ -2014,7 +2175,8 @@
       "leads_to_registration": null,
       "clinical_placement": false,
       "open_to_international": null,
-      "checks_required": []
+      "checks_required": [],
+      "min_prior_education": null
     },
     {
       "programme_id": "73110c28-63ed-4972-91dc-6611b75fc21e",
@@ -2056,7 +2218,8 @@
       "leads_to_registration": null,
       "clinical_placement": false,
       "open_to_international": null,
-      "checks_required": []
+      "checks_required": [],
+      "min_prior_education": null
     },
     {
       "programme_id": "7c35a349-8ff5-4029-b284-997b718d6e6a",
@@ -2097,7 +2260,8 @@
       "leads_to_registration": null,
       "clinical_placement": false,
       "open_to_international": null,
-      "checks_required": []
+      "checks_required": [],
+      "min_prior_education": null
     },
     {
       "programme_id": "7ced0502-57d1-4df2-866a-1c9d2743ad50",
@@ -2138,7 +2302,8 @@
       "leads_to_registration": null,
       "clinical_placement": false,
       "open_to_international": null,
-      "checks_required": []
+      "checks_required": [],
+      "min_prior_education": null
     },
     {
       "programme_id": "7dd2bcc8-3ded-4882-8b68-02956498b3b4",
@@ -2179,7 +2344,8 @@
       "leads_to_registration": null,
       "clinical_placement": false,
       "open_to_international": null,
-      "checks_required": []
+      "checks_required": [],
+      "min_prior_education": null
     },
     {
       "programme_id": "7fb602d8-05cb-4e6b-b978-b84e949df76c",
@@ -2220,7 +2386,8 @@
       "leads_to_registration": null,
       "clinical_placement": false,
       "open_to_international": null,
-      "checks_required": []
+      "checks_required": [],
+      "min_prior_education": null
     },
     {
       "programme_id": "85b94145-419e-4955-a92c-d21f6bfbacd7",
@@ -2262,7 +2429,8 @@
       "leads_to_registration": null,
       "clinical_placement": false,
       "open_to_international": null,
-      "checks_required": []
+      "checks_required": [],
+      "min_prior_education": null
     },
     {
       "programme_id": "85d6bc11-1ac9-441d-a91d-773f83ae0bf1",
@@ -2303,7 +2471,8 @@
       "leads_to_registration": null,
       "clinical_placement": false,
       "open_to_international": null,
-      "checks_required": []
+      "checks_required": [],
+      "min_prior_education": null
     },
     {
       "programme_id": "8ba0e999-92f5-4098-ba6d-e82323c799ff",
@@ -2344,7 +2513,8 @@
       "leads_to_registration": null,
       "clinical_placement": false,
       "open_to_international": null,
-      "checks_required": []
+      "checks_required": [],
+      "min_prior_education": null
     },
     {
       "programme_id": "9540d421-5cfd-4dc9-9cbb-b84377fcb01e",
@@ -2385,7 +2555,8 @@
       "leads_to_registration": null,
       "clinical_placement": false,
       "open_to_international": null,
-      "checks_required": []
+      "checks_required": [],
+      "min_prior_education": null
     },
     {
       "programme_id": "a57abe77-1665-4a9e-873e-e71046326678",
@@ -2426,7 +2597,8 @@
       "leads_to_registration": null,
       "clinical_placement": false,
       "open_to_international": null,
-      "checks_required": []
+      "checks_required": [],
+      "min_prior_education": null
     },
     {
       "programme_id": "ac7d4052-7275-4b1d-b9f4-f2baa1ff20a7",
@@ -2467,7 +2639,8 @@
       "leads_to_registration": null,
       "clinical_placement": false,
       "open_to_international": null,
-      "checks_required": []
+      "checks_required": [],
+      "min_prior_education": null
     },
     {
       "programme_id": "b43fcc27-6c4e-4a0a-9834-5e66e414a646",
@@ -2508,7 +2681,8 @@
       "leads_to_registration": null,
       "clinical_placement": false,
       "open_to_international": null,
-      "checks_required": []
+      "checks_required": [],
+      "min_prior_education": null
     },
     {
       "programme_id": "b6f61226-dc95-4972-aab6-6bbe5cfd1d1d",
@@ -2549,7 +2723,8 @@
       "leads_to_registration": null,
       "clinical_placement": false,
       "open_to_international": null,
-      "checks_required": []
+      "checks_required": [],
+      "min_prior_education": null
     },
     {
       "programme_id": "bc6a0fb1-bbc3-4e21-960f-ccf17e7124a6",
@@ -2590,7 +2765,8 @@
       "leads_to_registration": null,
       "clinical_placement": false,
       "open_to_international": null,
-      "checks_required": []
+      "checks_required": [],
+      "min_prior_education": null
     },
     {
       "programme_id": "c8fbb4d7-8391-4e95-babb-b698585c3dc3",
@@ -2631,7 +2807,8 @@
       "leads_to_registration": null,
       "clinical_placement": false,
       "open_to_international": null,
-      "checks_required": []
+      "checks_required": [],
+      "min_prior_education": null
     },
     {
       "programme_id": "cc09110a-6109-4265-9cd1-78a813895544",
@@ -2672,7 +2849,8 @@
       "leads_to_registration": null,
       "clinical_placement": false,
       "open_to_international": null,
-      "checks_required": []
+      "checks_required": [],
+      "min_prior_education": null
     },
     {
       "programme_id": "cdee11a4-5bfe-4b99-8ef6-93aa74150f49",
@@ -2713,7 +2891,8 @@
       "leads_to_registration": null,
       "clinical_placement": false,
       "open_to_international": null,
-      "checks_required": []
+      "checks_required": [],
+      "min_prior_education": null
     },
     {
       "programme_id": "d8d19650-f83b-4eb7-8c56-20d2bbaaa239",
@@ -2754,7 +2933,8 @@
       "leads_to_registration": null,
       "clinical_placement": false,
       "open_to_international": null,
-      "checks_required": []
+      "checks_required": [],
+      "min_prior_education": null
     },
     {
       "programme_id": "e1691575-aff4-4c04-a3c5-5b259e6ccde0",
@@ -2795,7 +2975,8 @@
       "leads_to_registration": null,
       "clinical_placement": false,
       "open_to_international": null,
-      "checks_required": []
+      "checks_required": [],
+      "min_prior_education": null
     },
     {
       "programme_id": "e60ae847-3566-4fc6-82c4-5fd1972bc077",
@@ -2836,7 +3017,8 @@
       "leads_to_registration": null,
       "clinical_placement": false,
       "open_to_international": null,
-      "checks_required": []
+      "checks_required": [],
+      "min_prior_education": null
     },
     {
       "programme_id": "f821d1ef-09ad-4ad4-b8ac-b217b135b95f",
@@ -2877,7 +3059,8 @@
       "leads_to_registration": null,
       "clinical_placement": false,
       "open_to_international": null,
-      "checks_required": []
+      "checks_required": [],
+      "min_prior_education": null
     }
   ],
   "intakes": [
@@ -4973,7 +5156,8 @@
       "confidence": "estimated",
       "is_demo": true,
       "created_at": "2026-11-07T11:42:14.273745+00:00",
-      "updated_at": "2026-11-07T11:42:14.273745+00:00"
+      "updated_at": "2026-11-07T11:42:14.273745+00:00",
+      "university_id": null
     },
     {
       "id": "4a223277-85bb-4ba7-9ffd-f03aa9eb6509",
@@ -4989,7 +5173,8 @@
       "confidence": "estimated",
       "is_demo": true,
       "created_at": "2026-11-07T11:42:14.273745+00:00",
-      "updated_at": "2026-11-07T11:42:14.273745+00:00"
+      "updated_at": "2026-11-07T11:42:14.273745+00:00",
+      "university_id": null
     },
     {
       "id": "10a7fa24-ce42-451b-b36a-8e47953faec9",
@@ -5005,7 +5190,8 @@
       "confidence": "estimated",
       "is_demo": true,
       "created_at": "2026-11-07T11:42:14.273745+00:00",
-      "updated_at": "2026-11-07T11:42:14.273745+00:00"
+      "updated_at": "2026-11-07T11:42:14.273745+00:00",
+      "university_id": null
     },
     {
       "id": "a49981c9-cb4a-4024-a97d-bb2f3bf97f71",
@@ -5021,7 +5207,8 @@
       "confidence": "estimated",
       "is_demo": true,
       "created_at": "2026-11-07T11:42:14.273745+00:00",
-      "updated_at": "2026-11-07T11:42:14.273745+00:00"
+      "updated_at": "2026-11-07T11:42:14.273745+00:00",
+      "university_id": null
     },
     {
       "id": "75667b59-d066-416e-98bb-c661c4819d7a",
@@ -5037,7 +5224,8 @@
       "confidence": "estimated",
       "is_demo": true,
       "created_at": "2026-11-07T11:42:14.273745+00:00",
-      "updated_at": "2026-11-07T11:42:14.273745+00:00"
+      "updated_at": "2026-11-07T11:42:14.273745+00:00",
+      "university_id": null
     },
     {
       "id": "185c2df3-8129-43fb-b055-7d7317671ede",
@@ -5053,7 +5241,8 @@
       "confidence": "estimated",
       "is_demo": true,
       "created_at": "2026-11-07T11:42:14.273745+00:00",
-      "updated_at": "2026-11-07T11:42:14.273745+00:00"
+      "updated_at": "2026-11-07T11:42:14.273745+00:00",
+      "university_id": null
     },
     {
       "id": "d569ac21-63e8-428d-b233-d4c3f2cfdfad",
@@ -5069,7 +5258,8 @@
       "confidence": "estimated",
       "is_demo": true,
       "created_at": "2026-11-07T11:42:14.273745+00:00",
-      "updated_at": "2026-11-07T11:42:14.273745+00:00"
+      "updated_at": "2026-11-07T11:42:14.273745+00:00",
+      "university_id": null
     },
     {
       "id": "851e357a-2d7a-43e2-8143-7ac0b278f2ac",
@@ -5085,7 +5275,8 @@
       "confidence": "estimated",
       "is_demo": true,
       "created_at": "2026-11-07T11:42:14.273745+00:00",
-      "updated_at": "2026-11-07T11:42:14.273745+00:00"
+      "updated_at": "2026-11-07T11:42:14.273745+00:00",
+      "university_id": null
     },
     {
       "id": "3ca76bf9-f372-44ef-b53a-1a1901c994f0",
@@ -5101,7 +5292,8 @@
       "confidence": "estimated",
       "is_demo": true,
       "created_at": "2026-11-07T11:42:14.273745+00:00",
-      "updated_at": "2026-11-07T11:42:14.273745+00:00"
+      "updated_at": "2026-11-07T11:42:14.273745+00:00",
+      "university_id": null
     },
     {
       "id": "ee6e5ccf-34e5-4198-ad5b-0499ea23d5d6",
@@ -5117,7 +5309,8 @@
       "confidence": "estimated",
       "is_demo": true,
       "created_at": "2026-11-07T11:42:14.273745+00:00",
-      "updated_at": "2026-11-07T11:42:14.273745+00:00"
+      "updated_at": "2026-11-07T11:42:14.273745+00:00",
+      "university_id": null
     },
     {
       "id": "1196880d-29f0-47a0-b350-38d1631460bd",
@@ -5133,7 +5326,8 @@
       "confidence": "estimated",
       "is_demo": true,
       "created_at": "2026-11-07T11:42:14.273745+00:00",
-      "updated_at": "2026-11-07T11:42:14.273745+00:00"
+      "updated_at": "2026-11-07T11:42:14.273745+00:00",
+      "university_id": null
     },
     {
       "id": "0022f6de-150f-4dd0-b50d-144a2dc66949",
@@ -5149,7 +5343,8 @@
       "confidence": "estimated",
       "is_demo": true,
       "created_at": "2026-11-07T11:42:14.273745+00:00",
-      "updated_at": "2026-11-07T11:42:14.273745+00:00"
+      "updated_at": "2026-11-07T11:42:14.273745+00:00",
+      "university_id": null
     },
     {
       "id": "2cd29c35-2af6-461e-b912-813ddf37cb47",
@@ -5165,7 +5360,8 @@
       "confidence": "estimated",
       "is_demo": true,
       "created_at": "2026-11-07T11:42:14.273745+00:00",
-      "updated_at": "2026-11-07T11:42:14.273745+00:00"
+      "updated_at": "2026-11-07T11:42:14.273745+00:00",
+      "university_id": null
     },
     {
       "id": "ece07149-f92d-4683-808c-c6a25166e6d8",
@@ -5181,7 +5377,8 @@
       "confidence": "estimated",
       "is_demo": true,
       "created_at": "2026-11-07T11:42:14.273745+00:00",
-      "updated_at": "2026-11-07T11:42:14.273745+00:00"
+      "updated_at": "2026-11-07T11:42:14.273745+00:00",
+      "university_id": null
     },
     {
       "id": "0d6992a3-cb8d-4c58-9978-0aeec072bafc",
@@ -5197,7 +5394,8 @@
       "confidence": "estimated",
       "is_demo": true,
       "created_at": "2026-11-07T11:42:14.273745+00:00",
-      "updated_at": "2026-11-07T11:42:14.273745+00:00"
+      "updated_at": "2026-11-07T11:42:14.273745+00:00",
+      "university_id": null
     },
     {
       "id": "072f8a74-a777-415e-aca6-8dcfeb3fd6c1",
@@ -5213,7 +5411,8 @@
       "confidence": "estimated",
       "is_demo": true,
       "created_at": "2026-11-07T11:42:14.273745+00:00",
-      "updated_at": "2026-11-07T11:42:14.273745+00:00"
+      "updated_at": "2026-11-07T11:42:14.273745+00:00",
+      "university_id": null
     },
     {
       "id": "1e492807-90e9-4aee-b88d-0062633f064f",
@@ -5229,7 +5428,8 @@
       "confidence": "estimated",
       "is_demo": true,
       "created_at": "2026-11-07T11:42:14.273745+00:00",
-      "updated_at": "2026-11-07T11:42:14.273745+00:00"
+      "updated_at": "2026-11-07T11:42:14.273745+00:00",
+      "university_id": null
     },
     {
       "id": "9a183acd-c941-4fa0-9871-541c5c9aff8f",
@@ -5245,7 +5445,8 @@
       "confidence": "estimated",
       "is_demo": true,
       "created_at": "2026-11-07T11:42:14.273745+00:00",
-      "updated_at": "2026-11-07T11:42:14.273745+00:00"
+      "updated_at": "2026-11-07T11:42:14.273745+00:00",
+      "university_id": null
     },
     {
       "id": "c6bbf704-45e3-4684-97c9-e83f11a1bdab",
@@ -5261,7 +5462,8 @@
       "confidence": "estimated",
       "is_demo": true,
       "created_at": "2026-11-07T11:42:14.273745+00:00",
-      "updated_at": "2026-11-07T11:42:14.273745+00:00"
+      "updated_at": "2026-11-07T11:42:14.273745+00:00",
+      "university_id": null
     },
     {
       "id": "3e3786a9-e7ca-47af-a4db-08751ee16731",
@@ -5277,7 +5479,8 @@
       "confidence": "estimated",
       "is_demo": true,
       "created_at": "2026-11-07T11:42:14.273745+00:00",
-      "updated_at": "2026-11-07T11:42:14.273745+00:00"
+      "updated_at": "2026-11-07T11:42:14.273745+00:00",
+      "university_id": null
     },
     {
       "id": "22d149a7-404c-466d-bdf1-c7279d85a76b",
@@ -5293,7 +5496,8 @@
       "confidence": "estimated",
       "is_demo": true,
       "created_at": "2026-11-07T11:42:14.273745+00:00",
-      "updated_at": "2026-11-07T11:42:14.273745+00:00"
+      "updated_at": "2026-11-07T11:42:14.273745+00:00",
+      "university_id": null
     },
     {
       "id": "cfa6ad7e-6a6e-421b-9e11-5243d6c9b202",
@@ -5309,7 +5513,8 @@
       "confidence": "estimated",
       "is_demo": true,
       "created_at": "2026-11-07T11:42:14.273745+00:00",
-      "updated_at": "2026-11-07T11:42:14.273745+00:00"
+      "updated_at": "2026-11-07T11:42:14.273745+00:00",
+      "university_id": null
     },
     {
       "id": "ea639895-a9d8-4366-82ea-e826c70b668a",
@@ -5325,7 +5530,8 @@
       "confidence": "estimated",
       "is_demo": true,
       "created_at": "2026-11-07T11:42:14.273745+00:00",
-      "updated_at": "2026-11-07T11:42:14.273745+00:00"
+      "updated_at": "2026-11-07T11:42:14.273745+00:00",
+      "university_id": null
     },
     {
       "id": "54015a1c-adfe-43e2-b98c-65707baaf639",
@@ -5341,7 +5547,8 @@
       "confidence": "estimated",
       "is_demo": true,
       "created_at": "2026-11-07T11:42:14.273745+00:00",
-      "updated_at": "2026-11-07T11:42:14.273745+00:00"
+      "updated_at": "2026-11-07T11:42:14.273745+00:00",
+      "university_id": null
     },
     {
       "id": "231c24b3-db8a-4ede-9688-bc1fbf799316",
@@ -5357,7 +5564,8 @@
       "confidence": "estimated",
       "is_demo": true,
       "created_at": "2026-11-07T11:42:14.273745+00:00",
-      "updated_at": "2026-11-07T11:42:14.273745+00:00"
+      "updated_at": "2026-11-07T11:42:14.273745+00:00",
+      "university_id": null
     },
     {
       "id": "cbbd065d-4d68-491c-8961-37147720f784",
@@ -5373,7 +5581,8 @@
       "confidence": "estimated",
       "is_demo": true,
       "created_at": "2026-11-07T11:42:14.273745+00:00",
-      "updated_at": "2026-11-07T11:42:14.273745+00:00"
+      "updated_at": "2026-11-07T11:42:14.273745+00:00",
+      "university_id": null
     }
   ],
   "scholarships": [
@@ -5402,7 +5611,7 @@
       "confidence": "estimated",
       "is_demo": true,
       "created_at": "2026-11-07T11:42:14.273745+00:00",
-      "updated_at": "2026-11-07T11:42:14.273745+00:00",
+      "updated_at": "2026-11-23T22:42:12.372385+00:00",
       "funding_type": "scholarship",
       "open_to_international": "yes",
       "eligible_from": "admission",
@@ -5434,7 +5643,7 @@
       "confidence": "estimated",
       "is_demo": true,
       "created_at": "2026-11-07T11:42:14.273745+00:00",
-      "updated_at": "2026-11-07T11:42:14.273745+00:00",
+      "updated_at": "2026-11-23T22:42:12.372385+00:00",
       "funding_type": "scholarship",
       "open_to_international": "yes",
       "eligible_from": "admission",
@@ -5465,7 +5674,7 @@
       "confidence": "estimated",
       "is_demo": true,
       "created_at": "2026-11-07T11:42:14.273745+00:00",
-      "updated_at": "2026-11-07T11:42:14.273745+00:00",
+      "updated_at": "2026-11-23T22:42:12.372385+00:00",
       "funding_type": "scholarship",
       "open_to_international": "yes",
       "eligible_from": "admission",
@@ -5499,7 +5708,7 @@
       "confidence": "estimated",
       "is_demo": true,
       "created_at": "2026-11-07T11:42:14.273745+00:00",
-      "updated_at": "2026-11-07T11:42:14.273745+00:00",
+      "updated_at": "2026-11-23T22:42:12.372385+00:00",
       "funding_type": "scholarship",
       "open_to_international": "yes",
       "eligible_from": "admission",
@@ -5821,21 +6030,24 @@
       "value": {
         "months": 36,
         "language": "CLB 7 or NCLC 7 in all 4 areas",
+        "non_degree": "programme_length",
         "details_url": "https://www.canada.ca/en/immigration-refugees-citizenship/services/study-canada/work/after-graduation/eligibility.html",
         "apply_within_days": 180,
+        "non_degree_language": "CLB 5 or NCLC 5 in all 4 areas",
         "min_programme_months": 8,
-        "field_of_study_required": false
+        "field_of_study_required": false,
+        "non_degree_field_of_study_required": true
       },
-      "description": "Post-graduation work permit: 3 years after a master's of at least 8 months, or until your passport expires if sooner. Apply within 180 days of confirmation that you finished. You need CLB 7 or NCLC 7 in all 4 language areas. Master's graduates have no field of study requirement.",
+      "description": "Post-graduation work permit: 3 years after a master's of at least 8 months, or until your passport expires if sooner. Apply within 180 days of confirmation that you finished. You need CLB 7 or NCLC 7 in all 4 language areas. Master's graduates have no field of study requirement. College certificates and diplomas (8 months to under 2 years) give a permit only as long as the programme, need CLB 5 or NCLC 5, and must be in an eligible field of study.",
       "effective_from": "2024-11-01",
       "effective_to": null,
       "review_due": null,
       "source_url": "https://www.canada.ca/en/immigration-refugees-citizenship/services/study-canada/work/after-graduation/about.html",
-      "last_verified_at": "2026-11-05T00:00:00+00:00",
+      "last_verified_at": "2026-11-23T17:34:00.717+00:00",
       "confidence": "official",
       "is_demo": false,
       "created_at": "2026-11-05T17:07:21.215657+00:00",
-      "updated_at": "2026-11-05T17:07:21.215657+00:00",
+      "updated_at": "2026-11-23T17:34:03.018139+00:00",
       "applies_to_travel_documents": []
     },
     {
@@ -6307,7 +6519,8 @@
       "region": null,
       "city": null,
       "observed_on": null,
-      "evidence_path": null
+      "evidence_path": null,
+      "university_id": null
     },
     {
       "id": "a3a5cb89-28ec-405f-adee-86d7fc0b5f9d",
@@ -6325,7 +6538,8 @@
       "region": null,
       "city": null,
       "observed_on": null,
-      "evidence_path": null
+      "evidence_path": null,
+      "university_id": null
     },
     {
       "id": "1db32e58-7e85-4ce3-b956-5d61549e9a5b",
@@ -6343,7 +6557,8 @@
       "region": null,
       "city": null,
       "observed_on": null,
-      "evidence_path": null
+      "evidence_path": null,
+      "university_id": null
     },
     {
       "id": "6162cdbe-2a38-4965-aecb-ae7dba86bff3",
@@ -6361,7 +6576,8 @@
       "region": null,
       "city": null,
       "observed_on": null,
-      "evidence_path": null
+      "evidence_path": null,
+      "university_id": null
     },
     {
       "id": "55310522-f8bd-4d96-bb6e-49e44426dd50",
@@ -6379,7 +6595,8 @@
       "region": null,
       "city": null,
       "observed_on": null,
-      "evidence_path": null
+      "evidence_path": null,
+      "university_id": null
     }
   ]
 }

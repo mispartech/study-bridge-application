@@ -148,6 +148,16 @@ describe("college programmes in matching", () => {
   })
 })
 
+describe("a programme too short for work rights", () => {
+  it("scores zero for work, not the benefit of the doubt given when no rule is held", () => {
+    const { cat, certificateId } = withCertificate()
+    cat.programmes.find((p) => p.id === certificateId)!.duration_months = 6
+    const profile = student({ level_preference: "either", post_study_work: "high" })
+    const short = bundles(cat, true).find((b) => b.programme.id === certificateId)!
+    expect(careerFit(short, short.intakes[0]!, profile, cat, options)).toBeCloseTo(0.45)
+  })
+})
+
 describe("approving a college programme", () => {
   const record = {
     university: {

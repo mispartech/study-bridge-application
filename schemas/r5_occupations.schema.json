@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "suggestions"
+  ],
+  "properties": {
+    "suggestions": {
+      "type": "array",
+      "maxItems": 5,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "occupation_id",
+          "rationale"
+        ],
+        "properties": {
+          "occupation_id": {
+            "type": "string"
+          },
+          "rationale": {
+            "type": "string",
+            "maxLength": 400
+          }
+        }
+      }
+    }
+  }
+}

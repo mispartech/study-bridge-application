@@ -30,6 +30,7 @@ import { hasSessionCookie } from "@/lib/auth/server"
 import { demoModeEnabled, loadCatalogue } from "@/lib/match/catalogue"
 import { parseProfileCookie, PROFILE_COOKIE } from "@/lib/match/draft"
 import { ACCOMMODATION_LABEL, BAND_LABEL, COUNTRY_LABEL, nextCycle, TERM_LABEL } from "@/lib/match/labels"
+import { demandFor, workPermitSignal } from "@/lib/match/careers"
 import { isOfficialUrl } from "@/lib/match/official-url"
 import { presentCost, presentResult } from "@/lib/match/present"
 import { formatShort, type Currency } from "@/lib/money"
@@ -97,6 +98,14 @@ async function Programme({ params }: { params: Promise<{ id: string }> }) {
         visaApplicationDate(intake)
       )
     : undefined
+  const demand = demandFor(bundle, catalogue.careers, now)
+  const careerIds = new Set(
+    (catalogue.careers?.links ?? []).filter((l) => l.programme_id === programme.id).map((l) => l.occupation_id)
+  )
+  const occupations = (catalogue.careers?.occupations ?? []).filter(
+    (o) => careerIds.has(o.id) && o.country === university.country
+  )
+  const permit = workPermitSignal(bundle, work, catalogue.careers, now)
   const cityCosts = catalogue.cityCosts.filter((c) => c.country === university.country && c.city === university.city)
   const applyAllowed = isOfficialUrl(programme.apply_url, university.official_domains) && !restriction
   const toefl = (requirement?.toefl_entries ?? []) as { scale: string; overall_min: number }[]
@@ -238,7 +247,43 @@ async function Programme({ params }: { params: Promise<{ id: string }> }) {
 
       <Section title="Post-study work">
         <p>{work?.description ?? "We don't have a verified rule for this country yet."}</p>
+        {work && permit === 1 && (
+          <p className="font-medium text-success-strong">Our records show this programme leads to a work permit.</p>
+        )}
+        {work && permit === 0 && (
+          <p className="font-medium text-warning-strong">
+            Our records show this programme doesn&apos;t lead to a work permit.
+          </p>
+        )}
+        {work && permit === null && (
+          <p className="text-muted-foreground">
+            We haven&apos;t confirmed whether this programme leads to a work permit. Check the official page.
+          </p>
+        )}
+        {work && (
+          <FreshnessBadge lastVerifiedAt={work.last_verified_at} now={now} sourceUrl={work.source_url} size="sm" />
+        )}
       </Section>
+
+      {occupations.length > 0 && (
+        <Section title="Careers this leads to">
+          {occupations.map((o) => (
+            <div key={o.id} data-testid="career" className="flex flex-col items-start gap-1">
+              <p className="font-medium">{o.title}</p>
+              {demand
+                .filter((d) => d.code === o.code)
+                .map((d) => (
+                  <div key={`${d.region}-${d.label}`} className="flex flex-wrap items-center gap-2">
+                    <span>
+                      In demand in {d.region ?? COUNTRY_LABEL[university.country]}: {d.label}
+                    </span>
+                    <FreshnessBadge lastVerifiedAt={d.last_verified_at} now={now} sourceUrl={d.source_url} size="sm" />
+                  </div>
+                ))}
+            </div>
+          ))}
+        </Section>
+      )}
 
       <Section title="City and accommodation">
         {cityCosts.map((c) => (

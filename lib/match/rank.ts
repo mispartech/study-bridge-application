@@ -1,5 +1,7 @@
 import { normaliseAcademics } from "./academics"
 import { hardFilter } from "./filters"
+import { demandFor, workPermitSignal } from "./careers"
+import { ruleOn, visaApplicationDate } from "./cost"
 import { eligibleScholarships, fitScore } from "./score"
 import type {
   Bundle,
@@ -132,8 +134,29 @@ export function rank(profile: MatchProfile, catalogue: Catalogue, options: Match
       const { goal_signals, ...scores } = fitScore(bundle, outcome, profile, academics, catalogue, options)
       const { cost, intake, next_deadline, reach, flags } = outcome
       const group = groupFor(scores.fit, reach, cost)
+      const demand = demandFor(bundle, catalogue.careers, options.now)
+      const permitRule = ruleOn(
+        catalogue.visaRules,
+        { country: bundle.university.country, type: "post_study_work", demoMode: options.demoMode },
+        visaApplicationDate(intake)
+      )
+      const permit = workPermitSignal(bundle, permitRule, catalogue.careers, options.now)
+      const work_permit_source = permit === 1 && permitRule ? permitRule.source_url : null
       const funding = fundingStatus(eligibleScholarships(bundle, profile, academics, catalogue, options))
-      passed.push({ bundle, scores, group, reach, cost, intake, next_deadline, flags, goal_signals, funding })
+      passed.push({
+        bundle,
+        scores,
+        group,
+        reach,
+        cost,
+        intake,
+        next_deadline,
+        flags,
+        goal_signals,
+        funding,
+        demand,
+        work_permit_source,
+      })
     }
   }
 

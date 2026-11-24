@@ -38,6 +38,9 @@ const ACTIONS = [
   "refund_issued",
   "pathway_changed",
   "funding_changed",
+  "career_data_changed",
+  "career_link_reviewed",
+  "institution_changed",
   "system_cleanup_role_removed",
   "system_cleanup_account_deleted",
 ] as const

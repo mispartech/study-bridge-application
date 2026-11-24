@@ -66,6 +66,10 @@ async function fetchCatalogue(demoMode: boolean): Promise<Catalogue> {
     costEstimates,
     pathways,
     signals,
+    occupations,
+    demand,
+    permitFields,
+    links,
   ] = await Promise.all([
     onlyThisMode(db.from("university").select("*")),
     onlyThisMode(db.from("programme").select("*")),
@@ -80,6 +84,10 @@ async function fetchCatalogue(demoMode: boolean): Promise<Catalogue> {
     withoutDemo(db.from("cost_estimate").select("*")),
     db.from("pathway").select("key, label, description, active, sort_order").eq("active", true).order("sort_order"),
     db.from("pathway_signal").select("pathway_key, signal, weight"),
+    db.from("occupation").select("*"),
+    db.from("occupation_demand").select("*"),
+    db.from("work_permit_field").select("*").limit(5000),
+    db.from("programme_occupation").select("programme_id, occupation_id").eq("status", "approved"),
   ])
   const data = <T>(res: { data: T[] | null; error: { message: string } | null }): T[] => {
     if (res.error) throw new Error(`Could not load the catalogue: ${res.error.message}`)
@@ -98,6 +106,12 @@ async function fetchCatalogue(demoMode: boolean): Promise<Catalogue> {
     fxRates: data(fxRates),
     costEstimates: data(costEstimates),
     pathways: toPathways(data(pathways), data(signals)),
+    careers: {
+      occupations: data(occupations),
+      demand: data(demand),
+      fields: data(permitFields),
+      links: data(links),
+    },
   }
 }
 

@@ -116,6 +116,15 @@ Admin Phases 2–3 (alerts, content hub), then 7–9.
 
 ## Status
 
+- Step E: built 24 Nov 2026; data pending.
+  - **Built:**
+    - occupations (NOC 2021 and UK SOC 2020), demand by region, work-permit fields of study, and programme-to-occupation links
+    - AI suggestions limited to occupations in the database; only links an editor approves are used
+    - "In demand in ..." and "Leads to a work permit" chips linked to their source, "Careers this leads to" on the programme page, and both pathway signals
+    - Admin pages: Careers and permits, Institutions
+  - **Fails safe:** missing, unapproved, expired or over-120-day-old records count as unknown and show nothing.
+  - **Before "Leads to a work permit" can show:** an editor adds `institution_check` (`"required"` or `"not_required"`) to each country's post-study work rule, marks institutions on the Institutions page, and, for college programmes, imports the eligible fields.
+  - **Data still to enter:** occupations and demand for Ontario and Nova Scotia, the IRCC field list, and links for 80% of pilot programmes.
 - Step D: built 24 Nov 2026; data pending.
   - **Built:**
     - the `scholarship` table, extended: funding type, international eligibility, when it's available (on admission or after classes start), automatic award, levels, regions, one institution, share of tuition, renewable

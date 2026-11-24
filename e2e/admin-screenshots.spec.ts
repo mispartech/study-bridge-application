@@ -21,6 +21,8 @@ const PAGES = [
   ["/admin/review", "review"],
   ["/admin/reports", "error-reports"],
   ["/admin/funding", "funding"],
+  ["/admin/careers", "careers"],
+  ["/admin/institutions", "institutions"],
   ["/admin/visa-rules", "visa-rules"],
   ["/admin/fx", "exchange-rates"],
   ["/admin/estimates", "flights-and-health"],

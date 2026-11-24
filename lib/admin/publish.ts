@@ -184,7 +184,7 @@ export function toRows(input: unknown) {
       pte_min: score("PTE"),
       toefl_entries: tests
         .filter((t) => t.test === "TOEFL_iBT")
-        .map((t) => ({ scale: t.scale ?? "0-120", min: t.overall_min })),
+        .map((t) => ({ scale: t.scale ?? "0-120", overall_min: t.overall_min })),
       english_waiver_text: r.requirement.english_waiver_text ?? null,
       waec_english_accepted: r.requirement.waec_english_accepted ?? false,
       waec_min_grade: r.requirement.waec_min_grade ?? null,

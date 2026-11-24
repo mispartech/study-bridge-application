@@ -6,6 +6,7 @@ import * as React from "react"
 import {
   Bell,
   Bot,
+  BriefcaseBusiness,
   ChartColumn,
   ChevronsLeft,
   ChevronsRight,
@@ -15,6 +16,7 @@ import {
   Flag,
   House,
   Inbox,
+  Landmark,
   ListChecks,
   Mail,
   Menu,
@@ -60,6 +62,8 @@ const ICONS: Record<NavIcon, LucideIcon> = {
   diagnostics: Stethoscope,
   pathways: Route,
   funding: PiggyBank,
+  careers: BriefcaseBusiness,
+  institutions: Landmark,
 }
 
 type Staff = { email: string; role: string }

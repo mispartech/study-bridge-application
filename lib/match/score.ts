@@ -1,6 +1,7 @@
 import { bandIndex, normaliseAcademics } from "./academics"
 import { ruleOn, toNgn, visaApplicationDate } from "./cost"
 import type { Tables } from "@/lib/db/database.types"
+import { demandSignal, workPermitSignal } from "./careers"
 import { levelOf, workMonthsFor } from "./levels"
 import { goalFit, type SignalKey, type SignalValues } from "./pathways"
 import type { Academics, Band, Bundle, Catalogue, Cost, MatchOptions, MatchProfile, ScoreBreakdown } from "./types"
@@ -62,10 +63,13 @@ export function careerFitDetail(
   const countries = profile.preferred_countries.length ? profile.preferred_countries : ["UK", "CA", "US"]
   const longest = Math.max(...countries.map(workMonths))
   // This programme's own work rights: a college certificate can earn less than a Master's in the same country.
-  const months = workMonthsFor(ruleFor(university.country)?.value, programme)
+  const rule = ruleFor(university.country)
+  const held = typeof (rule?.value as { months?: unknown } | undefined)?.months === "number"
+  const months = workMonthsFor(rule?.value, programme)
   const priority = profile.post_study_work
   // A student who has told us this matters gets a fair score where we hold no rule yet: unknown isn't zero.
-  const unknown = months === 0 && priority !== null
+  // A programme a held rule gives no work rights to (a very short certificate) is zero, not unknown.
+  const unknown = !held && priority !== null
   const work = unknown ? UNKNOWN_WORK_RULE : longest > 0 ? months / longest : 0
   const stem = university.country === "US" && programme.stem_designated
   const placement = stem || programme.has_coop_or_placement
@@ -76,7 +80,9 @@ export function careerFitDetail(
       field_match: fieldMatches ? 1 : 0,
       placement: placement ? 1 : 0,
       // No rule held for this destination yet: unknown, so left out rather than counted as none.
-      post_study_work: months === 0 && longest === 0 ? null : longest > 0 ? months / longest : 0,
+      work_permit_route: workPermitSignal(bundle, rule, catalogue.careers, o.now),
+      in_demand: demandSignal(bundle, catalogue.careers, o.now),
+      post_study_work: !held ? null : longest > 0 ? months / longest : 0,
       funding: scholarshipFit(
         bundle,
         profile,

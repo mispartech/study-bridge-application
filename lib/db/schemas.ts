@@ -584,6 +584,57 @@ export const pathwaySignalRow = z.object({
   weight: z.number().int().min(0).max(100),
 })
 
+export const occupationRow = z.object({
+  id: uuid,
+  country: countryCode,
+  system: z.enum(["NOC2021", "SOC2020", "SOC2018"]),
+  code: z.string().min(3),
+  title: z.string().min(2),
+  source_url: z.url(),
+  last_verified_at: timestamp,
+  confidence: confidenceLevel,
+  ...timestamps,
+})
+
+export const occupationDemandRow = z.object({
+  id: uuid,
+  occupation_id: uuid,
+  region: z.string(),
+  source_type: z.enum(["in_demand_list", "nominee_stream", "job_outlook", "shortage_list"]),
+  label: z.string().min(2),
+  valid_from: date,
+  valid_to: date.nullable(),
+  source_url: z.url(),
+  last_verified_at: timestamp,
+  confidence: confidenceLevel,
+  ...timestamps,
+})
+
+export const workPermitFieldRow = z.object({
+  id: uuid,
+  country: countryCode,
+  code: z.string().regex(/^\d{2}\.\d{4}$/),
+  title: z.string().min(2),
+  category: z.string().min(2),
+  eligible_from: date,
+  eligible_to: date.nullable(),
+  source_url: z.url(),
+  last_verified_at: timestamp,
+  confidence: confidenceLevel,
+  ...timestamps,
+})
+
+export const programmeOccupationRow = z.object({
+  programme_id: uuid,
+  occupation_id: uuid,
+  status: z.enum(["suggested", "approved", "rejected"]),
+  suggested_by: z.enum(["ai", "editor"]),
+  rationale: z.string().max(400),
+  reviewed_by: uuid.nullable(),
+  reviewed_at: timestamp.nullable(),
+  created_at: timestamp,
+})
+
 export const rowSchemas = {
   student_profile: studentProfileRow,
   shortlist: shortlistRow,
@@ -622,6 +673,10 @@ export const rowSchemas = {
   alert_endpoint: alertEndpointRow,
   pathway: pathwayRow,
   pathway_signal: pathwaySignalRow,
+  occupation: occupationRow,
+  occupation_demand: occupationDemandRow,
+  work_permit_field: workPermitFieldRow,
+  programme_occupation: programmeOccupationRow,
 } as const
 
 export type TableName = keyof Database["public"]["Tables"]

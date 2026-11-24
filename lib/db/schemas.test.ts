@@ -46,6 +46,10 @@ describe("schemas match the generated database types", () => {
       alert_endpoint: true,
       pathway: true,
       pathway_signal: true,
+      occupation: true,
+      occupation_demand: true,
+      work_permit_field: true,
+      programme_occupation: true,
     }
     expect(Object.keys(rowSchemas).sort()).toEqual(Object.keys(tables).sort())
   })

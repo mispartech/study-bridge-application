@@ -892,6 +892,62 @@ test.describe("staff roles and two-factor", () => {
     }
   })
 
+  test("a data editor records an occupation with its demand, reviews a link, and each step is audited", async ({
+    page,
+  }, info) => {
+    test.setTimeout(150_000)
+    const userId = await staffAccount(page, "data_editor")
+    await signInAs(page, userId)
+    // A 99xxx code is never a real NOC (the second digit only goes to 5), linked only to a demo programme, so no real programme ever shows it.
+    const code = `99${String(Date.now()).slice(-2)}${info.project.name === "desktop" ? 1 : 2}`
+    const title = `E2E occupation ${code}`
+    try {
+      await page.goto("/admin/careers")
+      const form = page.getByTestId("occupation-form")
+      await form.getByLabel(/^Code/).fill(code)
+      await form.getByLabel("Occupation title").fill(title)
+      await form.getByLabel("Occupation source").fill("https://www.example.com/not-official")
+      await form.getByRole("button", { name: "Save occupation" }).click()
+      await expect(form.getByRole("status")).toContainText("official government", { timeout: 20_000 })
+      await form.getByLabel("Occupation source").fill("https://www.canada.ca/e2e")
+      await form.getByLabel(/^Demand wording/).fill("E2E demand")
+      await form.getByLabel(/^Province or region/).fill("Nowhere")
+      await form.getByLabel("Demand source").fill("https://www.canada.ca/e2e")
+      await form.getByLabel("Valid from").fill("2026-01-01")
+      await form.getByRole("button", { name: "Save occupation" }).click()
+      await expect(form.getByRole("status")).toContainText("Saved", { timeout: 20_000 })
+      await expect(page.getByTestId("demand-row").filter({ hasText: title })).toContainText("E2E demand")
+
+      const { data: occupation } = await admin.from("occupation").select("id").eq("code", code).single()
+      const { data: programme } = await admin.from("programme").select("id").eq("is_demo", true).limit(1).single()
+      await admin.from("programme_occupation").insert({
+        programme_id: programme!.id,
+        occupation_id: occupation!.id,
+        suggested_by: "ai",
+        rationale: "e2e",
+      })
+      await page.reload()
+      const suggestion = page.getByTestId("link-suggestion").filter({ hasText: title })
+      await suggestion.getByRole("checkbox").check()
+      await page.getByRole("button", { name: "Reject selected" }).click()
+      await expect(suggestion).toHaveCount(0, { timeout: 20_000 })
+      const { data: link } = await admin
+        .from("programme_occupation")
+        .select("status, reviewed_by")
+        .eq("occupation_id", occupation!.id)
+        .single()
+      expect(link).toEqual({ status: "rejected", reviewed_by: userId })
+      const { data: audited } = await admin
+        .from("staff_audit")
+        .select("action")
+        .eq("staff_id", userId)
+        .in("action", ["career_data_changed", "career_link_reviewed"])
+      expect(audited?.map((a) => a.action).sort()).toEqual(["career_data_changed", "career_link_reviewed"])
+    } finally {
+      await admin.from("occupation").delete().eq("code", code).eq("title", title)
+    }
+  })
+
   test("the phone menu opens, moves between pages and closes", async ({ page }, info) => {
     test.skip(info.project.name !== "mobile-360", "phone layout only")
     test.setTimeout(90_000)
@@ -923,6 +979,8 @@ const ADMIN_PAGES = [
   ["/admin/review", "Review queue"],
   ["/admin/reports", "Error reports"],
   ["/admin/funding", "Funding"],
+  ["/admin/careers", "Careers and permits"],
+  ["/admin/institutions", "Institutions"],
   ["/admin/visa-rules", "Visa rules"],
   ["/admin/fx", "Exchange rates"],
   ["/admin/estimates", "Flights and health cover"],

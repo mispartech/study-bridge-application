@@ -728,6 +728,100 @@ export type Database = {
         }
         Relationships: []
       }
+      occupation: {
+        Row: {
+          code: string
+          confidence: Database["public"]["Enums"]["confidence_level"]
+          country: Database["public"]["Enums"]["country_code"]
+          created_at: string
+          id: string
+          last_verified_at: string
+          source_url: string
+          system: string
+          title: string
+          updated_at: string
+        }
+        ComputedFields: never
+        Insert: {
+          code: string
+          confidence: Database["public"]["Enums"]["confidence_level"]
+          country: Database["public"]["Enums"]["country_code"]
+          created_at?: string
+          id?: string
+          last_verified_at: string
+          source_url: string
+          system: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          code?: string
+          confidence?: Database["public"]["Enums"]["confidence_level"]
+          country?: Database["public"]["Enums"]["country_code"]
+          created_at?: string
+          id?: string
+          last_verified_at?: string
+          source_url?: string
+          system?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      occupation_demand: {
+        Row: {
+          confidence: Database["public"]["Enums"]["confidence_level"]
+          created_at: string
+          id: string
+          label: string
+          last_verified_at: string
+          occupation_id: string
+          region: string
+          source_type: string
+          source_url: string
+          updated_at: string
+          valid_from: string
+          valid_to: string | null
+        }
+        ComputedFields: never
+        Insert: {
+          confidence: Database["public"]["Enums"]["confidence_level"]
+          created_at?: string
+          id?: string
+          label: string
+          last_verified_at: string
+          occupation_id: string
+          region?: string
+          source_type: string
+          source_url: string
+          updated_at?: string
+          valid_from: string
+          valid_to?: string | null
+        }
+        Update: {
+          confidence?: Database["public"]["Enums"]["confidence_level"]
+          created_at?: string
+          id?: string
+          label?: string
+          last_verified_at?: string
+          occupation_id?: string
+          region?: string
+          source_type?: string
+          source_url?: string
+          updated_at?: string
+          valid_from?: string
+          valid_to?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "occupation_demand_occupation_id_fkey"
+            columns: ["occupation_id"]
+            isOneToOne: false
+            referencedRelation: "occupation"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pathway: {
         Row: {
           active: boolean
@@ -906,6 +1000,55 @@ export type Database = {
             columns: ["university_id"]
             isOneToOne: false
             referencedRelation: "university"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      programme_occupation: {
+        Row: {
+          created_at: string
+          occupation_id: string
+          programme_id: string
+          rationale: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          suggested_by: string
+        }
+        ComputedFields: never
+        Insert: {
+          created_at?: string
+          occupation_id: string
+          programme_id: string
+          rationale?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          suggested_by: string
+        }
+        Update: {
+          created_at?: string
+          occupation_id?: string
+          programme_id?: string
+          rationale?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          suggested_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "programme_occupation_occupation_id_fkey"
+            columns: ["occupation_id"]
+            isOneToOne: false
+            referencedRelation: "occupation"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "programme_occupation_programme_id_fkey"
+            columns: ["programme_id"]
+            isOneToOne: false
+            referencedRelation: "programme"
             referencedColumns: ["id"]
           },
         ]
@@ -1797,6 +1940,52 @@ export type Database = {
           source_url?: string
           updated_at?: string
           value?: NonNullable<Json>
+        }
+        Relationships: []
+      }
+      work_permit_field: {
+        Row: {
+          category: string
+          code: string
+          confidence: Database["public"]["Enums"]["confidence_level"]
+          country: Database["public"]["Enums"]["country_code"]
+          created_at: string
+          eligible_from: string
+          eligible_to: string | null
+          id: string
+          last_verified_at: string
+          source_url: string
+          title: string
+          updated_at: string
+        }
+        ComputedFields: never
+        Insert: {
+          category: string
+          code: string
+          confidence: Database["public"]["Enums"]["confidence_level"]
+          country: Database["public"]["Enums"]["country_code"]
+          created_at?: string
+          eligible_from: string
+          eligible_to?: string | null
+          id?: string
+          last_verified_at: string
+          source_url: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          code?: string
+          confidence?: Database["public"]["Enums"]["confidence_level"]
+          country?: Database["public"]["Enums"]["country_code"]
+          created_at?: string
+          eligible_from?: string
+          eligible_to?: string | null
+          id?: string
+          last_verified_at?: string
+          source_url?: string
+          title?: string
+          updated_at?: string
         }
         Relationships: []
       }

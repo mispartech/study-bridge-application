@@ -33,12 +33,12 @@ export const SIGNALS = {
   work_permit_route: {
     label: "Leads to a work permit",
     description: "The programme's field and institution qualify for a post-study work permit.",
-    available: false,
+    available: true,
   },
   in_demand: {
     label: "In-demand career",
     description: "The programme leads to an occupation the region is short of.",
-    available: false,
+    available: true,
   },
   licensing_path: {
     label: "Route to a licence",
