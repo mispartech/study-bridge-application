@@ -25,6 +25,7 @@ const englishTest = z.object({
   test: z.string(),
   scale: z.string().nullish(),
   overall_min: z.number(),
+  subscore_min: z.number().nullish(),
 })
 
 const record = z
@@ -184,7 +185,7 @@ export function toRows(input: unknown) {
       pte_min: score("PTE"),
       toefl_entries: tests
         .filter((t) => t.test === "TOEFL_iBT")
-        .map((t) => ({ scale: t.scale ?? "0-120", overall_min: t.overall_min })),
+        .map((t) => ({ scale: t.scale ?? "0-120", overall_min: t.overall_min, subscore_min: t.subscore_min ?? null })),
       english_waiver_text: r.requirement.english_waiver_text ?? null,
       waec_english_accepted: r.requirement.waec_english_accepted ?? false,
       waec_min_grade: r.requirement.waec_min_grade ?? null,

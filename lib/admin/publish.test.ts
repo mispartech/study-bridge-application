@@ -30,7 +30,7 @@ const record = () => ({
     min_uk_class: "upper_second",
     english_tests: [
       { test: "IELTS", overall_min: 6.5 },
-      { test: "TOEFL_iBT", scale: "0-120", overall_min: 88 },
+      { test: "TOEFL_iBT", scale: "0-120", overall_min: 88, subscore_min: 20 },
     ],
     gre_required: "not_required",
     gmat_required: "unknown",
@@ -53,7 +53,7 @@ describe("toRows", () => {
     expect(rows.fees[0]).toMatchObject({ tuition_per_year_minor: 2_850_000, application_fee_minor: 5000 })
     expect(rows.requirement).toMatchObject({
       ielts_min: 6.5,
-      toefl_entries: [{ scale: "0-120", overall_min: 88 }],
+      toefl_entries: [{ scale: "0-120", overall_min: 88, subscore_min: 20 }],
       gre_status: "not_required",
       gmat_status: null,
     })
