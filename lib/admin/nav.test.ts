@@ -11,7 +11,14 @@ describe("admin navigation per role", () => {
     expect(labels("admin")).toEqual({
       Monitor: ["Overview", "Alerts"],
       Students: ["Users", "Emailed reports", "Suggestions and feedback"],
-      "Content and data": ["Review queue", "Error reports", "Visa rules", "Exchange rates", "Flights and health"],
+      "Content and data": [
+        "Review queue",
+        "Error reports",
+        "Funding",
+        "Visa rules",
+        "Exchange rates",
+        "Flights and health",
+      ],
       Money: ["Payments"],
       AI: ["AI usage", "Advisor monitor"],
       System: ["Settings", "Pathways", "Audit log", "System", "Diagnostics"],
@@ -29,7 +36,14 @@ describe("admin navigation per role", () => {
   it("gives data editors their desk and the content pages only", () => {
     expect(labels("data_editor")).toEqual({
       Monitor: ["Home"],
-      "Content and data": ["Review queue", "Error reports", "Visa rules", "Exchange rates", "Flights and health"],
+      "Content and data": [
+        "Review queue",
+        "Error reports",
+        "Funding",
+        "Visa rules",
+        "Exchange rates",
+        "Flights and health",
+      ],
     })
   })
 

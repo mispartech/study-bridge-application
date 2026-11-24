@@ -1,7 +1,7 @@
 import { bandIndex, normaliseAcademics } from "./academics"
 import { ruleOn, toNgn, visaApplicationDate } from "./cost"
 import type { Tables } from "@/lib/db/database.types"
-import { workMonthsFor } from "./levels"
+import { levelOf, workMonthsFor } from "./levels"
 import { goalFit, type SignalKey, type SignalValues } from "./pathways"
 import type { Academics, Band, Bundle, Catalogue, Cost, MatchOptions, MatchProfile, ScoreBreakdown } from "./types"
 
@@ -106,6 +106,11 @@ function locationFit(bundle: Bundle, cost: Cost, profile: MatchProfile) {
 }
 
 /** Open scholarships this student can apply for on this programme. */
+/**
+ * Funding this student can count on for this programme: open to international students (stated, never assumed),
+ * available on admission rather than only after classes start, and matching the programme's country, region,
+ * institution, level and field, and the student's nationality and grades.
+ */
 export function eligibleScholarships(
   { programme, university }: Bundle,
   profile: MatchProfile,
@@ -114,9 +119,15 @@ export function eligibleScholarships(
   { now, demoMode }: MatchOptions
 ) {
   const today = now.toISOString().slice(0, 10)
+  const level = levelOf(programme)
   return catalogue.scholarships.filter(
     (s) =>
       (demoMode || !s.is_demo) &&
+      (s.open_to_international === "yes" || s.open_to_international === "limited") &&
+      (s.eligible_from ?? "admission") === "admission" &&
+      (!s.university_id || s.university_id === university.id) &&
+      (!s.regions?.length || s.regions.includes(university.region)) &&
+      (!s.levels?.length || s.levels.includes(level)) &&
       (s.deadline === null || s.deadline > today) &&
       (s.countries.length === 0 || s.countries.includes(university.country)) &&
       (s.fields.length === 0 || s.fields.includes(programme.field)) &&
@@ -138,7 +149,8 @@ function scholarshipFit(
   const { demoMode } = options
   if (!fee) return 0
   const eligible = eligibleScholarships(bundle, profile, academics, catalogue, options)
-  if (eligible.some((s) => s.amount_minor === null)) return 1 // full or tuition cover with no fixed amount
+  // Full or tuition cover with no fixed amount or share of tuition.
+  if (eligible.some((s) => s.amount_minor === null && !s.percent_of_tuition)) return 1
   const halfTuition = toNgn(
     BigInt(fee.tuition_per_year_minor) / 2n,
     fee.currency,
@@ -147,10 +159,11 @@ function scholarshipFit(
     demoMode
   )
   if (!halfTuition) return 0
-  const total = eligible.reduce(
-    (sum, s) => sum + (toNgn(BigInt(s.amount_minor!), s.currency!, "official", catalogue.fxRates, demoMode) ?? 0n),
-    0n
-  )
+  const yearlyTuition = toNgn(BigInt(fee.tuition_per_year_minor), fee.currency, "official", catalogue.fxRates, demoMode)
+  const total = eligible.reduce((sum, s) => {
+    if (s.percent_of_tuition) return sum + ((yearlyTuition ?? 0n) * BigInt(s.percent_of_tuition)) / 100n
+    return sum + (toNgn(BigInt(s.amount_minor!), s.currency!, "official", catalogue.fxRates, demoMode) ?? 0n)
+  }, 0n)
   return Math.min(1, Number((total * 1000n) / halfTuition) / 1000)
 }
 

@@ -19,6 +19,7 @@ import {
   Mail,
   Menu,
   MessageSquareText,
+  PiggyBank,
   Plane,
   Route,
   ScrollText,
@@ -58,6 +59,7 @@ const ICONS: Record<NavIcon, LucideIcon> = {
   system: Server,
   diagnostics: Stethoscope,
   pathways: Route,
+  funding: PiggyBank,
 }
 
 type Staff = { email: string; role: string }

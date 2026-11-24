@@ -20,6 +20,7 @@ const PAGES = [
   ["/admin/feedback", "feedback"],
   ["/admin/review", "review"],
   ["/admin/reports", "error-reports"],
+  ["/admin/funding", "funding"],
   ["/admin/visa-rules", "visa-rules"],
   ["/admin/fx", "exchange-rates"],
   ["/admin/estimates", "flights-and-health"],

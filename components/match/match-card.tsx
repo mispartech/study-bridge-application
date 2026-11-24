@@ -100,6 +100,16 @@ export function MatchCard({
             {card.level_label}
           </Chip>
         )}
+        {card.funding === "yes" && (
+          <Chip size="sm" variant="success" data-testid="funded-chip">
+            Funded
+          </Chip>
+        )}
+        {card.funding === "limited" && (
+          <Chip size="sm" variant="warning" data-testid="funded-chip">
+            Funding (few international places)
+          </Chip>
+        )}
         {card.has_coop && <Chip size="sm">Co-op or placement</Chip>}
         {card.flags.includes("related_field") && <Chip size="sm">Related field</Chip>}
         {card.flags.includes("check_test_requirement") && <Chip size="sm">Check test requirement</Chip>}

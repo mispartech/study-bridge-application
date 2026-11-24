@@ -178,6 +178,8 @@ export type RankedProgramme = {
   flags: MatchFlag[]
   /** Signals that raised this programme for the student's goals, for "ranked up for your goals". */
   goal_signals?: SignalKey[]
+  /** Funding this student can count on before arriving: "limited" when places for international students are few. */
+  funding?: "yes" | "limited" | null
 }
 
 export type RestrictedProgramme = { bundle: Bundle; reason: string; source_url: string; review_due: string | null }

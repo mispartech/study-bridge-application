@@ -62,6 +62,8 @@ export type CardView = ProgrammeSummary & {
   flags: RankedProgramme["flags"]
   /** Why it ranked higher for the student's goals, in words ("Work placement or co-op"). */
   goal_reasons: string[]
+  /** Funding open to this student on admission; "limited" is labelled as such. */
+  funding: "yes" | "limited" | null
   start_term: string
   start_month: string | null
   next_deadline: { label: string; date: string }
@@ -175,6 +177,7 @@ function presentCard(r: RankedProgramme, catalogue: Catalogue, now: Date, schola
     group: r.group,
     flags: r.flags,
     goal_reasons: (r.goal_signals ?? []).slice(0, 3).map((s) => SIGNALS[s].label),
+    funding: r.funding ?? null,
     start_term: r.intake.start_term,
     start_month: r.intake.start_month,
     next_deadline: r.next_deadline,

@@ -24,6 +24,7 @@ export type NavIcon =
   | "system"
   | "diagnostics"
   | "pathways"
+  | "funding"
 
 export type NavItem = { href: string; label: string; permission: Permission | null; icon: NavIcon }
 export type NavGroup = { key: string; label: string; items: NavItem[] }
@@ -57,6 +58,7 @@ export const NAV: readonly NavGroup[] = [
     items: [
       { href: "/admin/review", label: "Review queue", permission: "content", icon: "review" },
       { href: "/admin/reports", label: "Error reports", permission: "content", icon: "flag" },
+      { href: "/admin/funding", label: "Funding", permission: "content", icon: "funding" },
       { href: "/admin/visa-rules", label: "Visa rules", permission: "content", icon: "passport" },
       { href: "/admin/fx", label: "Exchange rates", permission: "content", icon: "currency" },
       { href: "/admin/estimates", label: "Flights and health", permission: "content", icon: "plane" },

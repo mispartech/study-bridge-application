@@ -849,6 +849,49 @@ test.describe("staff roles and two-factor", () => {
     }
   })
 
+  test("a data editor adds funding, which is audited and kept from students unless open to them", async ({ page }) => {
+    test.setTimeout(120_000)
+    const userId = await staffAccount(page, "data_editor")
+    await signInAs(page, userId)
+    const name = `E2E funding ${userId.slice(0, 8)}`
+    try {
+      await page.goto("/admin/funding")
+      const form = page.getByTestId("funding-form").first()
+      await form.getByLabel("Name", { exact: true }).fill(name)
+      await form.getByLabel("Funder", { exact: true }).fill("E2E College")
+      // Not open to international students, so no student is ever offered it while the test runs.
+      await form.getByLabel("Open to international students?").selectOption("no")
+      await form.getByLabel("Amount a year").fill("1500")
+      await form.getByLabel("Currency").selectOption("CAD")
+      await form.getByLabel("Link students use (funder's page)").fill("https://www.example.org/award")
+      await form.getByLabel("Source checked").fill("https://www.example.org/award")
+      await form.getByRole("button", { name: "Add funding" }).click()
+      await expect(form.getByRole("status")).toContainText("Saved", { timeout: 20_000 })
+      const row = page.getByTestId("funding-row").filter({ hasText: name })
+      await expect(row).toContainText("Not open to international")
+
+      const { data: saved } = await admin
+        .from("scholarship")
+        .select("id, amount_minor, currency, open_to_international, is_demo")
+        .eq("name", name)
+        .single()
+      expect(saved).toMatchObject({
+        amount_minor: 150_000,
+        currency: "CAD",
+        open_to_international: "no",
+        is_demo: false,
+      })
+      const { data: audited } = await admin
+        .from("staff_audit")
+        .select("action")
+        .eq("target_id", saved!.id)
+        .eq("action", "funding_changed")
+      expect(audited).toHaveLength(1)
+    } finally {
+      await admin.from("scholarship").delete().eq("name", name)
+    }
+  })
+
   test("the phone menu opens, moves between pages and closes", async ({ page }, info) => {
     test.skip(info.project.name !== "mobile-360", "phone layout only")
     test.setTimeout(90_000)
@@ -879,6 +922,7 @@ const ADMIN_PAGES = [
   ["/admin/feedback", "Suggestions and feedback"],
   ["/admin/review", "Review queue"],
   ["/admin/reports", "Error reports"],
+  ["/admin/funding", "Funding"],
   ["/admin/visa-rules", "Visa rules"],
   ["/admin/fx", "Exchange rates"],
   ["/admin/estimates", "Flights and health cover"],

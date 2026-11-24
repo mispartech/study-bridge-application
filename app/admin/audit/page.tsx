@@ -37,6 +37,7 @@ const ACTIONS = [
   "email_blocked",
   "refund_issued",
   "pathway_changed",
+  "funding_changed",
   "system_cleanup_role_removed",
   "system_cleanup_account_deleted",
 ] as const

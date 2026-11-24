@@ -116,7 +116,15 @@ Admin Phases 2–3 (alerts, content hub), then 7–9.
 
 ## Status
 
-- Step C: code built 23 Nov 2026; data pending.
+- Step D: built 24 Nov 2026; data pending.
+  - **Built:**
+    - the `scholarship` table, extended: funding type, international eligibility, when it's available (on admission or after classes start), automatic award, levels, regions, one institution, share of tuition, renewable
+    - matching counts only funding that is stated as open to international students, available on admission, and matching the programme's institution, region and level
+    - a "Funded" chip on results cards ("Funding (few international places)" when limited)
+    - the pathway signal for funding follows the same rules
+    - Admin → Content and data → Funding: add and edit records (saving marks them verified), deadlines highlighted, every change audited, and an institution's own funding must link to its official site
+  - **Data still to enter:** 10 records from official pages. Records that don't state international eligibility stay hidden from students.
+- Step C: code built 23 Nov 2026; 8 college programmes in review (Seneca, Centennial, NSCC).
   - **Built:**
     - programme `level` and `cip_code`; institution type; per-institution PGWP eligibility (unknown until checked, with source and date)
     - college entry by prior qualification

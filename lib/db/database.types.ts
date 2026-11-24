@@ -1225,66 +1225,101 @@ export type Database = {
       scholarship: {
         Row: {
           amount_minor: number | null
+          automatic: boolean
           confidence: Database["public"]["Enums"]["confidence_level"]
           countries: Database["public"]["Enums"]["country_code"][]
           coverage: string
           created_at: string
           currency: string | null
           deadline: string | null
+          eligible_from: string
           eligible_nationalities: unknown[]
           fields: Database["public"]["Enums"]["field_code"][]
           funder: string
+          funding_type: string
           id: string
           is_demo: boolean
           last_verified_at: string
+          levels: Database["public"]["Enums"]["programme_level"][]
           min_uk_class: Database["public"]["Enums"]["uk_class_band"] | null
           name: string
+          open_to_international: string | null
+          percent_of_tuition: number | null
+          regions: string[]
+          renewable: boolean
           source_url: string
+          university_id: string | null
           updated_at: string
           url: string
         }
         ComputedFields: never
         Insert: {
           amount_minor?: number | null
+          automatic?: boolean
           confidence: Database["public"]["Enums"]["confidence_level"]
           countries?: Database["public"]["Enums"]["country_code"][]
           coverage: string
           created_at?: string
           currency?: string | null
           deadline?: string | null
+          eligible_from?: string
           eligible_nationalities?: unknown[]
           fields?: Database["public"]["Enums"]["field_code"][]
           funder: string
+          funding_type?: string
           id?: string
           is_demo?: boolean
           last_verified_at: string
+          levels?: Database["public"]["Enums"]["programme_level"][]
           min_uk_class?: Database["public"]["Enums"]["uk_class_band"] | null
           name: string
+          open_to_international?: string | null
+          percent_of_tuition?: number | null
+          regions?: string[]
+          renewable?: boolean
           source_url: string
+          university_id?: string | null
           updated_at?: string
           url: string
         }
         Update: {
           amount_minor?: number | null
+          automatic?: boolean
           confidence?: Database["public"]["Enums"]["confidence_level"]
           countries?: Database["public"]["Enums"]["country_code"][]
           coverage?: string
           created_at?: string
           currency?: string | null
           deadline?: string | null
+          eligible_from?: string
           eligible_nationalities?: unknown[]
           fields?: Database["public"]["Enums"]["field_code"][]
           funder?: string
+          funding_type?: string
           id?: string
           is_demo?: boolean
           last_verified_at?: string
+          levels?: Database["public"]["Enums"]["programme_level"][]
           min_uk_class?: Database["public"]["Enums"]["uk_class_band"] | null
           name?: string
+          open_to_international?: string | null
+          percent_of_tuition?: number | null
+          regions?: string[]
+          renewable?: boolean
           source_url?: string
+          university_id?: string | null
           updated_at?: string
           url?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "scholarship_university_id_fkey"
+            columns: ["university_id"]
+            isOneToOne: false
+            referencedRelation: "university"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       search_log: {
         Row: {

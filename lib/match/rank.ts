@@ -132,7 +132,8 @@ export function rank(profile: MatchProfile, catalogue: Catalogue, options: Match
       const { goal_signals, ...scores } = fitScore(bundle, outcome, profile, academics, catalogue, options)
       const { cost, intake, next_deadline, reach, flags } = outcome
       const group = groupFor(scores.fit, reach, cost)
-      passed.push({ bundle, scores, group, reach, cost, intake, next_deadline, flags, goal_signals })
+      const funding = fundingStatus(eligibleScholarships(bundle, profile, academics, catalogue, options))
+      passed.push({ bundle, scores, group, reach, cost, intake, next_deadline, flags, goal_signals, funding })
     }
   }
 
@@ -152,3 +153,10 @@ export function rank(profile: MatchProfile, catalogue: Catalogue, options: Match
 }
 
 export { TOP_N }
+
+/** "yes" when some funding is open to international students, "limited" when it is only open to a few. */
+export function fundingStatus(eligible: { open_to_international: string | null }[]): "yes" | "limited" | null {
+  if (eligible.some((s) => s.open_to_international === "yes")) return "yes"
+  if (eligible.some((s) => s.open_to_international === "limited")) return "limited"
+  return null
+}

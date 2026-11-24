@@ -28,6 +28,7 @@ export type AuditAction =
   | "report_deleted"
   | "email_blocked"
   | "pathway_changed"
+  | "funding_changed"
 
 /**
  * Records one staff action with what changed. The table refuses edits and deletes. Failing to record is
