@@ -68,6 +68,8 @@ class University(_M):
 class Programme(_M):
     title: str
     degree_type: Literal["MSc", "MA", "MEng", "MBA", "MRes", "MPH", "LLM", "MPS", "Other"]
+    level: Literal["masters", "postgraduate_certificate", "graduate_diploma", "diploma"] | None = None
+    cip_code: str | None = Field(default=None, pattern=r"^\d{2}\.\d{4}$")
     field: Literal["computer_data_science", "public_health", "business_finance", "engineering", "project_management",
                    "law", "nursing", "mental_health", "other"]
     duration_months: int | None = Field(ge=6, le=36)
@@ -94,6 +96,7 @@ class Requirement(_M):
     academic_rule_text: str | None
     min_uk_class: Literal["first", "upper_second", "lower_second", "third", "pass"] | None
     min_gpa4: float | None = Field(ge=0, le=4)
+    min_prior_education: Literal["secondary", "diploma", "degree"] | None = None
     considers_lower_with_experience: bool | None = None
     nigeria_rule: str | None
     english_tests: list[EnglishTest]

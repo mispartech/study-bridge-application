@@ -3,6 +3,9 @@ import type { Currency, FxRates } from "@/lib/money"
 import { averageConfidence, dataConfidence } from "./data-confidence"
 import { fieldLabel } from "./labels"
 import { isOfficialUrl } from "./official-url"
+import type { CareerDemand } from "./careers"
+import { LEVEL_LABEL, levelOf, type Level } from "./levels"
+import { SIGNALS } from "./pathways"
 import type { Bundle, Catalogue, Cost, MatchProfile, MatchResult, RankedProgramme } from "./types"
 
 const DAY_MS = 86_400_000
@@ -28,6 +31,9 @@ export type CostView = {
 }
 
 export type ProgrammeSummary = {
+  /** Master's or a college credential, so a certificate is never mistaken for a degree. */
+  level: Level
+  level_label: string
   id: string
   title: string
   university: string
@@ -55,6 +61,13 @@ export type CardView = ProgrammeSummary & {
   fit: number
   group: RankedProgramme["group"]
   flags: RankedProgramme["flags"]
+  /** Why it ranked higher for the student's goals, in words ("Work placement or co-op"). */
+  goal_reasons: string[]
+  /** Funding open to this student on admission; "limited" is labelled as such. */
+  funding: "yes" | "limited" | null
+  /** The first current demand record; the programme page lists them all. */
+  demand: CareerDemand[]
+  work_permit_source: string | null
   start_term: string
   start_month: string | null
   next_deadline: { label: string; date: string }
@@ -140,6 +153,8 @@ export function presentProgramme(bundle: Bundle, catalogue: Catalogue, now: Date
     city: university.city,
     country: university.country,
     degree: programme.degree_type,
+    level: levelOf(programme),
+    level_label: LEVEL_LABEL[levelOf(programme)],
     field: fieldLabel(programme.field),
     duration_months: programme.duration_months,
     has_coop: programme.has_coop_or_placement,
@@ -165,6 +180,10 @@ function presentCard(r: RankedProgramme, catalogue: Catalogue, now: Date, schola
     fit: r.scores.fit,
     group: r.group,
     flags: r.flags,
+    goal_reasons: (r.goal_signals ?? []).slice(0, 3).map((s) => SIGNALS[s].label),
+    funding: r.funding ?? null,
+    demand: (r.demand ?? []).slice(0, 1),
+    work_permit_source: r.work_permit_source ?? null,
     start_term: r.intake.start_term,
     start_month: r.intake.start_month,
     next_deadline: r.next_deadline,

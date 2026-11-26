@@ -73,6 +73,13 @@ Rules:
    are accepted, and null when they are silent. List the checks the pages require before starting in
    checks_required: "police" for a criminal record or DBS check, "health" for occupational health clearance,
    "immunisation" for vaccinations.
+15. Level. Set level to "masters" for a Master's degree. For a college credential use the page's own name:
+   "postgraduate_certificate" for a postgraduate or graduate certificate (e.g. an Ontario College Graduate
+   Certificate), "graduate_diploma" for a graduate or post-degree diploma, "diploma" for a diploma or advanced
+   diploma open to school leavers. Use null when the pages don't say. Copy cip_code only when the pages print the
+   programme's 6-digit CIP code (NN.NNNN); never look one up. For college programmes that ask for a prior
+   qualification rather than a degree class or GPA, set min_prior_education to "degree", "diploma" or
+   "secondary" as stated, and leave min_uk_class and min_gpa4 null.
 
 Target programme title: {{target_title}}
 Target cycle: {{target_cycle}}
@@ -169,6 +176,24 @@ Pages:
             "MPS",
             "Other"
           ]
+        },
+        "level": {
+          "enum": [
+            "masters",
+            "postgraduate_certificate",
+            "graduate_diploma",
+            "diploma",
+            null
+          ],
+          "description": "Master's degree, or the college credential the page names (e.g. Ontario College Graduate Certificate = postgraduate_certificate). Null when the page doesn't say."
+        },
+        "cip_code": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^\\d{2}\\.\\d{4}$",
+          "description": "The programme's 6-digit CIP code (NN.NNNN) only when the pages print it."
         },
         "field": {
           "enum": [
@@ -273,6 +298,15 @@ Pages:
           ],
           "minimum": 0,
           "maximum": 4
+        },
+        "min_prior_education": {
+          "enum": [
+            "secondary",
+            "diploma",
+            "degree",
+            null
+          ],
+          "description": "The qualification a college programme needs first (e.g. 'a university degree' = degree). Null when not stated."
         },
         "considers_lower_with_experience": {
           "type": [

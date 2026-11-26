@@ -9,7 +9,7 @@ export const MODEL_CHOICES = [
   "anthropic:claude-sonnet-5-5",
 ] as const
 
-export const AI_TASKS = ["advisor", "explanations", "extraction"] as const
+export const AI_TASKS = ["advisor", "explanations", "extraction", "occupations"] as const
 
 const price = z.object({
   /** US dollars per million tokens, as published by the provider. */

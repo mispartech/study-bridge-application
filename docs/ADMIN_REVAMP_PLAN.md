@@ -69,7 +69,7 @@ The student timeline stays under `users.read`. Saved views are personal and need
 | 8 | Students insight | Segments, journey stages, cohort retention and user timelines |
 | 9 | Search, saved views and polish | Global search, saved views, notification preferences and phone polish |
 
-Phases 4–6 deliver the Version 1 product additions. They come before ingestion control, because the first batches can go through the existing pipeline and the new review queue. Phase 7 is what lets them scale.
+**Update 23 Nov 2026:** Phases 4–6 are replaced by Steps A–F of `docs/CANADA_V1_PLAN.md` (goals and pathways, colleges, funding, priority disciplines, life after study), which run **before** Phases 2–3. Phases 4–6 deliver the Version 1 product additions. They come before ingestion control, because the first batches can go through the existing pipeline and the new review queue. Phase 7 is what lets them scale.
 
 ---
 
@@ -485,4 +485,4 @@ Phases 4–6 deliver the Version 1 product additions. They come before ingestion
 
 ## Status
 
-Update this line as phases ship: `Phase 0: done 23 Nov 2026, decisions agreed (see docs/ADMIN_DECISIONS.md)`.
+Update this line as phases ship: `Phase 0: done 23 Nov 2026, decisions agreed (see docs/ADMIN_DECISIONS.md). Phase 1: done 23 Nov 2026 (row selection in DataTable moves to Phase 3, where bulk actions first use it).`

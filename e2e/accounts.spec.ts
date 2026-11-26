@@ -3,6 +3,8 @@ import { createHmac } from "node:crypto"
 
 import { expect, test, type Page } from "@playwright/test"
 
+import { totp } from "./totp"
+
 // Settings come from .env.test.local (development project), loaded and checked by playwright.config.ts.
 
 const BASE = "http://localhost:3100"
@@ -319,12 +321,10 @@ test.describe("analytics follow consent", () => {
     await page.getByRole("button", { name: "UK", exact: true }).click()
     await page.getByRole("button", { name: "See my matches" }).click()
     await expect(page.getByTestId("quick-result").first()).toBeVisible({ timeout: 15_000 })
-    await page
-      .context()
-      .addCookies([
-        { name: "sb-profile", value: encodeURIComponent(JSON.stringify(worked)), url: BASE },
-        { name: "sb-cookies", value: "all", url: BASE },
-      ])
+    await page.context().addCookies([
+      { name: "sb-profile", value: encodeURIComponent(JSON.stringify(worked)), url: BASE },
+      { name: "sb-cookies", value: "all", url: BASE },
+    ])
     await page.goto("/discover")
     await expect(page.locator('[data-loaded="true"]')).toBeVisible({ timeout: 20_000 })
     expect(events).toEqual([])
@@ -524,12 +524,10 @@ test.describe("emailed report", () => {
   test("a visitor emails their report, and its link signs them in with their results", async ({ page }) => {
     test.setTimeout(90_000)
     const email = `e2e-report-${crypto.randomUUID().slice(0, 8)}@example.com`
-    await page
-      .context()
-      .addCookies([
-        { name: "sb-profile", value: encodeURIComponent(JSON.stringify(worked)), url: BASE },
-        { name: "sb-cookies", value: "all", url: BASE },
-      ])
+    await page.context().addCookies([
+      { name: "sb-profile", value: encodeURIComponent(JSON.stringify(worked)), url: BASE },
+      { name: "sb-cookies", value: "all", url: BASE },
+    ])
     await page.goto("/discover")
     await expect(page.locator('[data-loaded="true"]')).toBeVisible({ timeout: 20_000 })
     await page.getByRole("button", { name: "Email me this report" }).click()
@@ -618,19 +616,6 @@ async function passMfa(page: Page) {
   await expect(page).toHaveURL(/\/admin$/, { timeout: 20_000 })
 }
 
-/** RFC 6238 time-based code, as an authenticator app computes it (SHA-1, 30 seconds, 6 digits). */
-function totp(base32: string, at = Date.now()) {
-  const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567"
-  let bits = ""
-  for (const c of base32.replace(/=+$/, "").toUpperCase()) bits += alphabet.indexOf(c).toString(2).padStart(5, "0")
-  const key = Buffer.from(bits.match(/.{8}/g)!.map((b) => parseInt(b, 2)))
-  const counter = Buffer.alloc(8)
-  counter.writeBigUInt64BE(BigInt(Math.floor(at / 30_000)))
-  const hash = createHmac("sha1", key).update(counter).digest()
-  const offset = hash[hash.length - 1]! & 0xf
-  return String((hash.readUInt32BE(offset) & 0x7fffffff) % 1_000_000).padStart(6, "0")
-}
-
 /** A signed-in, consented account with the given staff role. */
 async function staffAccount(page: Page, role: "support" | "data_editor" | "admin") {
   const userId = await signIn(page, "/admin")
@@ -654,14 +639,17 @@ test.describe("staff roles and two-factor", () => {
     expect(blocked.status()).toBe(403)
     expect(await blocked.json()).toMatchObject({ code: "mfa_required" })
     await passMfa(page)
-    await expect(page.getByRole("navigation", { name: "Admin" })).toContainText("Settings")
+    await expect(await adminNav(page)).toContainText("Settings")
   })
 
   test("support sees users but can't change roles or edit content", async ({ page }) => {
     test.setTimeout(90_000)
     const userId = await staffAccount(page, "support")
     await signInAs(page, userId)
-    const nav = page.getByRole("navigation", { name: "Admin" })
+    await expect(page.getByRole("heading", { name: "Support desk", level: 1 })).toBeVisible()
+    await expect(page.getByTestId("home-signups")).toBeVisible()
+    const nav = await adminNav(page)
+    await expect(nav.getByRole("heading")).toHaveText(["Monitor", "Students"])
     await expect(nav).toContainText("Users")
     await expect(nav).not.toContainText("Review queue")
     await page.goto("/admin/review")
@@ -695,7 +683,7 @@ test.describe("staff roles and two-factor", () => {
     created.push(target.user!.id)
     await page.goto(`/admin/users?q=${email}`)
     await expect(page.getByTestId("user-row")).toHaveCount(1)
-    await page.getByRole("link", { name: email }).click()
+    await page.getByTestId("user-row").getByRole("link", { name: email }).click()
     await page.getByLabel("Reason (needed to suspend or delete)").fill("e2e check")
     await page.getByRole("button", { name: "Suspend" }).click()
     await expect(page.getByTestId("suspended")).toBeVisible({ timeout: 20_000 })
@@ -723,16 +711,18 @@ test.describe("staff roles and two-factor", () => {
     test.setTimeout(300_000)
     const userId = await staffAccount(page, "admin")
     await signInAs(page, userId)
-    for (const [path, heading] of [
-      ["/admin/emailed-reports", "Emailed reports"],
-      ["/admin/feedback", "Suggestions and feedback"],
-      ["/admin/advisor", "Advisor monitor"],
-      ["/admin/payments", "Payments"],
-      ["/admin/system", "System"],
-      ["/admin/audit", "Audit log"],
-    ] as const) {
+    await expect(page.getByTestId("environment")).toHaveText("Local", { timeout: 20_000 })
+    for (const [path, heading] of ADMIN_PAGES) {
       await page.goto(path)
       await expect(page.getByRole("heading", { name: heading, level: 1 })).toBeVisible({ timeout: 20_000 })
+      // Inside the shell, with this page marked as the current one.
+      await expect(page.locator("#admin-main")).toBeVisible()
+      if (path !== "/admin/overview") {
+        await expect(page.locator(`#admin-sidebar nav a[href="${path}"]`)).toHaveAttribute("aria-current", "page")
+      }
+      // No sideways scrolling of the page itself, even on a 360px phone (wide tables become cards).
+      const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)
+      expect(overflow, `${path} scrolls sideways`).toBeLessThanOrEqual(0)
     }
 
     const email = `e2e-block-${crypto.randomUUID().slice(0, 8)}@example.com`
@@ -790,7 +780,10 @@ test.describe("staff roles and two-factor", () => {
     test.setTimeout(90_000)
     const userId = await staffAccount(page, "data_editor")
     await signInAs(page, userId)
-    const nav = page.getByRole("navigation", { name: "Admin" })
+    await expect(page.getByRole("heading", { name: "Content desk", level: 1 })).toBeVisible()
+    await expect(page.getByTestId("home-review-count")).toBeVisible()
+    const nav = await adminNav(page)
+    await expect(nav.getByRole("heading")).toHaveText(["Monitor", "Content and data"])
     await expect(nav).toContainText("Review queue")
     await expect(nav).not.toContainText("Users")
     await page.goto("/admin/users")
@@ -798,7 +791,226 @@ test.describe("staff roles and two-factor", () => {
     await page.goto("/admin/review")
     await expect(page.getByText("How often reviewers change each field")).toBeVisible()
   })
+
+  test("students and staff without two-factor are kept out of every admin page", async ({ page }) => {
+    test.setTimeout(300_000)
+    await signIn(page, "/discover")
+    await accept(page)
+    await expect(page).not.toHaveURL(/\/consent/, { timeout: 20_000 })
+    for (const path of ADMIN_ROUTES) {
+      await page.goto(path)
+      await expect(page.getByText(/could not be found|404/i).first(), `${path} opened for a student`).toBeVisible()
+      await expect(page.locator("#admin-sidebar")).toHaveCount(0)
+    }
+    const staffId = await staffAccount(page, "support")
+    await signInAs(page, staffId, { mfa: false })
+    for (const path of ADMIN_ROUTES) {
+      await page.goto(path)
+      await expect(page, `${path} opened without two-factor`).toHaveURL(/\/staff\/verify/)
+    }
+  })
+
+  test("an admin adds a pathway, and the change is audited", async ({ page }) => {
+    test.setTimeout(120_000)
+    const userId = await staffAccount(page, "admin")
+    await signInAs(page, userId)
+    // Switched off, so no real student is offered it while the test runs.
+    const key = `etoe_${userId.slice(0, 8).replace(/[^a-z]/g, "x")}`
+    try {
+      await page.goto("/admin/pathways")
+      await expect(page.getByTestId("pathway-preview")).toBeVisible({ timeout: 20_000 })
+      const form = page.getByTestId("pathway-new")
+      await form.getByLabel("Key (lowercase, underscores)").fill(key)
+      await form.getByLabel("Label students see").fill("E2E pathway")
+      await form.getByLabel("Students can choose it").uncheck()
+      await form.getByLabel("Weight for Matches your course").fill("60")
+      await form.getByLabel("Weight for Work placement or co-op").fill("40")
+      await form.getByRole("button", { name: "Add pathway" }).click()
+      await expect(form.getByRole("status")).toContainText("Saved", { timeout: 20_000 })
+      await expect(page.getByTestId(`pathway-${key}`)).toContainText("Switched off", { timeout: 20_000 })
+
+      const { data: signals } = await admin.from("pathway_signal").select("signal, weight").eq("pathway_key", key)
+      expect(signals?.sort((a, b) => a.signal.localeCompare(b.signal))).toEqual([
+        { signal: "field_match", weight: 60 },
+        { signal: "placement", weight: 40 },
+      ])
+      const { data: audited } = await admin
+        .from("staff_audit")
+        .select("action, after")
+        .eq("target_id", key)
+        .eq("action", "pathway_changed")
+        .single()
+      expect(audited?.after).toMatchObject({ key, active: false })
+      // Not offered to students.
+      const offered = await page.request.get("/api/pathways")
+      expect(JSON.stringify(await offered.json())).not.toContain(key)
+    } finally {
+      await admin.from("pathway").delete().eq("key", key)
+    }
+  })
+
+  test("a data editor adds funding, which is audited and kept from students unless open to them", async ({ page }) => {
+    test.setTimeout(120_000)
+    const userId = await staffAccount(page, "data_editor")
+    await signInAs(page, userId)
+    const name = `E2E funding ${userId.slice(0, 8)}`
+    try {
+      await page.goto("/admin/funding")
+      const form = page.getByTestId("funding-form").first()
+      await form.getByLabel("Name", { exact: true }).fill(name)
+      await form.getByLabel("Funder", { exact: true }).fill("E2E College")
+      // Not open to international students, so no student is ever offered it while the test runs.
+      await form.getByLabel("Open to international students?").selectOption("no")
+      await form.getByLabel("Amount a year").fill("1500")
+      await form.getByLabel("Currency").selectOption("CAD")
+      await form.getByLabel("Link students use (funder's page)").fill("https://www.example.org/award")
+      await form.getByLabel("Source checked").fill("https://www.example.org/award")
+      await form.getByRole("button", { name: "Add funding" }).click()
+      await expect(form.getByRole("status")).toContainText("Saved", { timeout: 20_000 })
+      const row = page.getByTestId("funding-row").filter({ hasText: name })
+      await expect(row).toContainText("Not open to international")
+
+      const { data: saved } = await admin
+        .from("scholarship")
+        .select("id, amount_minor, currency, open_to_international, is_demo")
+        .eq("name", name)
+        .single()
+      expect(saved).toMatchObject({
+        amount_minor: 150_000,
+        currency: "CAD",
+        open_to_international: "no",
+        is_demo: false,
+      })
+      const { data: audited } = await admin
+        .from("staff_audit")
+        .select("action")
+        .eq("target_id", saved!.id)
+        .eq("action", "funding_changed")
+      expect(audited).toHaveLength(1)
+    } finally {
+      await admin.from("scholarship").delete().eq("name", name)
+    }
+  })
+
+  test("a data editor records an occupation with its demand, reviews a link, and each step is audited", async ({
+    page,
+  }, info) => {
+    test.setTimeout(150_000)
+    const userId = await staffAccount(page, "data_editor")
+    await signInAs(page, userId)
+    // A 99xxx code is never a real NOC (the second digit only goes to 5), linked only to a demo programme, so no real programme ever shows it.
+    const code = `99${String(Date.now()).slice(-2)}${info.project.name === "desktop" ? 1 : 2}`
+    const title = `E2E occupation ${code}`
+    try {
+      await page.goto("/admin/careers")
+      const form = page.getByTestId("occupation-form")
+      await form.getByLabel(/^Code/).fill(code)
+      await form.getByLabel("Occupation title").fill(title)
+      await form.getByLabel("Occupation source").fill("https://www.example.com/not-official")
+      await form.getByRole("button", { name: "Save occupation" }).click()
+      await expect(form.getByRole("status")).toContainText("official government", { timeout: 20_000 })
+      await form.getByLabel("Occupation source").fill("https://www.canada.ca/e2e")
+      await form.getByLabel(/^Demand wording/).fill("E2E demand")
+      await form.getByLabel(/^Province or region/).fill("Nowhere")
+      await form.getByLabel("Demand source").fill("https://www.canada.ca/e2e")
+      await form.getByLabel("Valid from").fill("2026-01-01")
+      await form.getByRole("button", { name: "Save occupation" }).click()
+      await expect(form.getByRole("status")).toContainText("Saved", { timeout: 20_000 })
+      await expect(page.getByTestId("demand-row").filter({ hasText: title })).toContainText("E2E demand")
+
+      const { data: occupation } = await admin.from("occupation").select("id").eq("code", code).single()
+      const { data: programme } = await admin.from("programme").select("id").eq("is_demo", true).limit(1).single()
+      await admin.from("programme_occupation").insert({
+        programme_id: programme!.id,
+        occupation_id: occupation!.id,
+        suggested_by: "ai",
+        rationale: "e2e",
+      })
+      await page.reload()
+      const suggestion = page.getByTestId("link-suggestion").filter({ hasText: title })
+      await suggestion.getByRole("checkbox").check()
+      await page.getByRole("button", { name: "Reject selected" }).click()
+      await expect(suggestion).toHaveCount(0, { timeout: 20_000 })
+      const { data: link } = await admin
+        .from("programme_occupation")
+        .select("status, reviewed_by")
+        .eq("occupation_id", occupation!.id)
+        .single()
+      expect(link).toEqual({ status: "rejected", reviewed_by: userId })
+      const { data: audited } = await admin
+        .from("staff_audit")
+        .select("action")
+        .eq("staff_id", userId)
+        .in("action", ["career_data_changed", "career_link_reviewed"])
+      expect(audited?.map((a) => a.action).sort()).toEqual(["career_data_changed", "career_link_reviewed"])
+    } finally {
+      await admin.from("occupation").delete().eq("code", code).eq("title", title)
+    }
+  })
+
+  test("the phone menu opens, moves between pages and closes", async ({ page }, info) => {
+    test.skip(info.project.name !== "mobile-360", "phone layout only")
+    test.setTimeout(90_000)
+    const userId = await staffAccount(page, "admin")
+    await signInAs(page, userId)
+    await expect(page.getByRole("navigation", { name: "Admin" })).toBeHidden()
+    await page.getByRole("button", { name: "Open menu" }).click()
+    const nav = page.getByRole("navigation", { name: "Admin" })
+    await nav.getByRole("link", { name: "Users" }).click()
+    await expect(page).toHaveURL(/\/admin\/users$/)
+    await expect(page.getByRole("heading", { name: "Users", level: 1 })).toBeVisible()
+    await expect(nav).toBeHidden()
+    // Escape closes it too.
+    await page.getByRole("button", { name: "Open menu" }).click()
+    await expect(nav).toBeVisible()
+    await page.keyboard.press("Escape")
+    await expect(nav).toBeHidden()
+  })
 })
+
+/** Every admin page with its heading, in sidebar order. */
+const ADMIN_PAGES = [
+  ["/admin", "Overview"],
+  ["/admin/alerts", "Alerts"],
+  ["/admin/overview", "Overview"],
+  ["/admin/users", "Users"],
+  ["/admin/emailed-reports", "Emailed reports"],
+  ["/admin/feedback", "Suggestions and feedback"],
+  ["/admin/review", "Review queue"],
+  ["/admin/reports", "Error reports"],
+  ["/admin/funding", "Funding"],
+  ["/admin/careers", "Careers and permits"],
+  ["/admin/institutions", "Institutions"],
+  ["/admin/visa-rules", "Visa rules"],
+  ["/admin/fx", "Exchange rates"],
+  ["/admin/estimates", "Flights and health cover"],
+  ["/admin/payments", "Payments"],
+  ["/admin/ai-usage", "AI usage"],
+  ["/admin/advisor", "Advisor monitor"],
+  ["/admin/settings", "Settings"],
+  ["/admin/pathways", "Pathways"],
+  ["/admin/audit", "Audit log"],
+  ["/admin/system", "System"],
+  ["/admin/diagnostics", "Diagnostics"],
+] as const
+
+/** Every admin page, including the detail pages (a made-up id still has to be refused first). */
+const ADMIN_ROUTES = [
+  ...ADMIN_PAGES.map(([path]) => path),
+  `/admin/users/${"0".repeat(8)}-0000-4000-8000-${"0".repeat(12)}`,
+  `/admin/review/${"0".repeat(8)}-0000-4000-8000-${"0".repeat(12)}`,
+]
+
+/** The admin sidebar. On a phone it is a slide-over menu, so open it first. */
+async function adminNav(page: Page) {
+  // Wait for the shell first: isVisible() doesn't wait, and the page may still be loading.
+  await expect(page.locator("#admin-main")).toBeVisible({ timeout: 20_000 })
+  const open = page.getByRole("button", { name: "Open menu" })
+  if (await open.isVisible()) await open.click()
+  const nav = page.getByRole("navigation", { name: "Admin" })
+  await expect(nav).toBeVisible()
+  return nav
+}
 
 function queued(run: string) {
   const domain = `e2e-${run}.ac.uk`

@@ -77,3 +77,41 @@
   --sb-track: color-mix(in srgb, var(--sb-ink) 14%, var(--sb-surface));
   --sb-scrim: rgb(0 0 0 / 0.6);
 }
+
+/*
+ * Admin tokens (docs/ADMIN_REVAMP_PLAN.md, Phase 1). Extend the brand tokens above for the staff console only:
+ * denser rows, chart series and alert severities. Severity text uses the AA-safe "strong" shades.
+ */
+:root {
+  --sb-admin-sidebar: 15rem;
+  --sb-admin-topbar: 3.5rem;
+  --sb-admin-row: 2.5rem;
+  --sb-admin-gap: 1rem;
+
+  --sb-chart-1: #5b4cf5;
+  --sb-chart-2: #ff7a59;
+  --sb-chart-3: #12b886;
+  --sb-chart-4: #f59f00;
+  --sb-chart-5: #228be6;
+  --sb-chart-6: #ae3ec9;
+  --sb-chart-grid: color-mix(in srgb, var(--sb-ink) 8%, var(--sb-surface));
+  --sb-chart-previous: color-mix(in srgb, var(--sb-ink) 30%, var(--sb-surface));
+
+  --sb-severity-info: var(--sb-primary-strong);
+  --sb-severity-info-tint: var(--sb-primary-tint);
+  --sb-severity-warning: var(--sb-warning-strong);
+  --sb-severity-warning-tint: var(--sb-warning-tint);
+  --sb-severity-critical: var(--sb-danger-strong);
+  --sb-severity-critical-tint: var(--sb-danger-tint);
+}
+
+.dark {
+  --sb-chart-1: #8b80ff;
+  --sb-chart-2: #ff8d70;
+  --sb-chart-3: #3dd6a3;
+  --sb-chart-4: #ffb938;
+  --sb-chart-5: #4dabf7;
+  --sb-chart-6: #da77f2;
+  --sb-chart-grid: color-mix(in srgb, var(--sb-ink) 10%, var(--sb-surface));
+  --sb-chart-previous: color-mix(in srgb, var(--sb-ink) 35%, var(--sb-surface));
+}

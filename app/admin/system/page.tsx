@@ -1,21 +1,51 @@
 import { connection } from "next/server"
 
+import { DataTable, type Column } from "@/components/admin/data-table"
+import { PageHeader } from "@/components/admin/page-header"
+import { StatusBadge } from "@/components/admin/status-badge"
 import { Card } from "@/components/ui/card"
 import { envStatus } from "@/lib/admin/env"
 import { requireStaff } from "@/lib/auth/staff-page"
 import { serviceClient } from "@/lib/db/service"
 import { emailLive } from "@/lib/email/send"
-import { cn } from "@/lib/utils"
+import type { SearchParams } from "@/lib/admin/table"
+import type { Json } from "@/lib/db/database.types"
 
 const nf = new Intl.NumberFormat("en-GB")
 const time = (iso: string | null) => (iso ? iso.slice(0, 16).replace("T", " ") : "—")
 /** ISO time `days` ago. Read per request, after connection(). */
 const daysAgo = (days: number) => new Date(Date.now() - days * 86_400_000).toISOString()
 
+type Run = {
+  id: number
+  job: string
+  started_at: string
+  finished_at: string | null
+  ok: boolean | null
+  summary: Json
+}
+
+const RUNS: Column<Run>[] = [
+  { key: "started", header: "Started (UTC)", nowrap: true, sort: (r) => r.started_at, cell: (r) => time(r.started_at) },
+  { key: "job", header: "Job", sort: (r) => r.job, cell: (r) => <strong>{r.job}</strong> },
+  {
+    key: "result",
+    header: "Result",
+    fixed: true,
+    cell: (r) => <StatusBadge tone={r.ok ? "success" : "danger"}>{r.ok ? "ok" : "failed"}</StatusBadge>,
+  },
+  {
+    key: "summary",
+    header: "Summary",
+    cell: (r) => <span className="font-mono text-xs break-all text-muted-foreground">{JSON.stringify(r.summary)}</span>,
+  },
+]
+
 /** Is everything running? Scheduled jobs, ingestion, email delivery and environment health. */
-export default async function Page() {
+export default async function Page({ searchParams }: { searchParams: Promise<SearchParams> }) {
   await connection()
   await requireStaff("settings")
+  const params = await searchParams
   const db = serviceClient()
   const week = daysAgo(7)
   const month = daysAgo(30)
@@ -38,26 +68,23 @@ export default async function Page() {
   const env = envStatus()
 
   return (
-    <div className="flex flex-col gap-4">
-      <h1 className="font-heading text-xl font-bold">System</h1>
+    <>
+      <PageHeader title="System" description="Scheduled jobs, email delivery, ingestion, errors and the environment." />
 
       <Card className="gap-2">
         <h2 className="font-heading text-base font-bold">Scheduled jobs</h2>
         <p className="text-xs text-muted-foreground">Reminders run daily at 07:00 UTC, exchange rates at 06:00 UTC.</p>
-        {(runs.data ?? []).length === 0 ? (
-          <p className="text-sm text-muted-foreground">No runs recorded yet.</p>
-        ) : (
-          <ul className="flex flex-col gap-1 text-sm">
-            {(runs.data ?? []).map((r) => (
-              <li key={r.id} data-testid="cron-run" className="flex flex-wrap gap-x-2">
-                <span className="text-muted-foreground tabular-nums">{time(r.started_at)}</span>
-                <strong>{r.job}</strong>
-                <span className={r.ok ? "text-success-strong" : "text-danger-strong"}>{r.ok ? "ok" : "failed"}</span>
-                <span className="text-xs text-muted-foreground">{JSON.stringify(r.summary)}</span>
-              </li>
-            ))}
-          </ul>
-        )}
+        <DataTable
+          label="Scheduled job runs"
+          columns={RUNS}
+          rows={runs.data ?? []}
+          rowKey={(r) => String(r.id)}
+          rowProps={() => ({ "data-testid": "cron-run" })}
+          path="/admin/system"
+          params={params}
+          minWidth="40rem"
+          empty="No runs recorded yet."
+        />
       </Card>
 
       <div className="grid gap-4 sm:grid-cols-2">
@@ -99,19 +126,14 @@ export default async function Page() {
         <ul className="grid gap-x-8 gap-y-1 text-sm sm:grid-cols-2">
           {env.map((e) => (
             <li key={e.name} data-testid="env-row" className="flex items-center gap-2">
-              <span
-                className={cn(
-                  "w-16 shrink-0 rounded-full px-2 py-0.5 text-center text-xs font-medium",
-                  e.set ? "bg-success/15 text-success-strong" : "bg-danger/15 text-danger-strong"
-                )}
-              >
+              <StatusBadge tone={e.set ? "success" : "danger"} className="w-16 justify-center">
                 {e.set ? "set" : "missing"}
-              </span>
+              </StatusBadge>
               <span className="min-w-0 font-mono text-xs break-all">{e.name}</span>
             </li>
           ))}
         </ul>
       </Card>
-    </div>
+    </>
   )
 }

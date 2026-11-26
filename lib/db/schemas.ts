@@ -91,6 +91,8 @@ export const studentProfileRow = z.object({
   weights: fitWeights,
   completeness: z.number().int().min(0).max(100),
   post_study_work: z.enum(["low", "medium", "high"]).nullable(),
+  goals: z.array(z.string().regex(/^[a-z][a-z_]{1,39}$/)).max(5),
+  level_preference: z.enum(["masters", "certificate", "either"]),
   professional_registration: z.enum(["none", "nurse", "other"]),
   campus_or_city: z.enum(["campus", "city", "either"]).nullable(),
   include_related_fields: z.boolean(),
@@ -138,6 +140,10 @@ export const universityRow = z.object({
   region: z.string().min(1),
   is_public: z.boolean(),
   dli_number: z.string().nullable(),
+  institution_type: z.enum(["university", "public_college", "private_college"]),
+  pgwp_eligible: z.enum(["yes", "no", "unknown"]),
+  pgwp_source_url: z.url().nullable(),
+  pgwp_checked_at: timestamp.nullable(),
   sponsor_licence: z.boolean(),
   sevp_certified: z.boolean(),
   ranking_band: z.string().nullable(),
@@ -152,6 +158,11 @@ export const programmeRow = z.object({
   university_id: uuid,
   title: z.string().min(1),
   degree_type: degreeType,
+  level: z.enum(["masters", "postgraduate_certificate", "graduate_diploma", "diploma"]),
+  cip_code: z
+    .string()
+    .regex(/^\d{2}\.\d{4}$/)
+    .nullable(),
   field: fieldCode,
   duration_months: z.number().int().min(1).max(60),
   study_mode: studyMode,
@@ -193,6 +204,7 @@ export const requirementRow = z.object({
   clinical_placement: z.boolean(),
   open_to_international: z.enum(["yes", "limited", "no"]).nullable(),
   checks_required: z.array(z.enum(["police", "health", "immunisation"])),
+  min_prior_education: z.enum(["secondary", "diploma", "degree"]).nullable(),
   pte_min: z.number().min(10).max(90).nullable(),
   gre_status: testStatus.nullable(),
   gmat_status: testStatus.nullable(),
@@ -258,6 +270,15 @@ export const scholarshipRow = z.object({
   coverage: z.enum(["full", "tuition", "partial", "stipend"]),
   deadline: date.nullable(),
   url: z.string(),
+  funding_type: z.enum(["scholarship", "bursary", "entrance_award", "tuition_waiver", "grant"]),
+  open_to_international: z.enum(["yes", "limited", "no"]).nullable(),
+  eligible_from: z.enum(["admission", "after_start"]),
+  automatic: z.boolean(),
+  levels: z.array(z.enum(["masters", "postgraduate_certificate", "graduate_diploma", "diploma"])),
+  regions: z.array(z.string()),
+  university_id: uuid.nullable(),
+  percent_of_tuition: z.number().int().min(1).max(100).nullable(),
+  renewable: z.boolean(),
   ...content,
   ...timestamps,
 })
@@ -536,6 +557,84 @@ export const roleChangeAlertRow = z.object({
 
 export const alertEndpointRow = z.object({ id: z.literal(true), url: z.url() })
 
+export const pathwayRow = z.object({
+  key: z.string().regex(/^[a-z][a-z_]{1,39}$/),
+  label: z.string().min(2).max(60),
+  description: z.string().max(280),
+  active: z.boolean(),
+  sort_order: z.number().int(),
+  updated_by: z.uuid().nullable(),
+  updated_at: timestamp,
+  created_at: timestamp,
+})
+
+export const pathwaySignalRow = z.object({
+  pathway_key: z.string().regex(/^[a-z][a-z_]{1,39}$/),
+  signal: z.enum([
+    "field_match",
+    "placement",
+    "post_study_work",
+    "funding",
+    "work_permit_route",
+    "in_demand",
+    "licensing_path",
+    "research",
+    "entrepreneurship",
+  ]),
+  weight: z.number().int().min(0).max(100),
+})
+
+export const occupationRow = z.object({
+  id: uuid,
+  country: countryCode,
+  system: z.enum(["NOC2021", "SOC2020", "SOC2018"]),
+  code: z.string().min(3),
+  title: z.string().min(2),
+  source_url: z.url(),
+  last_verified_at: timestamp,
+  confidence: confidenceLevel,
+  ...timestamps,
+})
+
+export const occupationDemandRow = z.object({
+  id: uuid,
+  occupation_id: uuid,
+  region: z.string(),
+  source_type: z.enum(["in_demand_list", "nominee_stream", "job_outlook", "shortage_list"]),
+  label: z.string().min(2),
+  valid_from: date,
+  valid_to: date.nullable(),
+  source_url: z.url(),
+  last_verified_at: timestamp,
+  confidence: confidenceLevel,
+  ...timestamps,
+})
+
+export const workPermitFieldRow = z.object({
+  id: uuid,
+  country: countryCode,
+  code: z.string().regex(/^\d{2}\.\d{4}$/),
+  title: z.string().min(2),
+  category: z.string().min(2),
+  eligible_from: date,
+  eligible_to: date.nullable(),
+  source_url: z.url(),
+  last_verified_at: timestamp,
+  confidence: confidenceLevel,
+  ...timestamps,
+})
+
+export const programmeOccupationRow = z.object({
+  programme_id: uuid,
+  occupation_id: uuid,
+  status: z.enum(["suggested", "approved", "rejected"]),
+  suggested_by: z.enum(["ai", "editor"]),
+  rationale: z.string().max(400),
+  reviewed_by: uuid.nullable(),
+  reviewed_at: timestamp.nullable(),
+  created_at: timestamp,
+})
+
 export const rowSchemas = {
   student_profile: studentProfileRow,
   shortlist: shortlistRow,
@@ -572,6 +671,12 @@ export const rowSchemas = {
   internal_actor: internalActorRow,
   role_change_alert: roleChangeAlertRow,
   alert_endpoint: alertEndpointRow,
+  pathway: pathwayRow,
+  pathway_signal: pathwaySignalRow,
+  occupation: occupationRow,
+  occupation_demand: occupationDemandRow,
+  work_permit_field: workPermitFieldRow,
+  programme_occupation: programmeOccupationRow,
 } as const
 
 export type TableName = keyof Database["public"]["Tables"]

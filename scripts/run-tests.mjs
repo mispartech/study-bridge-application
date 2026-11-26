@@ -1,5 +1,6 @@
 // The deliberate way to run tests that touch Supabase (one project, so it's production):
 //   npm run test:e2e [-- playwright args]     npm run test:db
+//   npm run screenshots:admin                  admin screenshots, light and dark, desktop and 360px
 // Sets ALLOW_TESTS_ON_PRODUCTION for this run only, so a bare `npx playwright test` is still refused.
 // Test accounts are deleted afterwards (Playwright's global teardown, and here for the database tests).
 import { spawnSync } from "node:child_process"
@@ -15,8 +16,16 @@ const run = (script, scriptArgs) => spawnSync(node, [script, ...scriptArgs], { s
 
 let status
 if (kind === "e2e") status = run("node_modules/@playwright/test/cli.js", ["test", ...args])
-else if (kind === "db") {
+else if (kind === "screenshots") {
+  env.ADMIN_SCREENSHOTS = "1"
+  status = run("node_modules/@playwright/test/cli.js", [
+    "test",
+    "e2e/admin-screenshots.spec.ts",
+    "--project=desktop",
+    ...args,
+  ])
+} else if (kind === "db") {
   status = run("node_modules/vitest/vitest.mjs", ["run", "--config", "vitest.db.config.mts", ...args])
   run("scripts/cleanup-test-accounts.mjs", ["--tests-only", "--confirm"])
-} else throw new Error("Usage: node scripts/run-tests.mjs e2e|db [args]")
+} else throw new Error("Usage: node scripts/run-tests.mjs e2e|db|screenshots [args]")
 process.exitCode = status

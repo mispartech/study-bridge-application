@@ -117,6 +117,12 @@ test.describe("onboarding wizard", () => {
     await page.getByLabel("Term").selectOption("fall")
     await page.getByRole("button", { name: "Continue" }).click()
     await expect(page.getByTestId("step-6")).toBeVisible()
+    // Goals come from the admin's pathways; tick the first one offered and it stays ticked after a reload.
+    const goal = page.getByTestId("goal-picker").getByRole("button").first()
+    await goal.click()
+    await expect(goal).toHaveAttribute("aria-pressed", "true")
+    await page.reload()
+    await expect(page.getByTestId("goal-picker").getByRole("button").first()).toHaveAttribute("aria-pressed", "true")
     await page.getByRole("button", { name: "Next: save your results" }).click()
 
     // Step 3 of 3 offers an account, but results never wait for one.

@@ -5,6 +5,7 @@ import { after } from "next/server"
 import { serviceClient } from "@/lib/db/service"
 import { REFRESH_MS, refreshReferenceRates } from "@/lib/fx/reference-rates"
 
+import { pathwaySchema, type Pathway } from "./pathways"
 import type { Catalogue } from "./types"
 
 export const demoModeEnabled = () => process.env.NEXT_PUBLIC_DEMO_MODE === "true"
@@ -63,6 +64,12 @@ async function fetchCatalogue(demoMode: boolean): Promise<Catalogue> {
     gradeMappings,
     fxRates,
     costEstimates,
+    pathways,
+    signals,
+    occupations,
+    demand,
+    permitFields,
+    links,
   ] = await Promise.all([
     onlyThisMode(db.from("university").select("*")),
     onlyThisMode(db.from("programme").select("*")),
@@ -75,6 +82,12 @@ async function fetchCatalogue(demoMode: boolean): Promise<Catalogue> {
     db.from("grade_mapping").select("*"),
     withoutDemo(db.from("fx_rate").select("*")),
     withoutDemo(db.from("cost_estimate").select("*")),
+    db.from("pathway").select("key, label, description, active, sort_order").eq("active", true).order("sort_order"),
+    db.from("pathway_signal").select("pathway_key, signal, weight"),
+    db.from("occupation").select("*"),
+    db.from("occupation_demand").select("*"),
+    db.from("work_permit_field").select("*").limit(5000),
+    db.from("programme_occupation").select("programme_id, occupation_id").eq("status", "approved"),
   ])
   const data = <T>(res: { data: T[] | null; error: { message: string } | null }): T[] => {
     if (res.error) throw new Error(`Could not load the catalogue: ${res.error.message}`)
@@ -92,5 +105,26 @@ async function fetchCatalogue(demoMode: boolean): Promise<Catalogue> {
     gradeMappings: data(gradeMappings),
     fxRates: data(fxRates),
     costEstimates: data(costEstimates),
+    pathways: toPathways(data(pathways), data(signals)),
+    careers: {
+      occupations: data(occupations),
+      demand: data(demand),
+      fields: data(permitFields),
+      links: data(links),
+    },
   }
+}
+
+/** Pathway rows with their signal weights. A row that fails validation is left out, never guessed at. */
+export function toPathways(
+  rows: Omit<Pathway, "signals">[],
+  signals: { pathway_key: string; signal: string; weight: number }[]
+): Pathway[] {
+  return rows.flatMap((row) => {
+    const parsed = pathwaySchema.safeParse({
+      ...row,
+      signals: Object.fromEntries(signals.filter((s) => s.pathway_key === row.key).map((s) => [s.signal, s.weight])),
+    })
+    return parsed.success ? [parsed.data] : []
+  })
 }

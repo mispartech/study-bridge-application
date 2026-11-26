@@ -24,6 +24,7 @@ const aiConfig = z.object({
   extraction: modelRef,
   explanations: modelRef,
   advisor: modelRef,
+  occupations: modelRef,
 })
 export type AiTask = keyof z.infer<typeof aiConfig>
 

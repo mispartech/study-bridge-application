@@ -11,6 +11,7 @@ import { FitRing } from "@/components/ui/fit-ring"
 import { FreshnessBadge } from "@/components/ui/freshness-badge"
 import { VisaStatusChip } from "@/components/ui/visa-status-chip"
 import type { CardView } from "@/lib/match/present"
+import { COUNTRY_LABEL } from "@/lib/match/labels"
 import { formatShort, type FxRates } from "@/lib/money"
 
 import { BudgetChip, dateLabel, ProgrammeHeading } from "./card-parts"
@@ -82,12 +83,58 @@ export function MatchCard({
         </span>
       </p>
 
+      {card.goal_reasons?.length > 0 && (
+        <p data-testid="goal-reasons" className="text-sm text-primary-strong">
+          Ranked up for your goals: {card.goal_reasons.join(" · ")}
+        </p>
+      )}
+
       <div className="flex flex-wrap gap-1.5">
         {card.open_to_international === "no" && (
           <VisaStatusChip status="suspended" size="sm" label="Not open to international students" />
         )}
         {card.open_to_international === "limited" && (
           <VisaStatusChip status="conditional" size="sm" label="Limited places for international students" />
+        )}
+        {card.level && card.level !== "masters" && (
+          <Chip size="sm" variant="primary" data-testid="level-chip">
+            {card.level_label}
+          </Chip>
+        )}
+        {card.demand?.[0] && (
+          <Chip size="sm" variant="success" data-testid="demand-chip">
+            <a
+              href={card.demand[0].source_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              title={`${card.demand[0].title}: ${card.demand[0].label}`}
+              className="underline underline-offset-2"
+            >
+              In demand in {card.demand[0].region ?? COUNTRY_LABEL[card.country]}
+            </a>
+          </Chip>
+        )}
+        {card.work_permit_source && (
+          <Chip size="sm" variant="success" data-testid="permit-chip">
+            <a
+              href={card.work_permit_source}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline underline-offset-2"
+            >
+              Leads to a work permit
+            </a>
+          </Chip>
+        )}
+        {card.funding === "yes" && (
+          <Chip size="sm" variant="success" data-testid="funded-chip">
+            Funded
+          </Chip>
+        )}
+        {card.funding === "limited" && (
+          <Chip size="sm" variant="warning" data-testid="funded-chip">
+            Funding (few international places)
+          </Chip>
         )}
         {card.has_coop && <Chip size="sm">Co-op or placement</Chip>}
         {card.flags.includes("related_field") && <Chip size="sm">Related field</Chip>}

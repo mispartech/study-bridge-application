@@ -2,9 +2,14 @@ import Link from "next/link"
 import { connection } from "next/server"
 
 import { ApproveAllReady } from "@/components/admin/approve-all"
+import { DataTable, type Column } from "@/components/admin/data-table"
+import { PageHeader } from "@/components/admin/page-header"
+import { EmptyState } from "@/components/admin/states"
+import { StatusBadge } from "@/components/admin/status-badge"
 import { Card } from "@/components/ui/card"
 import { isReady } from "@/lib/admin/approve"
 import { fieldChangeStats } from "@/lib/admin/field-changes"
+import type { SearchParams } from "@/lib/admin/table"
 import { serviceClient } from "@/lib/db/service"
 import { requireStaff } from "@/lib/auth/staff-page"
 
@@ -34,9 +39,29 @@ const GROUPS = [
   },
 ]
 
-export default async function Page() {
+type Stat = ReturnType<typeof fieldChangeStats>[number]
+
+const STATS: Column<Stat>[] = [
+  {
+    key: "field",
+    header: "Field",
+    sort: (s) => s.field,
+    cell: (s) => <span className="font-mono text-xs">{s.field}</span>,
+  },
+  {
+    key: "changed",
+    header: "Changed by reviewers",
+    align: "right",
+    fixed: true,
+    sort: (s) => s.rate,
+    cell: (s) => `${s.changed} (${Math.round(s.rate * 100)}%)`,
+  },
+]
+
+export default async function Page({ searchParams }: { searchParams: Promise<SearchParams> }) {
   await connection()
   await requireStaff("content")
+  const params = await searchParams
   const { data } = await serviceClient()
     .from("review_queue")
     .select("id, proposed, reason, created_at, table_name")
@@ -47,38 +72,36 @@ export default async function Page() {
   const stats = fieldChangeStats(reviewed ?? [])
   const ready = (data ?? []).filter(isReady).length
   return (
-    <div className="flex flex-col gap-4">
+    <>
+      <PageHeader
+        title="Review queue"
+        description="Extracted records waiting for a data editor. Nothing reaches students until it is approved here."
+      />
       <ApproveAllReady ready={ready} />
       <Card data-testid="field-change-stats" className="gap-2">
         <h2 className="font-heading text-base font-bold">How often reviewers change each field</h2>
         <p className="text-xs text-muted-foreground">Across {reviewed?.length ?? 0} approved records.</p>
-        {stats.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No changes recorded yet.</p>
-        ) : (
-          <table className="w-full text-left text-sm">
-            <tbody>
-              {stats.map((s) => (
-                <tr key={s.field}>
-                  <td className="font-mono text-xs">{s.field}</td>
-                  <td className="text-right tabular-nums">
-                    {s.changed} ({Math.round(s.rate * 100)}%)
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
+        <DataTable
+          label="Field changes"
+          columns={STATS}
+          rows={stats}
+          rowKey={(st) => st.field}
+          path="/admin/review"
+          params={params}
+          minWidth="24rem"
+          empty="No changes recorded yet."
+        />
       </Card>
       {!data?.length ? (
-        <p className="text-sm text-muted-foreground">Nothing is waiting for review.</p>
+        <EmptyState title="Nothing is waiting for review" />
       ) : (
         GROUPS.map(({ tables, heading, note }) => {
           const items = data.filter((i) => tables.includes(i.table_name))
           if (!items.length) return null
           return (
             <section key={heading} className="flex flex-col gap-2">
-              <h2 className="font-heading text-lg font-bold">
-                {heading} ({items.length})
+              <h2 className="flex items-center gap-2 font-heading text-lg font-bold">
+                {heading} <StatusBadge tone="warning">{items.length} pending</StatusBadge>
               </h2>
               <p className="text-xs text-muted-foreground">{note}</p>
               <ul className="flex flex-col gap-2">
@@ -107,6 +130,6 @@ export default async function Page() {
           )
         })
       )}
-    </div>
+    </>
   )
 }

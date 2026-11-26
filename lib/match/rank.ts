@@ -1,5 +1,7 @@
 import { normaliseAcademics } from "./academics"
 import { hardFilter } from "./filters"
+import { demandFor, workPermitSignal } from "./careers"
+import { ruleOn, visaApplicationDate } from "./cost"
 import { eligibleScholarships, fitScore } from "./score"
 import type {
   Bundle,
@@ -129,10 +131,32 @@ export function rank(profile: MatchProfile, catalogue: Catalogue, options: Match
     } else if (outcome.status === "needs_english") {
       result.needs_english.push({ bundle, tests_planned: outcome.tests_planned, cost: outcome.cost })
     } else {
-      const scores = fitScore(bundle, outcome, profile, academics, catalogue, options)
+      const { goal_signals, ...scores } = fitScore(bundle, outcome, profile, academics, catalogue, options)
       const { cost, intake, next_deadline, reach, flags } = outcome
       const group = groupFor(scores.fit, reach, cost)
-      passed.push({ bundle, scores, group, reach, cost, intake, next_deadline, flags })
+      const demand = demandFor(bundle, catalogue.careers, options.now)
+      const permitRule = ruleOn(
+        catalogue.visaRules,
+        { country: bundle.university.country, type: "post_study_work", demoMode: options.demoMode },
+        visaApplicationDate(intake)
+      )
+      const permit = workPermitSignal(bundle, permitRule, catalogue.careers, options.now)
+      const work_permit_source = permit === 1 && permitRule ? permitRule.source_url : null
+      const funding = fundingStatus(eligibleScholarships(bundle, profile, academics, catalogue, options))
+      passed.push({
+        bundle,
+        scores,
+        group,
+        reach,
+        cost,
+        intake,
+        next_deadline,
+        flags,
+        goal_signals,
+        funding,
+        demand,
+        work_permit_source,
+      })
     }
   }
 
@@ -152,3 +176,10 @@ export function rank(profile: MatchProfile, catalogue: Catalogue, options: Match
 }
 
 export { TOP_N }
+
+/** "yes" when some funding is open to international students, "limited" when it is only open to a few. */
+export function fundingStatus(eligible: { open_to_international: string | null }[]): "yes" | "limited" | null {
+  if (eligible.some((s) => s.open_to_international === "yes")) return "yes"
+  if (eligible.some((s) => s.open_to_international === "limited")) return "limited"
+  return null
+}

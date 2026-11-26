@@ -3,6 +3,7 @@ import type { Tables } from "@/lib/db/database.types"
 import { bandIndex, nigeriaRuleMinimum } from "./academics"
 import { totalCost, withinCeiling } from "./cost"
 import { fieldMatch } from "./fields"
+import { LEVEL_LABEL, levelAllowed, levelOf } from "./levels"
 import type { Academics, Band, Bundle, Catalogue, Cost, MatchFlag, MatchOptions, MatchProfile } from "./types"
 
 const FRESHNESS_DAYS = 120
@@ -56,6 +57,10 @@ export function academicCheck(
 ): { passes: boolean; reach: boolean; headroom: number } {
   const fail = { passes: false, reach: false, headroom: 0 }
   if (academics.band === null) return fail
+  // College programmes may ask only for a prior qualification; every student here already holds a degree.
+  if (requirement.min_uk_class === null && requirement.min_gpa4 === null && requirement.min_prior_education) {
+    return { passes: true, reach: false, headroom: requirement.min_prior_education === "degree" ? 1 : 2 }
+  }
   const student = bandIndex(academics.band)
   // Canadian programmes may state only a GPA minimum; then the GPA decides.
   const minimum = requirement.min_uk_class === null ? null : bandIndex(requirement.min_uk_class as Band)
@@ -195,6 +200,9 @@ export function hardFilter(
   // Field comes first, so the restricted list only shows programmes the student actually wants.
   const field = fieldMatch(bundle.programme, profile)
   if (field === "none") return excluded("field", `Not in ${profile.field}`)
+  if (!levelAllowed(bundle.programme, profile.level_preference)) {
+    return excluded("level", `A ${LEVEL_LABEL[levelOf(bundle.programme)].toLowerCase()}, not what you chose`)
+  }
 
   const restriction = visaRestriction(bundle.university.country, profile, catalogue, options)
   if (restriction) {

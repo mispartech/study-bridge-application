@@ -1,12 +1,17 @@
-import { bandIndex } from "./academics"
+import { bandIndex, normaliseAcademics } from "./academics"
 import { ruleOn, toNgn, visaApplicationDate } from "./cost"
 import type { Tables } from "@/lib/db/database.types"
+import { demandSignal, workPermitSignal } from "./careers"
+import { levelOf, workMonthsFor } from "./levels"
+import { goalFit, type SignalKey, type SignalValues } from "./pathways"
 import type { Academics, Band, Bundle, Catalogue, Cost, MatchOptions, MatchProfile, ScoreBreakdown } from "./types"
 
 const round1 = (n: number) => Math.round(n * 10) / 10
 const OUTCOMES_UNKNOWN = 0.5
 const UNKNOWN_WORK_RULE = 0.5
-// Career fit's three parts always add up to 1. The student's post-study work priority moves weight towards it.
+// Career fit for students who haven't chosen a goal: three parts that always add up to 1, with the student's
+// post-study work priority moving weight towards work rights. Students with goals use the pathway weights
+// managed in the admin instead (lib/match/pathways.ts).
 const CAREER_WEIGHTS = {
   low: { field: 0.7, placement: 0.2, work: 0.1 },
   medium: { field: 0.6, placement: 0.2, work: 0.2 },
@@ -34,28 +39,67 @@ export function careerFit(
   profile: MatchProfile,
   catalogue: Catalogue,
   o: MatchOptions
-) {
+): number {
+  return careerFitDetail(bundle, intake, profile, catalogue, o).score
+}
+
+/** Career fit, and for students with goals, the signals that raised it. */
+export function careerFitDetail(
+  bundle: Bundle,
+  intake: Tables<"intake">,
+  profile: MatchProfile,
+  catalogue: Catalogue,
+  o: MatchOptions,
+  academics?: Academics
+): { score: number; reasons: SignalKey[] } {
   const { programme, university } = bundle
   const date = visaApplicationDate(intake)
+  const ruleFor = (country: string) =>
+    ruleOn(catalogue.visaRules, { country, type: "post_study_work", demoMode: o.demoMode }, date)
   const workMonths = (country: string) => {
-    const rule = ruleOn(catalogue.visaRules, { country, type: "post_study_work", demoMode: o.demoMode }, date)
-    const months = (rule?.value as { months?: unknown } | undefined)?.months
+    const months = (ruleFor(country)?.value as { months?: unknown } | undefined)?.months
     return typeof months === "number" ? months : 0
   }
   const countries = profile.preferred_countries.length ? profile.preferred_countries : ["UK", "CA", "US"]
   const longest = Math.max(...countries.map(workMonths))
-  const months = workMonths(university.country)
+  // This programme's own work rights: a college certificate can earn less than a Master's in the same country.
+  const rule = ruleFor(university.country)
+  const held = typeof (rule?.value as { months?: unknown } | undefined)?.months === "number"
+  const months = workMonthsFor(rule?.value, programme)
   const priority = profile.post_study_work
   // A student who has told us this matters gets a fair score where we hold no rule yet: unknown isn't zero.
-  const unknown = months === 0 && priority !== null
+  // A programme a held rule gives no work rights to (a very short certificate) is zero, not unknown.
+  const unknown = !held && priority !== null
   const work = unknown ? UNKNOWN_WORK_RULE : longest > 0 ? months / longest : 0
   const stem = university.country === "US" && programme.stem_designated
+  const placement = stem || programme.has_coop_or_placement
+  const fieldMatches = programme.field === profile.field
+
+  if (profile.goals.length > 0 && catalogue.pathways?.length) {
+    const values: SignalValues = {
+      field_match: fieldMatches ? 1 : 0,
+      placement: placement ? 1 : 0,
+      // No rule held for this destination yet: unknown, so left out rather than counted as none.
+      work_permit_route: workPermitSignal(bundle, rule, catalogue.careers, o.now),
+      in_demand: demandSignal(bundle, catalogue.careers, o.now),
+      post_study_work: !held ? null : longest > 0 ? months / longest : 0,
+      funding: scholarshipFit(
+        bundle,
+        profile,
+        academics ?? normaliseAcademics(profile, catalogue.gradeMappings),
+        catalogue,
+        o
+      ),
+    }
+    const fit = goalFit(values, catalogue.pathways, profile.goals)
+    if (fit) return fit
+  }
+
   const weight = CAREER_WEIGHTS[priority ?? "medium"]
-  return (
-    (programme.field === profile.field ? weight.field : 0) +
-    (stem || programme.has_coop_or_placement ? weight.placement : 0) +
-    weight.work * work
-  )
+  return {
+    score: (fieldMatches ? weight.field : 0) + (placement ? weight.placement : 0) + weight.work * work,
+    reasons: [],
+  }
 }
 
 function locationFit(bundle: Bundle, cost: Cost, profile: MatchProfile) {
@@ -68,6 +112,11 @@ function locationFit(bundle: Bundle, cost: Cost, profile: MatchProfile) {
 }
 
 /** Open scholarships this student can apply for on this programme. */
+/**
+ * Funding this student can count on for this programme: open to international students (stated, never assumed),
+ * available on admission rather than only after classes start, and matching the programme's country, region,
+ * institution, level and field, and the student's nationality and grades.
+ */
 export function eligibleScholarships(
   { programme, university }: Bundle,
   profile: MatchProfile,
@@ -76,9 +125,15 @@ export function eligibleScholarships(
   { now, demoMode }: MatchOptions
 ) {
   const today = now.toISOString().slice(0, 10)
+  const level = levelOf(programme)
   return catalogue.scholarships.filter(
     (s) =>
       (demoMode || !s.is_demo) &&
+      (s.open_to_international === "yes" || s.open_to_international === "limited") &&
+      (s.eligible_from ?? "admission") === "admission" &&
+      (!s.university_id || s.university_id === university.id) &&
+      (!s.regions?.length || s.regions.includes(university.region)) &&
+      (!s.levels?.length || s.levels.includes(level)) &&
       (s.deadline === null || s.deadline > today) &&
       (s.countries.length === 0 || s.countries.includes(university.country)) &&
       (s.fields.length === 0 || s.fields.includes(programme.field)) &&
@@ -100,7 +155,8 @@ function scholarshipFit(
   const { demoMode } = options
   if (!fee) return 0
   const eligible = eligibleScholarships(bundle, profile, academics, catalogue, options)
-  if (eligible.some((s) => s.amount_minor === null)) return 1 // full or tuition cover with no fixed amount
+  // Full or tuition cover with no fixed amount or share of tuition.
+  if (eligible.some((s) => s.amount_minor === null && !s.percent_of_tuition)) return 1
   const halfTuition = toNgn(
     BigInt(fee.tuition_per_year_minor) / 2n,
     fee.currency,
@@ -109,10 +165,11 @@ function scholarshipFit(
     demoMode
   )
   if (!halfTuition) return 0
-  const total = eligible.reduce(
-    (sum, s) => sum + (toNgn(BigInt(s.amount_minor!), s.currency!, "official", catalogue.fxRates, demoMode) ?? 0n),
-    0n
-  )
+  const yearlyTuition = toNgn(BigInt(fee.tuition_per_year_minor), fee.currency, "official", catalogue.fxRates, demoMode)
+  const total = eligible.reduce((sum, s) => {
+    if (s.percent_of_tuition) return sum + ((yearlyTuition ?? 0n) * BigInt(s.percent_of_tuition)) / 100n
+    return sum + (toNgn(BigInt(s.amount_minor!), s.currency!, "official", catalogue.fxRates, demoMode) ?? 0n)
+  }, 0n)
   return Math.min(1, Number((total * 1000n) / halfTuition) / 1000)
 }
 
@@ -124,11 +181,12 @@ export function fitScore(
   academics: Academics,
   catalogue: Catalogue,
   options: MatchOptions
-): ScoreBreakdown {
+): ScoreBreakdown & { goal_signals: SignalKey[] } {
+  const career = careerFitDetail(bundle, outcome.intake, profile, catalogue, options, academics)
   const components = {
     A: academicFit(outcome.headroom, outcome.reach),
     B: budgetFit(outcome.cost.total_ngn.market, profile.budget_total_minor),
-    C: careerFit(bundle, outcome.intake, profile, catalogue, options),
+    C: career.score,
     L: locationFit(bundle, outcome.cost, profile),
     S: scholarshipFit(bundle, profile, academics, catalogue, options),
     O: RANKING_SCORE[bundle.university.ranking_band ?? ""] ?? OUTCOMES_UNKNOWN,
@@ -149,5 +207,6 @@ export function fitScore(
     S: Math.round(components.S * 100) / 100,
     O: components.O,
     fit: round1(fit),
+    goal_signals: career.reasons,
   }
 }

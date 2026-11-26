@@ -728,6 +728,161 @@ export type Database = {
         }
         Relationships: []
       }
+      occupation: {
+        Row: {
+          code: string
+          confidence: Database["public"]["Enums"]["confidence_level"]
+          country: Database["public"]["Enums"]["country_code"]
+          created_at: string
+          id: string
+          last_verified_at: string
+          source_url: string
+          system: string
+          title: string
+          updated_at: string
+        }
+        ComputedFields: never
+        Insert: {
+          code: string
+          confidence: Database["public"]["Enums"]["confidence_level"]
+          country: Database["public"]["Enums"]["country_code"]
+          created_at?: string
+          id?: string
+          last_verified_at: string
+          source_url: string
+          system: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          code?: string
+          confidence?: Database["public"]["Enums"]["confidence_level"]
+          country?: Database["public"]["Enums"]["country_code"]
+          created_at?: string
+          id?: string
+          last_verified_at?: string
+          source_url?: string
+          system?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      occupation_demand: {
+        Row: {
+          confidence: Database["public"]["Enums"]["confidence_level"]
+          created_at: string
+          id: string
+          label: string
+          last_verified_at: string
+          occupation_id: string
+          region: string
+          source_type: string
+          source_url: string
+          updated_at: string
+          valid_from: string
+          valid_to: string | null
+        }
+        ComputedFields: never
+        Insert: {
+          confidence: Database["public"]["Enums"]["confidence_level"]
+          created_at?: string
+          id?: string
+          label: string
+          last_verified_at: string
+          occupation_id: string
+          region?: string
+          source_type: string
+          source_url: string
+          updated_at?: string
+          valid_from: string
+          valid_to?: string | null
+        }
+        Update: {
+          confidence?: Database["public"]["Enums"]["confidence_level"]
+          created_at?: string
+          id?: string
+          label?: string
+          last_verified_at?: string
+          occupation_id?: string
+          region?: string
+          source_type?: string
+          source_url?: string
+          updated_at?: string
+          valid_from?: string
+          valid_to?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "occupation_demand_occupation_id_fkey"
+            columns: ["occupation_id"]
+            isOneToOne: false
+            referencedRelation: "occupation"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pathway: {
+        Row: {
+          active: boolean
+          created_at: string
+          description: string
+          key: string
+          label: string
+          sort_order: number
+          updated_at: string
+          updated_by: string | null
+        }
+        ComputedFields: never
+        Insert: {
+          active?: boolean
+          created_at?: string
+          description?: string
+          key: string
+          label: string
+          sort_order?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          description?: string
+          key?: string
+          label?: string
+          sort_order?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
+      pathway_signal: {
+        Row: {
+          pathway_key: string
+          signal: string
+          weight: number
+        }
+        ComputedFields: never
+        Insert: {
+          pathway_key: string
+          signal: string
+          weight: number
+        }
+        Update: {
+          pathway_key?: string
+          signal?: string
+          weight?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pathway_signal_pathway_key_fkey"
+            columns: ["pathway_key"]
+            isOneToOne: false
+            referencedRelation: "pathway"
+            referencedColumns: ["key"]
+          },
+        ]
+      }
       payment: {
         Row: {
           amount_minor: number
@@ -771,6 +926,7 @@ export type Database = {
       programme: {
         Row: {
           apply_url: string
+          cip_code: string | null
           confidence: Database["public"]["Enums"]["confidence_level"]
           created_at: string
           degree_type: Database["public"]["Enums"]["degree_type"]
@@ -782,6 +938,7 @@ export type Database = {
           id: string
           is_demo: boolean
           last_verified_at: string
+          level: Database["public"]["Enums"]["programme_level"]
           programme_url: string
           source_url: string
           stem_designated: boolean
@@ -793,6 +950,7 @@ export type Database = {
         ComputedFields: never
         Insert: {
           apply_url: string
+          cip_code?: string | null
           confidence: Database["public"]["Enums"]["confidence_level"]
           created_at?: string
           degree_type: Database["public"]["Enums"]["degree_type"]
@@ -804,6 +962,7 @@ export type Database = {
           id?: string
           is_demo?: boolean
           last_verified_at: string
+          level?: Database["public"]["Enums"]["programme_level"]
           programme_url: string
           source_url: string
           stem_designated?: boolean
@@ -814,6 +973,7 @@ export type Database = {
         }
         Update: {
           apply_url?: string
+          cip_code?: string | null
           confidence?: Database["public"]["Enums"]["confidence_level"]
           created_at?: string
           degree_type?: Database["public"]["Enums"]["degree_type"]
@@ -825,6 +985,7 @@ export type Database = {
           id?: string
           is_demo?: boolean
           last_verified_at?: string
+          level?: Database["public"]["Enums"]["programme_level"]
           programme_url?: string
           source_url?: string
           stem_designated?: boolean
@@ -839,6 +1000,55 @@ export type Database = {
             columns: ["university_id"]
             isOneToOne: false
             referencedRelation: "university"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      programme_occupation: {
+        Row: {
+          created_at: string
+          occupation_id: string
+          programme_id: string
+          rationale: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          suggested_by: string
+        }
+        ComputedFields: never
+        Insert: {
+          created_at?: string
+          occupation_id: string
+          programme_id: string
+          rationale?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          suggested_by: string
+        }
+        Update: {
+          created_at?: string
+          occupation_id?: string
+          programme_id?: string
+          rationale?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          suggested_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "programme_occupation_occupation_id_fkey"
+            columns: ["occupation_id"]
+            isOneToOne: false
+            referencedRelation: "occupation"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "programme_occupation_programme_id_fkey"
+            columns: ["programme_id"]
+            isOneToOne: false
+            referencedRelation: "programme"
             referencedColumns: ["id"]
           },
         ]
@@ -974,6 +1184,7 @@ export type Database = {
           last_verified_at: string
           leads_to_registration: string | null
           min_gpa4: number | null
+          min_prior_education: string | null
           min_uk_class: Database["public"]["Enums"]["uk_class_band"] | null
           min_work_years: number
           nigeria_rule: string | null
@@ -1006,6 +1217,7 @@ export type Database = {
           last_verified_at: string
           leads_to_registration?: string | null
           min_gpa4?: number | null
+          min_prior_education?: string | null
           min_uk_class?: Database["public"]["Enums"]["uk_class_band"] | null
           min_work_years?: number
           nigeria_rule?: string | null
@@ -1037,6 +1249,7 @@ export type Database = {
           last_verified_at?: string
           leads_to_registration?: string | null
           min_gpa4?: number | null
+          min_prior_education?: string | null
           min_uk_class?: Database["public"]["Enums"]["uk_class_band"] | null
           min_work_years?: number
           nigeria_rule?: string | null
@@ -1155,66 +1368,101 @@ export type Database = {
       scholarship: {
         Row: {
           amount_minor: number | null
+          automatic: boolean
           confidence: Database["public"]["Enums"]["confidence_level"]
           countries: Database["public"]["Enums"]["country_code"][]
           coverage: string
           created_at: string
           currency: string | null
           deadline: string | null
+          eligible_from: string
           eligible_nationalities: unknown[]
           fields: Database["public"]["Enums"]["field_code"][]
           funder: string
+          funding_type: string
           id: string
           is_demo: boolean
           last_verified_at: string
+          levels: Database["public"]["Enums"]["programme_level"][]
           min_uk_class: Database["public"]["Enums"]["uk_class_band"] | null
           name: string
+          open_to_international: string | null
+          percent_of_tuition: number | null
+          regions: string[]
+          renewable: boolean
           source_url: string
+          university_id: string | null
           updated_at: string
           url: string
         }
         ComputedFields: never
         Insert: {
           amount_minor?: number | null
+          automatic?: boolean
           confidence: Database["public"]["Enums"]["confidence_level"]
           countries?: Database["public"]["Enums"]["country_code"][]
           coverage: string
           created_at?: string
           currency?: string | null
           deadline?: string | null
+          eligible_from?: string
           eligible_nationalities?: unknown[]
           fields?: Database["public"]["Enums"]["field_code"][]
           funder: string
+          funding_type?: string
           id?: string
           is_demo?: boolean
           last_verified_at: string
+          levels?: Database["public"]["Enums"]["programme_level"][]
           min_uk_class?: Database["public"]["Enums"]["uk_class_band"] | null
           name: string
+          open_to_international?: string | null
+          percent_of_tuition?: number | null
+          regions?: string[]
+          renewable?: boolean
           source_url: string
+          university_id?: string | null
           updated_at?: string
           url: string
         }
         Update: {
           amount_minor?: number | null
+          automatic?: boolean
           confidence?: Database["public"]["Enums"]["confidence_level"]
           countries?: Database["public"]["Enums"]["country_code"][]
           coverage?: string
           created_at?: string
           currency?: string | null
           deadline?: string | null
+          eligible_from?: string
           eligible_nationalities?: unknown[]
           fields?: Database["public"]["Enums"]["field_code"][]
           funder?: string
+          funding_type?: string
           id?: string
           is_demo?: boolean
           last_verified_at?: string
+          levels?: Database["public"]["Enums"]["programme_level"][]
           min_uk_class?: Database["public"]["Enums"]["uk_class_band"] | null
           name?: string
+          open_to_international?: string | null
+          percent_of_tuition?: number | null
+          regions?: string[]
+          renewable?: boolean
           source_url?: string
+          university_id?: string | null
           updated_at?: string
           url?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "scholarship_university_id_fkey"
+            columns: ["university_id"]
+            isOneToOne: false
+            referencedRelation: "university"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       search_log: {
         Row: {
@@ -1399,6 +1647,7 @@ export type Database = {
           field: Database["public"]["Enums"]["field_code"] | null
           funding_source: string | null
           gmat: number | null
+          goals: string[]
           graduation_year: number | null
           gre: number | null
           hnd_pgd: boolean
@@ -1407,6 +1656,7 @@ export type Database = {
           include_related_fields: boolean
           institution_type: string | null
           intake_target: string | null
+          level_preference: string
           nationality: string | null
           post_study_work: string | null
           preferred_cities: string[]
@@ -1448,6 +1698,7 @@ export type Database = {
           field?: Database["public"]["Enums"]["field_code"] | null
           funding_source?: string | null
           gmat?: number | null
+          goals?: string[]
           graduation_year?: number | null
           gre?: number | null
           hnd_pgd?: boolean
@@ -1456,6 +1707,7 @@ export type Database = {
           include_related_fields?: boolean
           institution_type?: string | null
           intake_target?: string | null
+          level_preference?: string
           nationality?: string | null
           post_study_work?: string | null
           preferred_cities?: string[]
@@ -1496,6 +1748,7 @@ export type Database = {
           field?: Database["public"]["Enums"]["field_code"] | null
           funding_source?: string | null
           gmat?: number | null
+          goals?: string[]
           graduation_year?: number | null
           gre?: number | null
           hnd_pgd?: boolean
@@ -1504,6 +1757,7 @@ export type Database = {
           include_related_fields?: boolean
           institution_type?: string | null
           intake_target?: string | null
+          level_preference?: string
           nationality?: string | null
           post_study_work?: string | null
           preferred_cities?: string[]
@@ -1560,12 +1814,16 @@ export type Database = {
           created_at: string
           dli_number: string | null
           id: string
+          institution_type: string
           intl_office_url: string | null
           is_demo: boolean
           is_public: boolean
           last_verified_at: string
           name: string
           official_domains: string[]
+          pgwp_checked_at: string | null
+          pgwp_eligible: string
+          pgwp_source_url: string | null
           ranking_band: string | null
           region: string
           sevp_certified: boolean
@@ -1581,12 +1839,16 @@ export type Database = {
           created_at?: string
           dli_number?: string | null
           id?: string
+          institution_type?: string
           intl_office_url?: string | null
           is_demo?: boolean
           is_public: boolean
           last_verified_at: string
           name: string
           official_domains: string[]
+          pgwp_checked_at?: string | null
+          pgwp_eligible?: string
+          pgwp_source_url?: string | null
           ranking_band?: string | null
           region: string
           sevp_certified?: boolean
@@ -1601,12 +1863,16 @@ export type Database = {
           created_at?: string
           dli_number?: string | null
           id?: string
+          institution_type?: string
           intl_office_url?: string | null
           is_demo?: boolean
           is_public?: boolean
           last_verified_at?: string
           name?: string
           official_domains?: string[]
+          pgwp_checked_at?: string | null
+          pgwp_eligible?: string
+          pgwp_source_url?: string | null
           ranking_band?: string | null
           region?: string
           sevp_certified?: boolean
@@ -1674,6 +1940,52 @@ export type Database = {
           source_url?: string
           updated_at?: string
           value?: NonNullable<Json>
+        }
+        Relationships: []
+      }
+      work_permit_field: {
+        Row: {
+          category: string
+          code: string
+          confidence: Database["public"]["Enums"]["confidence_level"]
+          country: Database["public"]["Enums"]["country_code"]
+          created_at: string
+          eligible_from: string
+          eligible_to: string | null
+          id: string
+          last_verified_at: string
+          source_url: string
+          title: string
+          updated_at: string
+        }
+        ComputedFields: never
+        Insert: {
+          category: string
+          code: string
+          confidence: Database["public"]["Enums"]["confidence_level"]
+          country: Database["public"]["Enums"]["country_code"]
+          created_at?: string
+          eligible_from: string
+          eligible_to?: string | null
+          id?: string
+          last_verified_at: string
+          source_url: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          code?: string
+          confidence?: Database["public"]["Enums"]["confidence_level"]
+          country?: Database["public"]["Enums"]["country_code"]
+          created_at?: string
+          eligible_from?: string
+          eligible_to?: string | null
+          id?: string
+          last_verified_at?: string
+          source_url?: string
+          title?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -1782,6 +2094,18 @@ export type Database = {
         Args: { p_bucket: string; p_key_hash: string; p_offset_seconds?: number; p_window_seconds: number }
         Returns: number
       }
+      save_pathway: {
+        Args: {
+          p_active: boolean
+          p_description: string
+          p_key: string
+          p_label: string
+          p_signals: Json
+          p_sort_order: number
+          p_staff: string
+        }
+        Returns: undefined
+      }
       search_summary: {
         Args: { p_from: string; p_include_internal?: boolean; p_to: string }
         Returns: {
@@ -1809,6 +2133,7 @@ export type Database = {
         | "mental_health"
       intake_term: "fall" | "winter" | "spring" | "summer"
       plan_tier: "free" | "plus"
+      programme_level: "masters" | "postgraduate_certificate" | "graduate_diploma" | "diploma"
       study_mode: "full_time" | "part_time" | "online" | "blended"
       test_status: "required" | "one_of_required" | "optional" | "not_required"
       tracker_stage:
@@ -1948,6 +2273,7 @@ export const Constants = {
       ],
       intake_term: ["fall", "winter", "spring", "summer"],
       plan_tier: ["free", "plus"],
+      programme_level: ["masters", "postgraduate_certificate", "graduate_diploma", "diploma"],
       study_mode: ["full_time", "part_time", "online", "blended"],
       test_status: ["required", "one_of_required", "optional", "not_required"],
       tracker_stage: [

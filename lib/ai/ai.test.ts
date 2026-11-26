@@ -43,7 +43,7 @@ describe("config", () => {
     expect(modelFor("extraction")).toEqual({ provider: "anthropic", model: "claude-haiku-5-5" })
     expect(modelFor("advisor")).toEqual({ provider: "google", model: "gemini-3.6-flash" })
     expect(modelFor("explanations")).toEqual({ provider: "google", model: "gemini-3.6-flash" })
-    expect(Object.keys(AI_CONFIG).sort()).toEqual(["advisor", "explanations", "extraction"])
+    expect(Object.keys(AI_CONFIG).sort()).toEqual(["advisor", "explanations", "extraction", "occupations"])
   })
 
   it("parses provider:model overrides, with gemini as an alias for google", () => {
